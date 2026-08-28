@@ -252,20 +252,9 @@ function HeroSvg({ element, gender, className }: { element: Element; gender: Gen
 
 /**
  * 주인공 초상화.
- * 1순위: public/images/portraits/hero-<element>-<gender>.png (개별 파일)
- * 2순위: public/images/portraits/hero-<element>.png (남/여가 좌·우로 합쳐진 1장.
- *        object-position 으로 성별 반쪽을 잘라서 보여줌)
- * 둘 다 없으면 벡터 초상화(HeroSvg).
+ * public/images/portraits/hero-<element>-<gender>.png 가 있으면 사용, 없으면 벡터(HeroSvg).
+ * (현재: 불/얼음은 사용자 일러스트를 반으로 잘라 넣음. 대지는 벡터.)
  */
-const COMBINED_ART: Partial<Record<Element, boolean>> = { fire: true, ice: true }
-
-// 좌(남) / 우(여) 반쪽 프레이밍 — 합본 이미지(hero-<element>.png) 기준.
-// [x%, y%] : object-position. 얼굴이 잘 보이도록 실측으로 조정.
-const FRAME: Record<Gender, { objectPosition: string }> = {
-  male: { objectPosition: '19% 16%' },
-  female: { objectPosition: '81% 16%' },
-}
-
 export function HeroPortrait({
   element,
   gender,
@@ -275,34 +264,16 @@ export function HeroPortrait({
   gender: Gender
   className?: string
 }) {
-  const [indivReady, setIndivReady] = useState(false)
-  const [combinedFailed, setCombinedFailed] = useState(false)
-
-  const indiv = `/images/portraits/hero-${element}-${gender}.png`
-  const combined = `/images/portraits/hero-${element}.png`
-  const useCombined = !indivReady && !combinedFailed && !!COMBINED_ART[element]
-  const useSvg = !indivReady && (combinedFailed || !COMBINED_ART[element])
-
+  const [ready, setReady] = useState(false)
+  const src = `/images/portraits/hero-${element}-${gender}.png`
   return (
     <span className={className} style={{ display: 'inline-block', overflow: 'hidden', position: 'relative' }}>
-      {useSvg && <HeroSvg element={element} gender={gender} className="h-full w-full" />}
-
-      {useCombined && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={combined}
-          alt=""
-          onError={() => setCombinedFailed(true)}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', ...FRAME[gender] }}
-        />
-      )}
-
-      {/* 개별 파일이 있으면(로드 성공) 그걸 위에 덮어 우선 표시 */}
+      {!ready && <HeroSvg element={element} gender={gender} className="h-full w-full" />}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={indiv}
+        src={src}
         alt=""
-        onLoad={() => setIndivReady(true)}
+        onLoad={() => setReady(true)}
         onError={() => {}}
         style={{
           position: 'absolute',
@@ -310,7 +281,8 @@ export function HeroPortrait({
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          display: indivReady ? 'block' : 'none',
+          objectPosition: '50% 14%',
+          display: ready ? 'block' : 'none',
         }}
       />
     </span>
