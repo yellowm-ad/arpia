@@ -22,7 +22,7 @@ import { applyExp } from '@/lib/exp-table'
 import { createInitialGameState, createPlayer, createStarterPet } from '@/lib/player-factory'
 import { generateFieldMonsters } from '@/lib/field'
 import { getEffectiveStats } from '@/lib/derived'
-import { canTrain, clampAffection, petDefById } from '@/lib/pets'
+import { canTrain, clampAffection, petDefById, petStatsForLevel } from '@/lib/pets'
 import {
   advanceTurn,
   checkBattleEnd,
@@ -45,6 +45,7 @@ export type Action =
   | { type: 'SELL_ITEM'; itemId: string }
   | { type: 'USE_ITEM_FIELD'; itemId: string }
   | { type: 'PET_TRAIN'; skillId: string }
+  | { type: 'REST' }
   | { type: 'EQUIP_ITEM'; itemId: string; slot: EquipSlot }
   | { type: 'UNEQUIP_ITEM'; slot: EquipSlot }
   | { type: 'JOB_CHANGE' }
@@ -217,6 +218,24 @@ function reducer(state: GameState, action: Action): GameState {
         ownedPets: state.ownedPets.map((p) => (p.defId === pet.defId ? pet : p)),
         inventory,
         toast: '펫이 새 스킬을 배웠다!',
+      }
+    }
+
+    case 'REST': {
+      const eff = getEffectiveStats(state.player)
+      const petDef = petDefById(state.pet.defId)
+      const petMax = petDef ? petStatsForLevel(petDef, state.pet.level) : null
+      const pet = petMax
+        ? { ...state.pet, hp: petMax.maxHp, mp: petMax.maxMp }
+        : state.pet
+      return {
+        ...state,
+        player: { ...state.player, hp: eff.maxHp, mp: eff.maxMp },
+        pet,
+        ownedPets: state.ownedPets.map((p) => (p.defId === pet.defId ? pet : p)),
+        activeNpcId: null,
+        screen: 'world',
+        toast: '기숙사에서 충분히 쉬었다. 파티 전원의 HP·MP가 모두 회복되었다.',
       }
     }
 

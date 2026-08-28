@@ -6,20 +6,26 @@ import { npcById, itemById } from '@/lib/mock-data'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Portrait } from '@/components/game/portrait'
 import { Coins } from 'lucide-react'
 
 export function ShopScreen() {
   const { state, dispatch } = useGame()
   const npc = state.activeShopId ? npcById(state.activeShopId) : null
-  if (!npc || !npc.shopItemIds) return null
+  if (!npc || !npc.shopItemIds || state.screen !== 'shop') return null
 
   const close = () => dispatch({ type: 'CLOSE_OVERLAY' })
 
   return (
     <Modal open onClose={close} title={`${npc.name}의 상점`} widthClass="max-w-2xl">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">보유 골드</div>
-        <Badge className="text-sm">
+      <div className="mb-3 flex items-center gap-3">
+        <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg border-2 border-gold/70">
+          <Portrait id={npc.id} className="h-full w-full" />
+        </div>
+        <div className="panel-parchment flex-1 p-2.5 text-xs leading-relaxed">
+          {npc.greeting[0]}
+        </div>
+        <Badge className="shrink-0 text-sm">
           <Coins className="size-3.5" /> {state.player.gold.toLocaleString()} G
         </Badge>
       </div>

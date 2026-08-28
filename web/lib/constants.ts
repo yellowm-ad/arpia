@@ -15,7 +15,7 @@ import type {
 export const MAP_SIZE_METERS = 2000
 export const CELL_SIZE_METERS = 200
 export const GRID_CELLS = MAP_SIZE_METERS / CELL_SIZE_METERS // 10
-export const MONSTERS_PER_CELL = 5
+export const MONSTERS_PER_CELL = 1 // 200m 정사각형(셀 1칸)당 1마리
 
 export const ZONES: ZoneDef[] = [
   {
@@ -71,7 +71,7 @@ export const ZONES: ZoneDef[] = [
     color: '#2f6b3a',
     description: '남서쪽 숲. 몬스터가 배회하며 접촉 시 전투가 시작된다.',
     hasMonsters: true,
-    monsterDensityPer200m: MONSTERS_PER_CELL,
+    monsterDensityPer200m: 1,
     recommendedLevel: 2,
   },
   {
@@ -82,7 +82,7 @@ export const ZONES: ZoneDef[] = [
     color: '#1f5c8a',
     description: '남동쪽 바다. 수생 몬스터가 배회한다.',
     hasMonsters: true,
-    monsterDensityPer200m: MONSTERS_PER_CELL,
+    monsterDensityPer200m: 1,
     recommendedLevel: 3,
   },
   {
@@ -93,7 +93,7 @@ export const ZONES: ZoneDef[] = [
     color: '#4a3a5c',
     description: '봉인이 약해진 대마왕 아즈카의 폐허. 언데드와 흑마법사가 출몰한다. (권장 Lv.10+)',
     hasMonsters: true,
-    monsterDensityPer200m: 4,
+    monsterDensityPer200m: 1,
     recommendedLevel: 10,
   },
 ]

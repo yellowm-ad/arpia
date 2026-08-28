@@ -10,6 +10,30 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, MessageCircle } from 'lucide
 const TILE = 64
 const MOVE_SPEED = 2.1 // 초당 이동 셀 수
 
+// 구역별 기본 배경 (원작·나무위키 삽화 미사용 — 전부 CSS 그라디언트로 자체 제작)
+function zoneBg(kind: string): string {
+  switch (kind) {
+    case 'school': // 마법학교 — 자수정 석조 + 창문 격자
+      return 'repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 26px), repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 30px), linear-gradient(160deg, #3a3a78, #232152)'
+    case 'forest': // 숲 — 층층 나뭇잎 캐노피
+      return 'radial-gradient(circle at 20% 25%, rgba(120,190,110,0.35) 0 14px, transparent 15px), radial-gradient(circle at 70% 60%, rgba(90,160,90,0.3) 0 20px, transparent 22px), radial-gradient(circle at 45% 85%, rgba(140,200,120,0.25) 0 16px, transparent 18px), linear-gradient(180deg, #2f6b3a, #1c4726)'
+    case 'sea': // 바다 — 물결 줄무늬
+      return 'repeating-linear-gradient(115deg, rgba(255,255,255,0.10) 0 3px, transparent 3px 18px), linear-gradient(180deg, #2f86c0, #16466e)'
+    case 'colosseum': // 콜로세움 — 모래 + 원형 경기장
+      return 'radial-gradient(circle at 50% 50%, transparent 0 40%, rgba(0,0,0,0.18) 41% 43%, transparent 44%), radial-gradient(circle at 50% 50%, rgba(255,220,160,0.18), transparent 70%), linear-gradient(160deg, #c98a4a, #7a4a26)'
+    case 'shopStreet': // 상점가 — 차양 줄무늬
+      return 'repeating-linear-gradient(90deg, rgba(255,255,255,0.12) 0 10px, rgba(0,0,0,0.05) 10px 20px), linear-gradient(160deg, #d9a441, #8a5a1e)'
+    case 'village': // 기숙사 마을 — 잔디 + 길
+      return 'linear-gradient(90deg, transparent 44%, rgba(200,170,120,0.35) 45% 55%, transparent 56%), radial-gradient(circle at 30% 40%, rgba(120,190,110,0.25) 0 12px, transparent 14px), linear-gradient(180deg, #6fae5d, #3f7a38)'
+    case 'military': // 연구동 — 강철 격자
+      return 'repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 16px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 16px), linear-gradient(160deg, #8a8f9c, #4a4f5c)'
+    case 'ruins': // 아즈카의 폐허 — 균열
+      return 'repeating-linear-gradient(70deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 22px), repeating-linear-gradient(200deg, rgba(0,0,0,0.2) 0 1px, transparent 1px 30px), linear-gradient(160deg, #4a3a5c, #221a30)'
+    default:
+      return 'linear-gradient(180deg, #1a1f45, #12163a)'
+  }
+}
+
 export function WorldScreen() {
   const { state, dispatch } = useGame()
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -138,10 +162,10 @@ export function WorldScreen() {
               width: GRID_CELLS * TILE,
               height: GRID_CELLS * TILE,
               backgroundImage:
-                'linear-gradient(rgba(217,164,65,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.15) 1px, transparent 1px)',
+                'linear-gradient(rgba(217,164,65,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.10) 1px, transparent 1px)',
               backgroundSize: `${TILE}px ${TILE}px`,
-              backgroundColor: '#12163a',
-              boxShadow: '0 0 0 4px rgba(217,164,65,0.4)',
+              backgroundColor: '#0e1230',
+              boxShadow: '0 0 0 4px rgba(217,164,65,0.4), inset 0 0 120px rgba(0,0,0,0.55)',
             }}
           />
 
@@ -149,14 +173,15 @@ export function WorldScreen() {
           {ZONES.map((zone) => (
             <div key={zone.id}>
               <div
-                className="absolute flex items-start justify-start p-2"
+                className="absolute"
                 style={{
                   left: zone.cell.x0 * TILE,
                   top: zone.cell.y0 * TILE,
                   width: (zone.cell.x1 - zone.cell.x0) * TILE,
                   height: (zone.cell.y1 - zone.cell.y0) * TILE,
-                  background: `${zone.color}33`,
-                  border: `2px solid ${zone.color}aa`,
+                  background: zoneBg(zone.kind),
+                  border: `2px solid ${zone.color}cc`,
+                  boxShadow: 'inset 0 0 40px rgba(0,0,0,0.35)',
                 }}
               />
               <BillboardLabel x={zone.cell.x0 + 0.15} y={zone.cell.y0 + 0.15} tile={TILE}>
@@ -170,12 +195,10 @@ export function WorldScreen() {
           {/* NPC 마커 */}
           {NPCS.map((npc) => (
             <Marker key={npc.id} x={npc.cell.x} y={npc.cell.y} tile={TILE} onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}>
-              <div className="flex flex-col items-center gap-0.5">
-                <div className="flex size-8 items-center justify-center rounded-full border-2 border-gold bg-primary-soft shadow-lg">
-                  <Image src={npc.icon} alt={npc.name} width={18} height={18} />
-                </div>
-                <span className="rounded bg-black/70 px-1 text-[10px] text-gold-soft whitespace-nowrap">{npc.name}</span>
+              <div className="flex size-8 items-center justify-center rounded-full border-2 border-gold bg-primary-soft">
+                <Image src={npc.icon} alt={npc.name} width={18} height={18} />
               </div>
+              <span className="text-[10px] font-semibold text-gold-soft whitespace-nowrap">{npc.name}</span>
             </Marker>
           ))}
 
@@ -185,29 +208,27 @@ export function WorldScreen() {
             if (!def) return null
             return (
               <Marker key={fm.uid} x={fm.homeCell.x} y={fm.homeCell.y} tile={TILE} wanderSeed={fm.wanderSeed}>
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`flex size-7 items-center justify-center rounded-full border-2 ${def.isTestMonster ? 'border-emerald-400 bg-emerald-950' : 'border-red-400/70 bg-red-950/70'}`}
-                  >
-                    <Image src={def.icon} alt={def.name} width={16} height={16} />
-                  </div>
-                  {def.isTestMonster && <span className="rounded bg-emerald-900/80 px-1 text-[9px] text-emerald-200">TEST</span>}
+                <div
+                  className={`flex size-7 items-center justify-center rounded-full border-2 ${def.isTestMonster ? 'border-emerald-400 bg-emerald-950' : 'border-red-400/80 bg-red-950/80'}`}
+                >
+                  <Image src={def.icon} alt={def.name} width={16} height={16} />
                 </div>
+                <span className={`text-[9px] font-semibold whitespace-nowrap ${def.isTestMonster ? 'text-emerald-200' : 'text-red-200'}`}>
+                  {def.isTestMonster ? 'TEST' : def.name}
+                </span>
               </Marker>
             )
           })}
 
           {/* 플레이어 */}
           <Marker x={state.position.x} y={state.position.y} tile={TILE}>
-            <div className="flex flex-col items-center">
-              <div
-                className="flex size-9 items-center justify-center rounded-full border-2 shadow-xl"
-                style={{ borderColor: elem.color as string, background: '#1a1435' }}
-              >
-                <Image src={elem.icon} alt={elem.name} width={20} height={20} />
-              </div>
-              <span className="mt-0.5 rounded bg-black/70 px-1 text-[10px] text-white">{state.player.name}</span>
+            <div
+              className="flex size-9 items-center justify-center rounded-full border-2"
+              style={{ borderColor: elem.color as string, background: '#1a1435' }}
+            >
+              <Image src={elem.icon} alt={elem.name} width={20} height={20} />
             </div>
+            <span className="text-[10px] font-semibold text-white whitespace-nowrap">{state.player.name}</span>
           </Marker>
         </div>
       </div>
@@ -288,12 +309,42 @@ function Marker({
         animationDelay: wanderSeed != null ? `${(wanderSeed % 1000) / 1000}s` : undefined,
       }}
     >
-      <div
-        className={onClick ? 'cursor-pointer' : ''}
-        style={{ transform: 'rotateX(-55deg) rotateZ(-45deg)', transformStyle: 'preserve-3d' }}
-        onClick={onClick}
-      >
-        {children}
+      {/* 쿼터뷰 정면을 향하는 레이어. 콘텐츠를 화면상 위로 띄우고 지면과 기둥으로 연결 */}
+      <div style={{ transform: 'rotateX(-55deg) rotateZ(-45deg)', transformStyle: 'preserve-3d' }}>
+        {/* 지면 그림자 */}
+        <div
+          style={{
+            position: 'absolute',
+            left: -9,
+            top: -4,
+            width: 18,
+            height: 8,
+            borderRadius: '50%',
+            background: 'rgba(0,0,0,0.45)',
+            filter: 'blur(1.5px)',
+          }}
+        />
+        {/* 기둥 */}
+        <div
+          style={{
+            position: 'absolute',
+            left: -1,
+            top: -40,
+            width: 2,
+            height: 40,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0))',
+          }}
+        />
+        {/* 떠 있는 콘텐츠 (다크 플레이트) */}
+        <div
+          className={onClick ? 'cursor-pointer' : ''}
+          onClick={onClick}
+          style={{ position: 'absolute', left: 0, top: -40, transform: 'translate(-50%, -100%)' }}
+        >
+          <div className="flex flex-col items-center gap-0.5 rounded-lg border border-gold/60 bg-[#0d0b18]/90 px-1.5 py-1 shadow-[0_4px_10px_rgba(0,0,0,0.6)]">
+            {children}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -302,7 +353,7 @@ function Marker({
 function BillboardLabel({ x, y, tile, children }: { x: number; y: number; tile: number; children: ReactNode }) {
   return (
     <div className="absolute" style={{ left: x * tile, top: y * tile, transformStyle: 'preserve-3d' }}>
-      <div style={{ transform: 'rotateX(-55deg) rotateZ(-45deg)' }}>{children}</div>
+      <div style={{ transform: 'rotateX(-55deg) rotateZ(-45deg) translateY(-14px)' }}>{children}</div>
     </div>
   )
 }

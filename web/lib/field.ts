@@ -17,7 +17,7 @@ export function generateFieldMonsters(testMode: boolean): FieldMonster[] {
     if (!zone.hasMonsters) continue
     const pool = monstersForZoneKind(zone.kind)
     if (pool.length === 0) continue
-    const density = zone.monsterDensityPer200m ?? 5
+    const density = zone.monsterDensityPer200m ?? 1
 
     for (let cx = zone.cell.x0; cx < zone.cell.x1; cx++) {
       for (let cy = zone.cell.y0; cy < zone.cell.y1; cy++) {
