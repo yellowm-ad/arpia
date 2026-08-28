@@ -50,6 +50,8 @@ export type Action =
   | { type: 'UNEQUIP_ITEM'; slot: EquipSlot }
   | { type: 'JOB_CHANGE' }
   | { type: 'START_BATTLE'; fieldMonsterUid: string }
+  | { type: 'ENCOUNTER_FIGHT' }
+  | { type: 'ENCOUNTER_FLEE' }
   | { type: 'BATTLE_ACTOR_ACTION'; actorUid: string; action: EngineBattleAction }
   | { type: 'BATTLE_TICK' }
   | { type: 'BATTLE_END_CONTINUE' }
@@ -89,7 +91,7 @@ function reducer(state: GameState, action: Action): GameState {
       const player = createPlayer(action.name, action.element)
       const pet = createStarterPet(action.element)
       const fieldMonsters = generateFieldMonsters(state.settings.testMode)
-      return { ...state, player, pet, ownedPets: [pet], fieldMonsters, screen: 'world', previousScreen: 'world' }
+      return { ...state, player, pet, ownedPets: [pet], fieldMonsters, pendingEncounterUid: null, screen: 'world', previousScreen: 'world' }
     }
 
     case 'SET_SCREEN': {
@@ -98,7 +100,7 @@ function reducer(state: GameState, action: Action): GameState {
     }
 
     case 'MOVE': {
-      if (state.screen !== 'world' || state.battle) return state
+      if (state.screen !== 'world' || state.battle || state.pendingEncounterUid) return state
       const nx = Math.max(0.2, Math.min(GRID_CELLS - 0.2, state.position.x + action.dx))
       const ny = Math.max(0.2, Math.min(GRID_CELLS - 0.2, state.position.y + action.dy))
       const zone = zoneAt(nx, ny)
@@ -123,14 +125,37 @@ function reducer(state: GameState, action: Action): GameState {
         }
       }
 
-      const next: GameState = {
+      // 접촉 시 전투를 바로 시작하지 않고 '전투/피하기'를 먼저 묻는다. 이동은 정지.
+      if (touched) return { ...state, facing, pendingEncounterUid: touched }
+
+      return {
         ...state,
         position: { x: nx, y: ny },
         facing,
         currentZoneId: zone?.id ?? state.currentZoneId,
       }
-      if (touched) return startBattleFromField(next, touched)
-      return next
+    }
+
+    case 'ENCOUNTER_FIGHT': {
+      if (!state.pendingEncounterUid) return state
+      return startBattleFromField({ ...state, pendingEncounterUid: null }, state.pendingEncounterUid)
+    }
+
+    case 'ENCOUNTER_FLEE': {
+      const fm = state.pendingEncounterUid
+        ? state.fieldMonsters.find((f) => f.uid === state.pendingEncounterUid)
+        : null
+      let position = state.position
+      if (fm) {
+        const dx = state.position.x - fm.homeCell.x
+        const dy = state.position.y - fm.homeCell.y
+        const len = Math.hypot(dx, dy) || 1
+        position = {
+          x: Math.max(0.2, Math.min(GRID_CELLS - 0.2, state.position.x + (dx / len) * 0.75)),
+          y: Math.max(0.2, Math.min(GRID_CELLS - 0.2, state.position.y + (dy / len) * 0.75)),
+        }
+      }
+      return { ...state, position, pendingEncounterUid: null, toast: '슬쩍 피해 지나갔다.' }
     }
 
     case 'OPEN_NPC':

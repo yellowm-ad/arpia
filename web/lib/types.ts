@@ -366,6 +366,7 @@ export interface GameState {
   currentZoneId: string
   inventory: InventorySlot[]
   fieldMonsters: FieldMonster[]
+  pendingEncounterUid: string | null // 접촉 시 전투 여부를 묻는 대상
   activeNpcId: string | null
   activeShopId: string | null
   battle: BattleState | null

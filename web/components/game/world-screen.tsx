@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useGame } from '@/lib/game-state'
 import { ELEMENT_META, GRID_CELLS, ZONES, zoneAt } from '@/lib/constants'
 import { MONSTERS, NPCS } from '@/lib/mock-data'
+import { Button } from '@/components/ui/button'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, MessageCircle } from 'lucide-react'
 
 const TILE = 64
@@ -127,6 +128,11 @@ export function WorldScreen() {
   const currentZone = zoneAt(state.position.x, state.position.y)
   const interactTarget = nearestNpc()
   const elem = ELEMENT_META[state.player.element]
+  const encounterName = state.pendingEncounterUid
+    ? MONSTERS.find(
+        (m) => m.id === state.fieldMonsters.find((f) => f.uid === state.pendingEncounterUid)?.monsterId,
+      )?.name
+    : null
 
   const dpadPress = (dx: number, dy: number) => {
     const key = dx === -1 ? 'arrowleft' : dx === 1 ? 'arrowright' : dy === -1 ? 'arrowup' : 'arrowdown'
@@ -241,10 +247,30 @@ export function WorldScreen() {
       </div>
 
       {/* 상호작용 프롬프트 */}
-      {interactTarget && (
+      {interactTarget && !state.pendingEncounterUid && (
         <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2">
           <div className="panel-gilded flex items-center gap-2 px-3 py-1.5 text-xs text-gold-soft">
             <MessageCircle className="size-3.5" /> {interactTarget.name}와(과) 대화 (E)
+          </div>
+        </div>
+      )}
+
+      {/* 몬스터 접촉 — 전투 여부 확인 */}
+      {state.pendingEncounterUid && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40">
+          <div className="panel-gilded flex flex-col items-center gap-3 px-6 py-5 text-center">
+            <div className="font-display text-sm text-gold-soft text-shadow-ink">
+              {encounterName ?? '몬스터'}와(과) 마주쳤다!
+            </div>
+            <div className="text-xs text-muted-foreground">전투를 시작할까?</div>
+            <div className="flex gap-2">
+              <Button variant="default" onClick={() => dispatch({ type: 'ENCOUNTER_FIGHT' })}>
+                전투하기
+              </Button>
+              <Button variant="outline" onClick={() => dispatch({ type: 'ENCOUNTER_FLEE' })}>
+                피하기
+              </Button>
+            </div>
           </div>
         </div>
       )}

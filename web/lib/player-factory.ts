@@ -49,6 +49,7 @@ export function createInitialGameState(): GameState {
       { itemId: 'feed-any', qty: 2 },
     ],
     fieldMonsters: [],
+    pendingEncounterUid: null,
     activeNpcId: null,
     activeShopId: null,
     battle: null,
