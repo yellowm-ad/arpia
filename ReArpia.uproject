@@ -1,13 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "4.22",
+	"EngineAssociation": "5.8",
 	"Category": "",
-	"Description": "",
-	"Modules": [
-		{
-			"Name": "ReArpia",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		}
-	]
+	"Description": ""
 }
