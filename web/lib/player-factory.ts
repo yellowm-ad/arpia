@@ -1,14 +1,15 @@
-import type { Element, GameState, Pet, PlayerCharacter } from '@/lib/types'
+import type { Element, GameState, Gender, Pet, PlayerCharacter } from '@/lib/types'
 import { computeStatsForLevel, jobTierForLevel, ZONES, STARTING_GOLD, DEFAULT_SETTINGS } from '@/lib/constants'
 import { autoLearnSkillIds } from '@/lib/mock-data'
 import { createPet, STARTER_PET_BY_ELEMENT } from '@/lib/pets'
 
-export function createPlayer(name: string, element: Element): PlayerCharacter {
+export function createPlayer(name: string, element: Element, gender: Gender = 'male'): PlayerCharacter {
   const stats = computeStatsForLevel(element, 1)
   const jobTier = jobTierForLevel(1)
   return {
     name: name || '이름없는 견습생',
     element,
+    gender,
     level: 1,
     exp: 0,
     jobTierId: jobTier.id,
@@ -26,7 +27,7 @@ export function createStarterPet(element: Element): Pet {
 }
 
 export function createInitialGameState(): GameState {
-  const player = createPlayer('', 'fire')
+  const player = createPlayer('', 'fire', 'male')
   const pet = createStarterPet('fire')
   const schoolZone = ZONES.find((z) => z.id === 'zone-school')!
 

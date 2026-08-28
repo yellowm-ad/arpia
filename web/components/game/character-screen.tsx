@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { HeroPortrait } from '@/components/game/portrait'
 import { ELEMENT_META, JOB_TIERS } from '@/lib/constants'
 import { itemById, SKILLS } from '@/lib/mock-data'
 import { getEffectiveStats } from '@/lib/derived'
@@ -41,10 +42,10 @@ export function CharacterScreen() {
       <div className="grid gap-4 sm:grid-cols-[220px_1fr]">
         <div className="flex flex-col items-center gap-2">
           <div
-            className="flex size-24 items-center justify-center rounded-full border-4"
+            className="h-32 w-24 overflow-hidden rounded-lg border-2"
             style={{ borderColor: elem.color as string, background: 'rgba(0,0,0,0.3)' }}
           >
-            <Image src={elem.icon} alt={elem.name} width={52} height={52} />
+            <HeroPortrait element={player.element} gender={player.gender} className="h-full w-full" />
           </div>
           <div className="text-center">
             <div className="font-display text-lg text-gold-soft">{player.name}</div>

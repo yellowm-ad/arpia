@@ -6,6 +6,7 @@ import { useGame } from '@/lib/game-state'
 import { ELEMENT_META, GRID_CELLS, ZONES, zoneAt } from '@/lib/constants'
 import { MONSTERS, NPCS } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
+import { HeroPortrait } from '@/components/game/portrait'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, MessageCircle } from 'lucide-react'
 
 const TILE = 64
@@ -229,10 +230,10 @@ export function WorldScreen() {
           {/* 플레이어 */}
           <Marker x={state.position.x} y={state.position.y} tile={TILE}>
             <div
-              className="flex size-9 items-center justify-center rounded-full border-2"
+              className="h-14 w-11 overflow-hidden rounded-md border-2"
               style={{ borderColor: elem.color as string, background: '#1a1435' }}
             >
-              <Image src={elem.icon} alt={elem.name} width={20} height={20} />
+              <HeroPortrait element={state.player.element} gender={state.player.gender} className="h-full w-full" />
             </div>
             <span className="text-[10px] font-semibold text-white whitespace-nowrap">{state.player.name}</span>
           </Marker>

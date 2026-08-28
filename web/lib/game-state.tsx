@@ -6,6 +6,7 @@ import type {
   Element,
   EquipSlot,
   GameState,
+  Gender,
   ScreenId,
 } from '@/lib/types'
 import {
@@ -34,7 +35,7 @@ import {
 } from '@/lib/battle-engine'
 
 export type Action =
-  | { type: 'START_GAME'; name: string; element: Element }
+  | { type: 'START_GAME'; name: string; element: Element; gender: Gender }
   | { type: 'SET_SCREEN'; screen: ScreenId }
   | { type: 'MOVE'; dx: number; dy: number }
   | { type: 'OPEN_NPC'; npcId: string }
@@ -88,7 +89,7 @@ function refreshLearnedSkills(element: string, level: number, tierId: string): s
 function reducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'START_GAME': {
-      const player = createPlayer(action.name, action.element)
+      const player = createPlayer(action.name, action.element, action.gender)
       const pet = createStarterPet(action.element)
       const fieldMonsters = generateFieldMonsters(state.settings.testMode)
       return { ...state, player, pet, ownedPets: [pet], fieldMonsters, pendingEncounterUid: null, screen: 'world', previousScreen: 'world' }

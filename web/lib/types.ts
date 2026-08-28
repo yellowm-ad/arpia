@@ -8,6 +8,8 @@
 export type Element = 'fire' | 'ice' | 'earth'
 export type ElementOrNeutral = Element | 'neutral'
 
+export type Gender = 'male' | 'female'
+
 /** 전직 5단계. 요구 레벨 1 / 10 / 20 / 30 / 40 */
 export type JobTierId = 'apprentice' | 'novice' | 'adept' | 'magus' | 'archmagus'
 
@@ -300,6 +302,7 @@ export interface FieldMonster {
 export interface PlayerCharacter {
   name: string
   element: Element
+  gender: Gender
   level: number
   exp: number
   jobTierId: JobTierId
