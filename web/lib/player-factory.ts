@@ -41,7 +41,7 @@ export function createInitialGameState(): GameState {
     position: { ...village.spawn },
     facing: 'down',
     currentMapId: 'village',
-    currentZoneId: 'z-magic-hall',
+    currentZoneId: 'z-quad',
     inventory: [
       { itemId: 'potion-hp-s', qty: 5 },
       { itemId: 'potion-mp-s', qty: 3 },

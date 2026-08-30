@@ -8,10 +8,38 @@ import { MAPS, zoneAt } from '@/lib/maps'
 import { MONSTERS, NPCS } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import { HeroPortrait } from '@/components/game/portrait'
+import { IsoWorld } from '@/components/game/iso-world'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, DoorOpen, MessageCircle, ShieldAlert } from 'lucide-react'
 
 const TILE = 64
-const MOVE_SPEED = 2.1 // 초당 이동 셀 수
+const MOVE_SPEED = 2.1 // 초당 이동 셀 수 (쿼터뷰 맵)
+const FLAT_MOVE_SPEED = 1.45 // 이미지 맵은 카메라를 당겨서 보므로 체감 속도 보정
+const IMG_ZOOM = 2.7 // 이미지 맵 확대 배율 — 캐릭터가 건물 사이를 걷는 스케일
+
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
+
+// 마을 NPC 폰(pawn) 색 — 역할별 로브/그림자/머리
+const NPC_ROLE_COLOR: Record<string, { robe: string; shade: string; hair: string }> = {
+  jobTrainer: { robe: '#6b53c0', shade: '#48376f', hair: '#d8d2e8' },
+  weaponMerchant: { robe: '#a85a2c', shade: '#6f3a1c', hair: '#3a2a1c' },
+  potionMerchant: { robe: '#3f9f7a', shade: '#2b6a52', hair: '#5a3a2a' },
+  toolMerchant: { robe: '#c9922f', shade: '#8a6320', hair: '#3a2f1c' },
+  petTamer: { robe: '#7fae4d', shade: '#557634', hair: '#2f2a1a' },
+  housing: { robe: '#8a8f9c', shade: '#5c606b', hair: '#d8d8e0' },
+  arenaMaster: { robe: '#b64430', shade: '#7c2c1f', hair: '#2a1a12' },
+  guard: { robe: '#5b6bd6', shade: '#3c489a', hair: '#2a2a30' },
+  templePriest: { robe: '#e6dcc0', shade: '#b7a980', hair: '#dcd6c4' },
+  saint: { robe: '#f2ede0', shade: '#cfc7b2', hair: '#e8d9b8' },
+  farmer: { robe: '#8a6a3a', shade: '#5e4726', hair: '#3a2a18' },
+  flavor: { robe: '#7a7f8c', shade: '#53585f', hair: '#3a3a44' },
+}
+
+const ELEM_SPRITE: Record<string, { robe: string; shade: string; hair: string; accent: string }> = {
+  fire: { robe: '#b5462f', shade: '#7f2e20', hair: '#efe4d2', accent: '#e8641f' },
+  ice: { robe: '#3f7fa6', shade: '#2b566f', hair: '#dfeef6', accent: '#6fc3e6' },
+  earth: { robe: '#6d7a3e', shade: '#4b5528', hair: '#e6ddc4', accent: '#caa246' },
+}
+const SKIN = '#f0d9bf'
 
 // 구역별 기본 배경 (원작·나무위키 삽화 미사용 — 전부 CSS 그라디언트로 자체 제작)
 function zoneBg(kind: string): string {
@@ -65,8 +93,11 @@ export function WorldScreen() {
   const { state, dispatch } = useGame()
   const viewportRef = useRef<HTMLDivElement>(null)
   const [viewportSize, setViewportSize] = useState({ w: 960, h: 640 })
+  const [moving, setMoving] = useState(false)
   const pressedKeys = useRef<Set<string>>(new Set())
   const lastTime = useRef<number | null>(null)
+  const mapIdRef = useRef(state.currentMapId)
+  mapIdRef.current = state.currentMapId
 
   useEffect(() => {
     const el = viewportRef.current
@@ -113,9 +144,13 @@ export function WorldScreen() {
       if (keys.has('arrowdown') || keys.has('s')) dy += 1
       if (keys.has('arrowleft') || keys.has('a')) dx -= 1
       if (keys.has('arrowright') || keys.has('d')) dx += 1
-      if (dx !== 0 || dy !== 0) {
+      const isMoving = dx !== 0 || dy !== 0
+      setMoving((prev) => (prev === isMoving ? prev : isMoving))
+      if (isMoving) {
         const len = Math.hypot(dx, dy) || 1
-        dispatch({ type: 'MOVE', dx: (dx / len) * MOVE_SPEED * dt, dy: (dy / len) * MOVE_SPEED * dt })
+        const rm = MAPS[mapIdRef.current].render
+        const spd = rm === 'image' || rm === 'iso' ? FLAT_MOVE_SPEED : MOVE_SPEED
+        dispatch({ type: 'MOVE', dx: (dx / len) * spd * dt, dy: (dy / len) * spd * dt })
       }
     }
     raf = requestAnimationFrame(tick)
@@ -150,6 +185,22 @@ export function WorldScreen() {
   const camX = viewportSize.w / 2 - state.position.x * TILE
   const camY = viewportSize.h / 2 - state.position.y * TILE
 
+  // 이미지 맵: 확대(IMG_ZOOM)한 좌표계에서 플레이어를 화면 중앙에 두되,
+  // 맵 밖 검은 여백이 보이지 않도록 카메라를 맵 경계 안으로 clamp.
+  const EFF = TILE * IMG_ZOOM
+  const planeW = map.grid.w * EFF
+  const planeH = map.grid.h * EFF
+  const flatCamX = clamp(
+    viewportSize.w / 2 - state.position.x * EFF,
+    Math.min(0, viewportSize.w - planeW),
+    0,
+  )
+  const flatCamY = clamp(
+    viewportSize.h / 2 - state.position.y * EFF,
+    Math.min(0, viewportSize.h - planeH),
+    0,
+  )
+
   const visibleMonsters = useMemo(() => {
     return state.fieldMonsters.filter((fm) => {
       const d = Math.hypot(fm.homeCell.x - state.position.x, fm.homeCell.y - state.position.y)
@@ -175,6 +226,117 @@ export function WorldScreen() {
     ? map.portals.find((p) => p.id === state.pendingPortalId)
     : null
 
+  const iso = map.render === 'iso'
+  const flat = !iso && !!map.bgImage
+
+  // ── 이미지 맵(평면): 캐릭터/폰이 장면 안에 서 있는 형태로 렌더 ──
+  const renderWorldSprites = () => (
+    <>
+      {tilePortals.map((p) => (
+        <PortalPawn
+          key={p.id}
+          x={p.cell.x}
+          y={p.cell.y}
+          eff={EFF}
+          kind={p.kind}
+          label={`${p.label}${p.requiredLevel ? ` · Lv.${p.requiredLevel}+` : ''}`}
+          onClick={() => dispatch({ type: 'USE_PORTAL', portalId: p.id })}
+        />
+      ))}
+      {gateCell && (
+        <PortalPawn
+          x={gateCell.x}
+          y={gateCell.y}
+          eff={EFF}
+          kind="gate"
+          label="군 통문"
+          onClick={() => dispatch({ type: 'OPEN_GATE' })}
+        />
+      )}
+      {mapNpcs.map((npc) => (
+        <NpcPawn
+          key={npc.id}
+          npc={npc}
+          eff={EFF}
+          active={interactTarget?.id === npc.id}
+          onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}
+        />
+      ))}
+      <HeroSprite
+        x={state.position.x}
+        y={state.position.y}
+        eff={EFF}
+        element={state.player.element}
+        facing={state.facing}
+        moving={moving}
+      />
+    </>
+  )
+
+  // ── 쿼터뷰(그라디언트) 맵: 기존 카드형 마커 ──
+  const renderQuarterMarkers = () => (
+    <>
+      {tilePortals.map((p) => (
+        <Marker key={p.id} x={p.cell.x} y={p.cell.y} tile={TILE} onClick={() => dispatch({ type: 'USE_PORTAL', portalId: p.id })}>
+          <div
+            className={`flex size-8 items-center justify-center rounded-full border-2 ${p.kind === 'exit' ? 'border-sky-300 bg-sky-950/80' : 'border-fuchsia-300 bg-fuchsia-950/80'}`}
+          >
+            <DoorOpen className={`size-4 ${p.kind === 'exit' ? 'text-sky-200' : 'text-fuchsia-200'}`} />
+          </div>
+          <span className="text-[9px] font-semibold text-fuchsia-100 whitespace-nowrap">
+            {p.label}
+            {p.requiredLevel ? ` · Lv.${p.requiredLevel}+` : ''}
+          </span>
+        </Marker>
+      ))}
+
+      {gateCell && (
+        <Marker x={gateCell.x} y={gateCell.y} tile={TILE} onClick={() => dispatch({ type: 'OPEN_GATE' })}>
+          <div className="flex size-9 items-center justify-center rounded-md border-2 border-amber-300 bg-amber-950/80">
+            <DoorOpen className="size-5 text-amber-200" />
+          </div>
+          <span className="text-[10px] font-display text-amber-100 whitespace-nowrap">군 통문</span>
+        </Marker>
+      )}
+
+      {mapNpcs.map((npc) => (
+        <Marker key={npc.id} x={npc.cell.x} y={npc.cell.y} tile={TILE} onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}>
+          <div className="flex size-8 items-center justify-center rounded-full border-2 border-gold bg-primary-soft">
+            <Image src={npc.icon} alt={npc.name} width={18} height={18} />
+          </div>
+          <span className="text-[10px] font-semibold text-gold-soft whitespace-nowrap">{npc.name}</span>
+        </Marker>
+      ))}
+
+      {visibleMonsters.map((fm) => {
+        const def = MONSTERS.find((m) => m.id === fm.monsterId)
+        if (!def) return null
+        return (
+          <Marker key={fm.uid} x={fm.homeCell.x} y={fm.homeCell.y} tile={TILE} wanderSeed={fm.wanderSeed}>
+            <div
+              className={`flex size-7 items-center justify-center rounded-full border-2 ${def.isTestMonster ? 'border-emerald-400 bg-emerald-950' : 'border-red-400/80 bg-red-950/80'}`}
+            >
+              <Image src={def.icon} alt={def.name} width={16} height={16} />
+            </div>
+            <span className={`text-[9px] font-semibold whitespace-nowrap ${def.isTestMonster ? 'text-emerald-200' : 'text-red-200'}`}>
+              {def.isTestMonster ? 'TEST' : def.name}
+            </span>
+          </Marker>
+        )
+      })}
+
+      <Marker x={state.position.x} y={state.position.y} tile={TILE}>
+        <div
+          className="h-14 w-11 overflow-hidden rounded-md border-2"
+          style={{ borderColor: elem.color as string, background: '#1a1435' }}
+        >
+          <HeroPortrait element={state.player.element} gender={state.player.gender} className="h-full w-full" />
+        </div>
+        <span className="text-[10px] font-semibold text-white whitespace-nowrap">{state.player.name}</span>
+      </Marker>
+    </>
+  )
+
   const dpadPress = (dx: number, dy: number) => {
     const key = dx === -1 ? 'arrowleft' : dx === 1 ? 'arrowright' : dy === -1 ? 'arrowup' : 'arrowdown'
     pressedKeys.current.add(key)
@@ -185,125 +347,116 @@ export function WorldScreen() {
   }
 
   return (
-    <div ref={viewportRef} className="relative h-full w-full overflow-hidden bg-[#080a1a]" style={{ perspective: 1500 }}>
-      <div
-        className="absolute left-0 top-0"
-        style={{
-          transform: `translate3d(${viewportSize.w / 2}px, ${viewportSize.h * 0.32}px, 0) rotateX(55deg) rotateZ(45deg)`,
-          transformStyle: 'preserve-3d',
-        }}
-      >
+    <div ref={viewportRef} className="relative h-full w-full overflow-hidden bg-[#0b1020]" style={{ perspective: 1500 }}>
+      {iso ? (
+        <>
+          <IsoWorld
+            state={state}
+            dispatch={dispatch}
+            viewportSize={viewportSize}
+            moving={moving}
+            interactId={interactTarget?.id ?? null}
+          />
+          {/* 골든아워 따뜻한 앰비언트 */}
+          <div
+            className="pointer-events-none absolute inset-0 z-10"
+            style={{
+              background:
+                'linear-gradient(200deg, rgba(255,214,150,0.16) 0%, rgba(255,196,140,0.06) 38%, rgba(60,44,80,0.10) 100%)',
+              mixBlendMode: 'soft-light',
+            }}
+          />
+          {/* 가장자리 비네트 — 아이소 다이아몬드 여백을 어둡게 */}
+          <div
+            className="pointer-events-none absolute inset-0 z-10"
+            style={{ background: 'radial-gradient(135% 105% at 50% 44%, rgba(0,0,0,0) 50%, rgba(20,14,28,0.70) 100%)' }}
+          />
+        </>
+      ) : flat ? (
+        /* ── 이미지 맵: 쿼터뷰 일러스트를 확대해 카메라를 따라다니며 탐험 ── */
+        <div className="absolute left-0 top-0" style={{ transform: `translate3d(${flatCamX}px, ${flatCamY}px, 0)`, willChange: 'transform' }}>
+          <div
+            className="absolute left-0 top-0"
+            style={{
+              width: planeW,
+              height: planeH,
+              backgroundImage: `url(${map.bgImage})`,
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+              backgroundColor: '#0e1230',
+              boxShadow: '0 0 0 6px rgba(217,164,65,0.35), 0 30px 80px rgba(0,0,0,0.6)',
+            }}
+          />
+          {/* 지면 위 은은한 비네트 — 장면 깊이감 */}
+          <div
+            className="pointer-events-none absolute left-0 top-0"
+            style={{
+              width: planeW,
+              height: planeH,
+              background:
+                'radial-gradient(120% 90% at 50% 42%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.22) 100%), linear-gradient(180deg, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0) 16%)',
+            }}
+          />
+          {renderWorldSprites()}
+        </div>
+      ) : (
+        /* ── 그라디언트 맵: 쿼터뷰 렌더 ── */
         <div
-          className="absolute"
+          className="absolute left-0 top-0"
           style={{
-            transform: `translate3d(${camX - viewportSize.w / 2}px, ${camY - viewportSize.h * 0.32}px, 0)`,
+            transform: `translate3d(${viewportSize.w / 2}px, ${viewportSize.h * 0.32}px, 0) rotateX(55deg) rotateZ(45deg)`,
             transformStyle: 'preserve-3d',
           }}
         >
-          {/* 바닥 그리드 */}
           <div
             className="absolute"
             style={{
-              left: 0,
-              top: 0,
-              width: map.grid.w * TILE,
-              height: map.grid.h * TILE,
-              backgroundImage:
-                `linear-gradient(rgba(217,164,65,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.10) 1px, transparent 1px), ${zoneBg(map.bg)}`,
-              backgroundSize: `${TILE}px ${TILE}px, ${TILE}px ${TILE}px, cover`,
-              backgroundColor: '#0e1230',
-              boxShadow: '0 0 0 4px rgba(217,164,65,0.4), inset 0 0 120px rgba(0,0,0,0.55)',
+              transform: `translate3d(${camX - viewportSize.w / 2}px, ${camY - viewportSize.h * 0.32}px, 0)`,
+              transformStyle: 'preserve-3d',
             }}
-          />
-
-          {/* 구역 타일 (마을 등 town 맵) */}
-          {map.zones.map((zone) => (
-            <div key={zone.id}>
-              <div
-                className="absolute"
-                style={{
-                  left: zone.cell.x0 * TILE,
-                  top: zone.cell.y0 * TILE,
-                  width: (zone.cell.x1 - zone.cell.x0) * TILE,
-                  height: (zone.cell.y1 - zone.cell.y0) * TILE,
-                  background: zoneBg(zone.kind),
-                  border: `2px solid ${zone.color}cc`,
-                  boxShadow: 'inset 0 0 40px rgba(0,0,0,0.35)',
-                }}
-              />
-              <BillboardLabel x={zone.cell.x0 + 0.15} y={zone.cell.y0 + 0.15} tile={TILE}>
-                <span className="rounded bg-black/60 px-1.5 py-0.5 text-[11px] font-display text-gold-soft text-shadow-ink whitespace-nowrap">
-                  {zone.name}
-                </span>
-              </BillboardLabel>
-            </div>
-          ))}
-
-          {/* 하위 스테이지 진입 / 상위 맵 복귀 포탈 */}
-          {tilePortals.map((p) => (
-            <Marker key={p.id} x={p.cell.x} y={p.cell.y} tile={TILE} onClick={() => dispatch({ type: 'USE_PORTAL', portalId: p.id })}>
-              <div
-                className={`flex size-8 items-center justify-center rounded-full border-2 ${p.kind === 'exit' ? 'border-sky-300 bg-sky-950/80' : 'border-fuchsia-300 bg-fuchsia-950/80'}`}
-              >
-                <DoorOpen className={`size-4 ${p.kind === 'exit' ? 'text-sky-200' : 'text-fuchsia-200'}`} />
-              </div>
-              <span className="text-[9px] font-semibold text-fuchsia-100 whitespace-nowrap">
-                {p.label}
-                {p.requiredLevel ? ` · Lv.${p.requiredLevel}+` : ''}
-              </span>
-            </Marker>
-          ))}
-
-          {/* 군 통문 */}
-          {gateCell && (
-            <Marker x={gateCell.x} y={gateCell.y} tile={TILE} onClick={() => dispatch({ type: 'OPEN_GATE' })}>
-              <div className="flex size-9 items-center justify-center rounded-md border-2 border-amber-300 bg-amber-950/80">
-                <DoorOpen className="size-5 text-amber-200" />
-              </div>
-              <span className="text-[10px] font-display text-amber-100 whitespace-nowrap">군 통문</span>
-            </Marker>
-          )}
-
-          {/* NPC 마커 */}
-          {mapNpcs.map((npc) => (
-            <Marker key={npc.id} x={npc.cell.x} y={npc.cell.y} tile={TILE} onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}>
-              <div className="flex size-8 items-center justify-center rounded-full border-2 border-gold bg-primary-soft">
-                <Image src={npc.icon} alt={npc.name} width={18} height={18} />
-              </div>
-              <span className="text-[10px] font-semibold text-gold-soft whitespace-nowrap">{npc.name}</span>
-            </Marker>
-          ))}
-
-          {/* 필드 몬스터 마커 */}
-          {visibleMonsters.map((fm) => {
-            const def = MONSTERS.find((m) => m.id === fm.monsterId)
-            if (!def) return null
-            return (
-              <Marker key={fm.uid} x={fm.homeCell.x} y={fm.homeCell.y} tile={TILE} wanderSeed={fm.wanderSeed}>
-                <div
-                  className={`flex size-7 items-center justify-center rounded-full border-2 ${def.isTestMonster ? 'border-emerald-400 bg-emerald-950' : 'border-red-400/80 bg-red-950/80'}`}
-                >
-                  <Image src={def.icon} alt={def.name} width={16} height={16} />
-                </div>
-                <span className={`text-[9px] font-semibold whitespace-nowrap ${def.isTestMonster ? 'text-emerald-200' : 'text-red-200'}`}>
-                  {def.isTestMonster ? 'TEST' : def.name}
-                </span>
-              </Marker>
-            )
-          })}
-
-          {/* 플레이어 */}
-          <Marker x={state.position.x} y={state.position.y} tile={TILE}>
+          >
+            {/* 바닥 그리드 */}
             <div
-              className="h-14 w-11 overflow-hidden rounded-md border-2"
-              style={{ borderColor: elem.color as string, background: '#1a1435' }}
-            >
-              <HeroPortrait element={state.player.element} gender={state.player.gender} className="h-full w-full" />
-            </div>
-            <span className="text-[10px] font-semibold text-white whitespace-nowrap">{state.player.name}</span>
-          </Marker>
+              className="absolute"
+              style={{
+                left: 0,
+                top: 0,
+                width: map.grid.w * TILE,
+                height: map.grid.h * TILE,
+                backgroundImage: `linear-gradient(rgba(217,164,65,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.10) 1px, transparent 1px), ${zoneBg(map.bg)}`,
+                backgroundSize: `${TILE}px ${TILE}px, ${TILE}px ${TILE}px, cover`,
+                backgroundColor: '#0e1230',
+                boxShadow: '0 0 0 4px rgba(217,164,65,0.4), inset 0 0 120px rgba(0,0,0,0.55)',
+              }}
+            />
+
+            {/* 구역 타일 (마을 등 town 맵) */}
+            {map.zones.map((zone) => (
+              <div key={zone.id}>
+                <div
+                  className="absolute"
+                  style={{
+                    left: zone.cell.x0 * TILE,
+                    top: zone.cell.y0 * TILE,
+                    width: (zone.cell.x1 - zone.cell.x0) * TILE,
+                    height: (zone.cell.y1 - zone.cell.y0) * TILE,
+                    background: zoneBg(zone.kind),
+                    border: `2px solid ${zone.color}cc`,
+                    boxShadow: 'inset 0 0 40px rgba(0,0,0,0.35)',
+                  }}
+                />
+                <BillboardLabel x={zone.cell.x0 + 0.15} y={zone.cell.y0 + 0.15} tile={TILE}>
+                  <span className="rounded bg-black/60 px-1.5 py-0.5 text-[11px] font-display text-gold-soft text-shadow-ink whitespace-nowrap">
+                    {zone.name}
+                  </span>
+                </BillboardLabel>
+              </div>
+            ))}
+
+            {renderQuarterMarkers()}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 상단 좌측 구역 안내 */}
       <div className="pointer-events-none absolute bottom-3 left-3 z-20">
@@ -433,6 +586,233 @@ function DpadBtn({ icon, onDown, onUp }: { icon: ReactNode; onDown: () => void; 
   )
 }
 
+interface MarkerProps {
+  x: number
+  y: number
+  tile: number
+  children: ReactNode
+  onClick?: () => void
+  wanderSeed?: number
+}
+
+// ────────────────────────────────────────────────────────────────
+// 이미지 맵(평면)용 인게임 스프라이트 — 캐릭터/NPC/포탈이 장면에 서 있는 형태
+// 좌표 (x,y) 는 발밑(그라운드) 기준. 그림자는 발밑에, 몸은 위로 세운다.
+// ────────────────────────────────────────────────────────────────
+
+/** 작은 SD(치비) 인물 실루엣. viewBox 40x54, 발끝이 (20,54) */
+function ChibiFigure({
+  robe,
+  shade,
+  hair,
+  accent,
+  back,
+}: {
+  robe: string
+  shade: string
+  hair: string
+  accent?: string
+  back?: boolean // 위쪽을 볼 때 뒤통수
+}) {
+  return (
+    <svg width="40" height="54" viewBox="0 0 40 54" style={{ overflow: 'visible' }}>
+      {/* 다리 */}
+      <rect x="14" y="38" width="5.5" height="12" rx="2.5" fill={shade} />
+      <rect x="20.5" y="38" width="5.5" height="12" rx="2.5" fill={shade} />
+      {/* 로브(몸통) */}
+      <path d="M11 24 Q20 19 29 24 L32 44 Q20 49 8 44 Z" fill={robe} stroke="#1c1712" strokeWidth="1.4" />
+      <path d="M20 20 L20 46" stroke={shade} strokeWidth="1.6" opacity="0.7" />
+      <rect x="15" y="33" width="10" height="3.4" rx="1.5" fill={accent ?? shade} />
+      {/* 팔 */}
+      <path d="M11 25 q-4 6 -2 13" fill="none" stroke={robe} strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M29 25 q4 6 2 13" fill="none" stroke={robe} strokeWidth="4.5" strokeLinecap="round" />
+      {/* 머리 */}
+      <circle cx="20" cy="14" r="8.4" fill={SKIN} stroke="#1c1712" strokeWidth="1.2" />
+      {/* 머리카락 */}
+      <path
+        d={back ? 'M10.5 15 Q10 3 20 3 Q30 3 29.5 15 Q26 9 20 9 Q14 9 10.5 15 Z' : 'M11 13 Q11 3 20 3 Q29 3 29 13 Q29 7 24 6 Q22 10 20 9 Q18 10 16 6 Q11 7 11 13 Z'}
+        fill={hair}
+        stroke="#1c1712"
+        strokeWidth="1"
+      />
+      {!back && (
+        <>
+          <circle cx="16.6" cy="15" r="1.5" fill="#241a12" />
+          <circle cx="23.4" cy="15" r="1.5" fill="#241a12" />
+        </>
+      )}
+      {accent && !back && <circle cx="33" cy="30" r="2.4" fill={accent} opacity="0.85" />}
+    </svg>
+  )
+}
+
+/** 플레이어 캐릭터 */
+function HeroSprite({
+  x,
+  y,
+  eff,
+  element,
+  facing,
+  moving,
+}: {
+  x: number
+  y: number
+  eff: number
+  element: string
+  facing: 'up' | 'down' | 'left' | 'right'
+  moving: boolean
+}) {
+  const p = ELEM_SPRITE[element] ?? ELEM_SPRITE.fire
+  const flip = facing === 'left'
+  const back = facing === 'up'
+  return (
+    <div className="pointer-events-none absolute z-10" style={{ left: x * eff, top: y * eff }}>
+      {/* 발밑 그림자 */}
+      <div
+        style={{
+          position: 'absolute',
+          left: -16,
+          top: -6,
+          width: 32,
+          height: 11,
+          borderRadius: '50%',
+          background: 'radial-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0))',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          bottom: 0,
+          transform: `translate(-50%, 0) scaleX(${flip ? -1 : 1})`,
+          transformOrigin: 'bottom center',
+          animation: moving ? 'sprite-walk 0.4s ease-in-out infinite' : 'sprite-idle 2.6s ease-in-out infinite',
+          filter: 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))',
+        }}
+      >
+        <ChibiFigure robe={p.robe} shade={p.shade} hair={p.hair} accent={p.accent} back={back} />
+      </div>
+    </div>
+  )
+}
+
+/** 마을 NPC */
+function NpcPawn({
+  npc,
+  eff,
+  active,
+  onClick,
+}: {
+  npc: { id: string; name: string; role: string; cell: { x: number; y: number } }
+  eff: number
+  active: boolean
+  onClick: () => void
+}) {
+  const c = NPC_ROLE_COLOR[npc.role] ?? NPC_ROLE_COLOR.flavor
+  return (
+    <div
+      className="absolute z-10 cursor-pointer"
+      style={{ left: npc.cell.x * eff, top: npc.cell.y * eff }}
+      onClick={onClick}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          left: -14,
+          top: -5,
+          width: 28,
+          height: 9,
+          borderRadius: '50%',
+          background: 'radial-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0))',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          bottom: 0,
+          transform: 'translate(-50%, 0) scale(0.92)',
+          transformOrigin: 'bottom center',
+          animation: 'sprite-idle 2.8s ease-in-out infinite',
+          filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))',
+        }}
+      >
+        <ChibiFigure robe={c.robe} shade={c.shade} hair={c.hair} />
+      </div>
+      {/* 이름표 + 대화 표시 */}
+      <div style={{ position: 'absolute', left: 0, bottom: 64, transform: 'translate(-50%, 0)' }}>
+        <div className="flex flex-col items-center gap-0.5 whitespace-nowrap">
+          <span
+            className={`rounded px-1.5 py-0.5 text-[11px] font-semibold text-shadow-ink ${
+              active ? 'bg-gold text-black' : 'bg-black/65 text-gold-soft'
+            }`}
+          >
+            {npc.name}
+          </span>
+          <MessageCircle className={`size-3.5 ${active ? 'text-gold-soft' : 'text-white/70'}`} style={{ animation: 'sprite-idle 1.6s ease-in-out infinite' }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** 포탈 / 군 통문 — 지면의 빛무리 + 문 아이콘 */
+function PortalPawn({
+  x,
+  y,
+  eff,
+  kind,
+  label,
+  onClick,
+}: {
+  x: number
+  y: number
+  eff: number
+  kind: 'gate' | 'portal' | 'exit'
+  label: string
+  onClick: () => void
+}) {
+  const color = kind === 'gate' ? '#f0c040' : kind === 'exit' ? '#7fd0f0' : '#e879f9'
+  const big = kind === 'gate'
+  return (
+    <div className="absolute z-[9] cursor-pointer" style={{ left: x * eff, top: y * eff }} onClick={onClick}>
+      {/* 지면 빛무리 */}
+      <div
+        style={{
+          position: 'absolute',
+          left: big ? -34 : -24,
+          top: big ? -16 : -12,
+          width: big ? 68 : 48,
+          height: big ? 26 : 18,
+          borderRadius: '50%',
+          background: `radial-gradient(${color}cc, ${color}00 70%)`,
+          animation: 'portal-pulse 2s ease-in-out infinite',
+        }}
+      />
+      <div style={{ position: 'absolute', left: 0, bottom: 6, transform: 'translate(-50%, 0)' }}>
+        <div
+          className="flex items-center justify-center rounded-md border-2"
+          style={{
+            width: big ? 34 : 26,
+            height: big ? 34 : 26,
+            borderColor: color,
+            background: 'rgba(10,8,16,0.78)',
+            boxShadow: `0 0 12px ${color}aa`,
+          }}
+        >
+          <DoorOpen style={{ width: big ? 18 : 14, height: big ? 18 : 14, color }} />
+        </div>
+      </div>
+      <div
+        className={`absolute whitespace-nowrap rounded bg-black/65 px-1.5 py-0.5 text-[10px] font-semibold ${big ? 'font-display' : ''}`}
+        style={{ left: 0, bottom: big ? 46 : 38, transform: 'translate(-50%, 0)', color }}
+      >
+        {label}
+      </div>
+    </div>
+  )
+}
+
 function Marker({
   x,
   y,
@@ -440,14 +820,7 @@ function Marker({
   children,
   onClick,
   wanderSeed,
-}: {
-  x: number
-  y: number
-  tile: number
-  children: ReactNode
-  onClick?: () => void
-  wanderSeed?: number
-}) {
+}: MarkerProps) {
   return (
     <div
       className="absolute"

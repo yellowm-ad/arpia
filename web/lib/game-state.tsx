@@ -90,6 +90,16 @@ function refreshLearnedSkills(element: string, level: number, tierId: string): s
   return autoLearnSkillIds(element, level, JOB_TIER_ORDER.indexOf(tierId as never))
 }
 
+const BODY_R = 0.24 // 캐릭터 반경(셀) — 이 만큼 건물 벽에서 떨어져 선다
+function blockedAt(mapId: GameState['currentMapId'], x: number, y: number): boolean {
+  const b = MAPS[mapId].blockers
+  if (!b) return false
+  for (const r of b) {
+    if (x > r.x0 - BODY_R && x < r.x1 + BODY_R && y > r.y0 - BODY_R && y < r.y1 + BODY_R) return true
+  }
+  return false
+}
+
 function reducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'START_GAME': {
@@ -102,7 +112,7 @@ function reducer(state: GameState, action: Action): GameState {
         pet,
         ownedPets: [pet],
         currentMapId: 'village',
-        currentZoneId: 'z-magic-hall',
+        currentZoneId: 'z-quad',
         position: { ...MAPS.village.spawn },
         fieldMonsters,
         pendingEncounterUid: null,
@@ -128,8 +138,27 @@ function reducer(state: GameState, action: Action): GameState {
       )
         return state
       const map = MAPS[state.currentMapId]
-      const nx = Math.max(0.2, Math.min(map.grid.w - 0.2, state.position.x + action.dx))
-      const ny = Math.max(0.2, Math.min(map.grid.h - 0.2, state.position.y + action.dy))
+      const clampX = (v: number) => Math.max(0.2, Math.min(map.grid.w - 0.2, v))
+      const clampY = (v: number) => Math.max(0.2, Math.min(map.grid.h - 0.2, v))
+      const ox = state.position.x
+      const oy = state.position.y
+      // 건물 충돌: 대각선이 막히면 x/y 축으로 슬라이드
+      let nx = clampX(ox + action.dx)
+      let ny = clampY(oy + action.dy)
+      if (blockedAt(state.currentMapId, nx, ny)) {
+        const slideX = clampX(ox + action.dx)
+        const slideY = clampY(oy + action.dy)
+        if (!blockedAt(state.currentMapId, slideX, oy)) {
+          nx = slideX
+          ny = oy
+        } else if (!blockedAt(state.currentMapId, ox, slideY)) {
+          nx = ox
+          ny = slideY
+        } else {
+          nx = ox
+          ny = oy
+        }
+      }
       const zone = zoneAt(map, nx, ny)
       const facing =
         Math.abs(action.dx) > Math.abs(action.dy)

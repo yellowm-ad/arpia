@@ -320,8 +320,21 @@ export interface GameMap {
   grid: { w: number; h: number }
   /** 바닥 배경 키 (world-screen 의 zoneBg 스위치) */
   bg: ZoneKind | string
+  /**
+   * 렌더 방식.
+   *  'gradient'(기본) = CSS 쿼터뷰 · 'image' = bgImage 평면 · 'iso' = 아이소메트릭 도트 엔진
+   */
+  render?: 'gradient' | 'image' | 'iso'
+  /** render:'image' 일 때 배경 일러스트 경로 */
+  bgImage?: string
+  /** render:'iso' 일 때: 셀별 지면 타일 종류 */
+  tileAt?: (x: number, y: number) => import('./iso').TileKind
+  /** render:'iso' 일 때: 건물·자연물 등 배치 오브젝트 */
+  props?: import('./iso').PropDef[]
   /** 맵 내부 라벨 구역. 단순 필드 맵은 빈 배열 */
   zones: ZoneDef[]
+  /** 이동 불가 사각형(셀 좌표) — 건물·분수 등. 비면 자유 이동 */
+  blockers?: { x0: number; y0: number; x1: number; y1: number }[]
   /** field 맵: 명시 몬스터 id 풀 (우선) */
   monsterPool?: string[]
   /** field 맵: 풀 미지정 시 이 kind 로 몬스터 조회 */
