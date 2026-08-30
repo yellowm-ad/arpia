@@ -13,10 +13,13 @@ const ROLE_LABEL: Record<string, string> = {
   potionMerchant: '물약 상인',
   toolMerchant: '도구 상인',
   petTamer: '펫 조련사',
-  housing: '기숙사 촌장',
+  housing: '하우징 촌장',
   arenaMaster: '투기장장',
   guard: '경비대장',
   flavor: '주민',
+  templePriest: '신관',
+  saint: '성녀',
+  farmer: '농부',
 }
 
 export function DialogueScreen() {

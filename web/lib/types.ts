@@ -253,6 +253,19 @@ export type ZoneKind =
   | 'sea'
   | 'ruins'
   | 'field'
+  // 재설계로 추가된 구역/맵 종류
+  | 'plaza'
+  | 'park'
+  | 'farm'
+  | 'temple'
+  | 'cave'
+  | 'mine'
+  | 'swamp'
+  | 'deepsea'
+  | 'atlantis'
+  | 'graveyard'
+  | 'volcano'
+  | 'demon'
 
 export interface ZoneDef {
   id: string
@@ -266,6 +279,62 @@ export interface ZoneDef {
   recommendedLevel?: number
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 멀티맵 / 포탈 — 메인 마을 + 야생 스테이지들을 독립된 맵으로 분리
+// ─────────────────────────────────────────────────────────────────────────────
+export type MapId =
+  | 'village'
+  | 'forest'
+  | 'cave'
+  | 'mine'
+  | 'swamp'
+  | 'sea'
+  | 'deepsea'
+  | 'atlantis'
+  | 'ruins'
+  | 'graveyard'
+  | 'temple-ruin'
+  | 'volcano'
+  | 'demon-village'
+  | 'demon-castle'
+
+/** 포탈: 타일에 서면(또는 군 통문에서 선택하면) 다른 맵으로 이동 */
+export interface Portal {
+  id: string
+  cell: { x: number; y: number }
+  to: MapId
+  /** 목적지 도착 위치. 생략 시 목적지 맵의 spawn */
+  toSpawn?: { x: number; y: number }
+  label: string
+  /** 안내용 권장 레벨(입장 자체는 막지 않음) */
+  requiredLevel?: number
+  /** gate=군 통문(메뉴형) · portal=하위 스테이지 진입 타일 · exit=상위 맵 복귀 타일 */
+  kind: 'gate' | 'portal' | 'exit'
+}
+
+export interface GameMap {
+  id: MapId
+  name: string
+  /** town=몬스터 없는 안전지대 · field=몬스터 배회 */
+  kind: 'town' | 'field'
+  grid: { w: number; h: number }
+  /** 바닥 배경 키 (world-screen 의 zoneBg 스위치) */
+  bg: ZoneKind | string
+  /** 맵 내부 라벨 구역. 단순 필드 맵은 빈 배열 */
+  zones: ZoneDef[]
+  /** field 맵: 명시 몬스터 id 풀 (우선) */
+  monsterPool?: string[]
+  /** field 맵: 풀 미지정 시 이 kind 로 몬스터 조회 */
+  monsterZoneKind?: ZoneKind
+  /** 셀당 몬스터 수 (기본 1) */
+  monsterDensity?: number
+  recommendedLevel?: number
+  portals: Portal[]
+  spawn: { x: number; y: number }
+  /** 전투 패배 시 리스폰 위치 (village 전용) */
+  respawn?: { x: number; y: number }
+}
+
 export type NpcRole =
   | 'jobTrainer'
   | 'weaponMerchant'
@@ -276,6 +345,9 @@ export type NpcRole =
   | 'arenaMaster'
   | 'guard'
   | 'flavor'
+  | 'templePriest'
+  | 'saint'
+  | 'farmer'
 
 export interface NpcDef {
   id: string
@@ -366,10 +438,13 @@ export interface GameState {
   ownedPets: Pet[] // 보유 펫 도감(활성 펫 포함)
   position: { x: number; y: number }
   facing: 'up' | 'down' | 'left' | 'right'
+  currentMapId: MapId
   currentZoneId: string
   inventory: InventorySlot[]
-  fieldMonsters: FieldMonster[]
+  fieldMonsters: FieldMonster[] // 현재 맵의 몬스터만 보유
   pendingEncounterUid: string | null // 접촉 시 전투 여부를 묻는 대상
+  pendingPortalId: string | null // 접촉 시 이동 여부를 묻는 포탈
+  gateOpen: boolean // 군 통문 목적지 선택 오버레이
   activeNpcId: string | null
   activeShopId: string | null
   battle: BattleState | null

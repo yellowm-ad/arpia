@@ -282,15 +282,25 @@ export function monstersForZoneKind(kind: string): MonsterDef[] {
 // NPC — 설계: §9.1
 // ============================================================================
 export const NPCS: NpcDef[] = [
-  { id: 'npc-job-trainer', name: '미르엘 교수', role: 'jobTrainer', icon: '/images/npc/professor.svg', zoneId: 'zone-school', cell: { x: 1.5, y: 1.5 }, greeting: ['어서 오렴, 견습생. 나는 전직을 담당하는 미르엘이란다.', '레벨이 충분히 오르면 언제든 찾아오렴 — 다음 단계로 이끌어주마.'] },
-  { id: 'npc-librarian', name: '사서 오웬', role: 'flavor', icon: '/images/npc/librarian.svg', zoneId: 'zone-school', cell: { x: 0.8, y: 2.2 }, greeting: ['도서관에는 아직 정리 중인 마법서가 많단다. 조용히 둘러보렴.'] },
-  { id: 'npc-weapon', name: '대장장이 반', role: 'weaponMerchant', icon: '/images/npc/blacksmith.svg', zoneId: 'zone-shop', cell: { x: 7.5, y: 1.2 }, greeting: ['속성별 완드, 다 갖춰놨다네. 전직 단계에 맞는 걸로 골라 가시게.'], shopItemIds: [...wands.map((w) => w.id), ...robes.map((r) => r.id), ...hats.map((h) => h.id), ...accessories.map((a) => a.id)] },
-  { id: 'npc-potion', name: '약사 셀린', role: 'potionMerchant', icon: '/images/npc/alchemist.svg', zoneId: 'zone-shop', cell: { x: 8.5, y: 1.8 }, greeting: ['신선한 물약이 방금 들어왔어요. 전투 전엔 꼭 챙기세요!'], shopItemIds: potions.map((p) => p.id) },
-  { id: 'npc-tool', name: '만물상 토비', role: 'toolMerchant', icon: '/images/npc/tinker.svg', zoneId: 'zone-shop', cell: { x: 8.0, y: 2.4 }, greeting: ['도구는 다 여기 있습니다. 가속의 모래, 이거 전투에서 꽤 쓸만해요.'], shopItemIds: tools.map((t) => t.id) },
-  { id: 'npc-tamer', name: '조련사 리코', role: 'petTamer', icon: '/images/npc/librarian.svg', zoneId: 'zone-shop', cell: { x: 7.2, y: 2.6 }, greeting: ['펫한테 새 재주를 가르쳐 볼까? 먹이도 팔고 있어.'], shopItemIds: feeds.map((f) => f.id) },
-  { id: 'npc-elder', name: '촌장 헬가', role: 'housing', icon: '/images/npc/elder.svg', zoneId: 'zone-dorm', cell: { x: 1.5, y: 5.0 }, greeting: ['기숙사 마을에 온 걸 환영하네. 하우징은 다음 업데이트에서 만나볼 걸세.'] },
-  { id: 'npc-arena', name: '투기장장 그로먼', role: 'arenaMaster', icon: '/images/npc/arena-master.svg', zoneId: 'zone-plaza', cell: { x: 5, y: 5 }, greeting: ['콜로세움 대전은 준비 중이다! 조금만 기다려다오.'] },
-  { id: 'npc-guard', name: '경비대장 로한', role: 'guard', icon: '/images/npc/guard.svg', zoneId: 'zone-research', cell: { x: 8.5, y: 5.0 }, greeting: ['남동쪽 폐허는 위험하다. Lv.10은 넘겨야 살아 돌아올 게다.'] },
+  // ── 학교 지구 (마법동) ──
+  { id: 'npc-job-trainer', name: '미르엘 교수', role: 'jobTrainer', icon: '/images/npc/professor.svg', zoneId: 'z-magic-hall', cell: { x: 1.4, y: 1.4 }, greeting: ['어서 오렴, 견습생. 나는 전직을 담당하는 미르엘이란다.', '레벨이 충분히 오르면 언제든 찾아오렴 — 다음 단계로 이끌어주마.'] },
+  { id: 'npc-librarian', name: '사서 오웬', role: 'flavor', icon: '/images/npc/librarian.svg', zoneId: 'z-magic-hall', cell: { x: 2.3, y: 2.4 }, greeting: ['마법동 도서관에는 아직 정리 중인 마법서가 많단다. 조용히 둘러보렴.', '연금술동과 마도구동도 둘러보면 좋을 게야.'] },
+  // ── 별빛 상점가 ──
+  { id: 'npc-weapon', name: '대장장이 반', role: 'weaponMerchant', icon: '/images/npc/blacksmith.svg', zoneId: 'z-shops', cell: { x: 10.4, y: 6.2 }, greeting: ['속성별 완드, 다 갖춰놨다네. 전직 단계에 맞는 걸로 골라 가시게.'], shopItemIds: [...wands.map((w) => w.id), ...robes.map((r) => r.id), ...hats.map((h) => h.id), ...accessories.map((a) => a.id)] },
+  { id: 'npc-potion', name: '약사 셀린', role: 'potionMerchant', icon: '/images/npc/alchemist.svg', zoneId: 'z-shops', cell: { x: 11.5, y: 6.9 }, greeting: ['신선한 물약이 방금 들어왔어요. 통문 밖으로 나가기 전엔 꼭 챙기세요!'], shopItemIds: potions.map((p) => p.id) },
+  { id: 'npc-tool', name: '만물상 토비', role: 'toolMerchant', icon: '/images/npc/tinker.svg', zoneId: 'z-shops', cell: { x: 12.6, y: 6.2 }, greeting: ['도구는 다 여기 있습니다. 가속의 모래, 이거 전투에서 꽤 쓸만해요.'], shopItemIds: tools.map((t) => t.id) },
+  { id: 'npc-tamer', name: '조련사 리코', role: 'petTamer', icon: '/images/npc/librarian.svg', zoneId: 'z-shops', cell: { x: 13.3, y: 7.0 }, greeting: ['펫한테 새 재주를 가르쳐 볼까? 먹이도 팔고 있어.', '햇살 농가에서 펫 농장도 준비 중이라던데.'], shopItemIds: feeds.map((f) => f.id) },
+  // ── 하우징 마을 ──
+  { id: 'npc-elder', name: '촌장 헬가', role: 'housing', icon: '/images/npc/elder.svg', zoneId: 'z-housing', cell: { x: 11.5, y: 2.5 }, greeting: ['하우징 마을에 온 걸 환영하네. 집을 짓는 기능은 다음 업데이트에서 만나볼 걸세.', '지친 견습생은 여기서 쉬어 가도 좋네.'] },
+  // ── 수련의 광장 ──
+  { id: 'npc-arena', name: '투기장장 그로먼', role: 'arenaMaster', icon: '/images/npc/arena-master.svg', zoneId: 'z-plaza', cell: { x: 7.5, y: 6.4 }, greeting: ['콜로세움 대전은 준비 중이다! 조금만 기다려다오.'] },
+  // ── 통문 주둔지 ──
+  { id: 'npc-guard', name: '경비대장 로한', role: 'guard', icon: '/images/npc/guard.svg', zoneId: 'z-barracks', cell: { x: 10.6, y: 10.2 }, greeting: ['야생으로 나가려면 저 군 통문을 통해야 한다.', '숲은 견습생도 견딜 만하지만, 폐허와 화산지대는 준비가 단단히 되어 있어야 살아 돌아온다.'] },
+  // ── 성역 신전 (신규) ──
+  { id: 'npc-priest', name: '신관 세드릭', role: 'templePriest', icon: '/images/npc/elder.svg', zoneId: 'z-temple', cell: { x: 1.9, y: 10.0 }, greeting: ['성역에 온 것을 환영하네, 젊은 마법사여.', '이곳은 지친 영혼이 쉬어 가는 곳. 통문 밖에서 쓰러지면 이 신전에서 눈을 뜨게 될 걸세.'] },
+  { id: 'npc-saint', name: '성녀 리아나', role: 'saint', icon: '/images/npc/librarian.svg', zoneId: 'z-temple', cell: { x: 3.1, y: 10.7 }, greeting: ['빛이 그대와 함께하기를.', '언젠가 이 손으로 그대에게 축복을 내릴 날이 오겠지요. 지금은 준비 중이랍니다.'] },
+  // ── 햇살 농가 (신규) ──
+  { id: 'npc-farmer', name: '농부 하름', role: 'farmer', icon: '/images/npc/tinker.svg', zoneId: 'z-farm', cell: { x: 7.0, y: 10.2 }, greeting: ['어이, 견습생! 여기가 햇살 농가일세.', '밭농사에 펫 농장까지 해볼 생각인데, 아직은 삽질만 하고 있다네. 곧 열 테니 기대하게.'] },
 ]
 const NPC_MAP = new Map(NPCS.map((n) => [n.id, n]))
 export function npcById(id: string): NpcDef | undefined {

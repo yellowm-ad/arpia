@@ -1,5 +1,6 @@
 import type { Element, GameState, Gender, Pet, PlayerCharacter } from '@/lib/types'
-import { computeStatsForLevel, jobTierForLevel, ZONES, STARTING_GOLD, DEFAULT_SETTINGS } from '@/lib/constants'
+import { computeStatsForLevel, jobTierForLevel, STARTING_GOLD, DEFAULT_SETTINGS } from '@/lib/constants'
+import { MAPS } from '@/lib/maps'
 import { autoLearnSkillIds } from '@/lib/mock-data'
 import { createPet, STARTER_PET_BY_ELEMENT } from '@/lib/pets'
 
@@ -29,7 +30,7 @@ export function createStarterPet(element: Element): Pet {
 export function createInitialGameState(): GameState {
   const player = createPlayer('', 'fire', 'male')
   const pet = createStarterPet('fire')
-  const schoolZone = ZONES.find((z) => z.id === 'zone-school')!
+  const village = MAPS.village
 
   return {
     screen: 'title',
@@ -37,12 +38,10 @@ export function createInitialGameState(): GameState {
     player,
     pet,
     ownedPets: [pet],
-    position: {
-      x: (schoolZone.cell.x0 + schoolZone.cell.x1) / 2,
-      y: schoolZone.cell.y1 + 0.5,
-    },
+    position: { ...village.spawn },
     facing: 'down',
-    currentZoneId: schoolZone.id,
+    currentMapId: 'village',
+    currentZoneId: 'z-magic-hall',
     inventory: [
       { itemId: 'potion-hp-s', qty: 5 },
       { itemId: 'potion-mp-s', qty: 3 },
@@ -51,6 +50,8 @@ export function createInitialGameState(): GameState {
     ],
     fieldMonsters: [],
     pendingEncounterUid: null,
+    pendingPortalId: null,
+    gateOpen: false,
     activeNpcId: null,
     activeShopId: null,
     battle: null,

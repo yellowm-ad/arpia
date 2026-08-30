@@ -10,14 +10,13 @@ import type {
   ScreenId,
 } from '@/lib/types'
 import {
-  GRID_CELLS,
   JOB_TIER_ORDER,
   MAX_PARTY_SIZE,
   jobTierForLevel,
   jobTierAtLeast,
-  zoneAt,
   computeStatsForLevel,
 } from '@/lib/constants'
+import { MAPS, zoneAt } from '@/lib/maps'
 import { ITEMS, MONSTERS, NPCS, autoLearnSkillIds, itemById, npcById } from '@/lib/mock-data'
 import { applyExp } from '@/lib/exp-table'
 import { createInitialGameState, createPlayer, createStarterPet } from '@/lib/player-factory'
@@ -53,6 +52,11 @@ export type Action =
   | { type: 'START_BATTLE'; fieldMonsterUid: string }
   | { type: 'ENCOUNTER_FIGHT' }
   | { type: 'ENCOUNTER_FLEE' }
+  | { type: 'USE_PORTAL'; portalId: string }
+  | { type: 'PORTAL_CONFIRM' }
+  | { type: 'PORTAL_CANCEL' }
+  | { type: 'OPEN_GATE' }
+  | { type: 'CLOSE_GATE' }
   | { type: 'BATTLE_ACTOR_ACTION'; actorUid: string; action: EngineBattleAction }
   | { type: 'BATTLE_TICK' }
   | { type: 'BATTLE_END_CONTINUE' }
@@ -91,8 +95,22 @@ function reducer(state: GameState, action: Action): GameState {
     case 'START_GAME': {
       const player = createPlayer(action.name, action.element, action.gender)
       const pet = createStarterPet(action.element)
-      const fieldMonsters = generateFieldMonsters(state.settings.testMode)
-      return { ...state, player, pet, ownedPets: [pet], fieldMonsters, pendingEncounterUid: null, screen: 'world', previousScreen: 'world' }
+      const fieldMonsters = generateFieldMonsters(MAPS.village, state.settings.testMode)
+      return {
+        ...state,
+        player,
+        pet,
+        ownedPets: [pet],
+        currentMapId: 'village',
+        currentZoneId: 'z-magic-hall',
+        position: { ...MAPS.village.spawn },
+        fieldMonsters,
+        pendingEncounterUid: null,
+        pendingPortalId: null,
+        gateOpen: false,
+        screen: 'world',
+        previousScreen: 'world',
+      }
     }
 
     case 'SET_SCREEN': {
@@ -101,10 +119,18 @@ function reducer(state: GameState, action: Action): GameState {
     }
 
     case 'MOVE': {
-      if (state.screen !== 'world' || state.battle || state.pendingEncounterUid) return state
-      const nx = Math.max(0.2, Math.min(GRID_CELLS - 0.2, state.position.x + action.dx))
-      const ny = Math.max(0.2, Math.min(GRID_CELLS - 0.2, state.position.y + action.dy))
-      const zone = zoneAt(nx, ny)
+      if (
+        state.screen !== 'world' ||
+        state.battle ||
+        state.pendingEncounterUid ||
+        state.pendingPortalId ||
+        state.gateOpen
+      )
+        return state
+      const map = MAPS[state.currentMapId]
+      const nx = Math.max(0.2, Math.min(map.grid.w - 0.2, state.position.x + action.dx))
+      const ny = Math.max(0.2, Math.min(map.grid.h - 0.2, state.position.y + action.dy))
+      const zone = zoneAt(map, nx, ny)
       const facing =
         Math.abs(action.dx) > Math.abs(action.dy)
           ? action.dx > 0
@@ -125,9 +151,15 @@ function reducer(state: GameState, action: Action): GameState {
           break
         }
       }
-
       // 접촉 시 전투를 바로 시작하지 않고 '전투/피하기'를 먼저 묻는다. 이동은 정지.
       if (touched) return { ...state, facing, pendingEncounterUid: touched }
+
+      // 포탈 타일 접촉 — 이동 여부 확인 (군 통문 gate 는 클릭 전용이라 제외)
+      for (const p of map.portals) {
+        if (p.kind === 'gate') continue
+        const d = Math.hypot(p.cell.x - nx, p.cell.y - ny)
+        if (d < 0.45) return { ...state, facing, pendingPortalId: p.id }
+      }
 
       return {
         ...state,
@@ -143,6 +175,7 @@ function reducer(state: GameState, action: Action): GameState {
     }
 
     case 'ENCOUNTER_FLEE': {
+      const map = MAPS[state.currentMapId]
       const fm = state.pendingEncounterUid
         ? state.fieldMonsters.find((f) => f.uid === state.pendingEncounterUid)
         : null
@@ -152,11 +185,40 @@ function reducer(state: GameState, action: Action): GameState {
         const dy = state.position.y - fm.homeCell.y
         const len = Math.hypot(dx, dy) || 1
         position = {
-          x: Math.max(0.2, Math.min(GRID_CELLS - 0.2, state.position.x + (dx / len) * 0.75)),
-          y: Math.max(0.2, Math.min(GRID_CELLS - 0.2, state.position.y + (dy / len) * 0.75)),
+          x: Math.max(0.2, Math.min(map.grid.w - 0.2, state.position.x + (dx / len) * 0.75)),
+          y: Math.max(0.2, Math.min(map.grid.h - 0.2, state.position.y + (dy / len) * 0.75)),
         }
       }
       return { ...state, position, pendingEncounterUid: null, toast: '슬쩍 피해 지나갔다.' }
+    }
+
+    case 'OPEN_GATE':
+      return { ...state, gateOpen: true }
+
+    case 'CLOSE_GATE':
+      return { ...state, gateOpen: false }
+
+    case 'USE_PORTAL':
+      return travelThroughPortal(state, action.portalId)
+
+    case 'PORTAL_CONFIRM':
+      return state.pendingPortalId ? travelThroughPortal(state, state.pendingPortalId) : state
+
+    case 'PORTAL_CANCEL': {
+      if (!state.pendingPortalId) return state
+      const map = MAPS[state.currentMapId]
+      const p = map.portals.find((pp) => pp.id === state.pendingPortalId)
+      let position = state.position
+      if (p) {
+        const dx = state.position.x - p.cell.x
+        const dy = state.position.y - p.cell.y
+        const len = Math.hypot(dx, dy) || 1
+        position = {
+          x: Math.max(0.2, Math.min(map.grid.w - 0.2, state.position.x + (dx / len) * 0.9)),
+          y: Math.max(0.2, Math.min(map.grid.h - 0.2, state.position.y + (dy / len) * 0.9)),
+        }
+      }
+      return { ...state, position, pendingPortalId: null }
     }
 
     case 'OPEN_NPC':
@@ -301,7 +363,11 @@ function reducer(state: GameState, action: Action): GameState {
 
     case 'TOGGLE_TEST_MODE': {
       const testMode = !state.settings.testMode
-      return { ...state, settings: { ...state.settings, testMode }, fieldMonsters: generateFieldMonsters(testMode) }
+      return {
+        ...state,
+        settings: { ...state.settings, testMode },
+        fieldMonsters: generateFieldMonsters(MAPS[state.currentMapId], testMode),
+      }
     }
 
     case 'UPDATE_SETTINGS':
@@ -402,18 +468,24 @@ function reducer(state: GameState, action: Action): GameState {
         }
       }
 
-      const schoolZone = zoneAt(1.5, 1.5)
+      const village = MAPS.village
+      const respawnPos = village.respawn ?? village.spawn
       const pet = { ...state.pet, hp: Math.max(1, Math.round(state.pet.hp * 0.2)) }
       return {
         ...state,
         player: { ...state.player, hp: 1, mp: Math.max(1, Math.round(state.player.stats.maxMp * 0.2)) },
         pet,
         ownedPets: state.ownedPets.map((p) => (p.defId === pet.defId ? pet : p)),
-        position: { x: 1.5, y: 3.5 },
-        currentZoneId: schoolZone?.id ?? state.currentZoneId,
+        currentMapId: 'village',
+        position: { ...respawnPos },
+        currentZoneId: zoneAt(village, respawnPos.x, respawnPos.y)?.id ?? state.currentZoneId,
+        fieldMonsters: [],
+        pendingEncounterUid: null,
+        pendingPortalId: null,
+        gateOpen: false,
         battle: null,
         screen: 'world',
-        toast: '기절했다... 마법학교 앞에서 정신을 차렸다.',
+        toast: '기절했다... 성역 신전에서 정신을 차렸다.',
       }
     }
 
@@ -422,6 +494,27 @@ function reducer(state: GameState, action: Action): GameState {
 
     default:
       return state
+  }
+}
+
+/** 포탈(타일/군 통문)을 통해 다른 맵으로 이동 */
+function travelThroughPortal(state: GameState, portalId: string): GameState {
+  const fromMap = MAPS[state.currentMapId]
+  const portal = fromMap.portals.find((p) => p.id === portalId)
+  if (!portal) return state
+  const destMap = MAPS[portal.to]
+  const pos = portal.toSpawn ?? destMap.spawn
+  return {
+    ...state,
+    currentMapId: destMap.id,
+    position: { ...pos },
+    facing: 'down',
+    currentZoneId: zoneAt(destMap, pos.x, pos.y)?.id ?? '',
+    fieldMonsters: generateFieldMonsters(destMap, state.settings.testMode),
+    pendingEncounterUid: null,
+    pendingPortalId: null,
+    gateOpen: false,
+    toast: `${destMap.name}에 도착했다.`,
   }
 }
 

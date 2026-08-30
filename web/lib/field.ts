@@ -1,56 +1,57 @@
-import type { FieldMonster } from '@/lib/types'
-import { ZONES, GRID_CELLS } from '@/lib/constants'
-import { MONSTERS, monstersForZoneKind } from '@/lib/mock-data'
+import type { FieldMonster, GameMap, MonsterDef } from '@/lib/types'
+import { MONSTERS, monsterById, monstersForZoneKind } from '@/lib/mock-data'
 import { mulberry32 } from '@/lib/rng'
 
+/** 맵 id 별로 고정 시드를 뽑아 배치가 재현되도록 한다 */
+function seedForMap(mapId: string): number {
+  let h = 20260828
+  for (let i = 0; i < mapId.length; i++) h = (h * 31 + mapId.charCodeAt(i)) | 0
+  return h >>> 0
+}
+
 /**
- * 필드 몬스터 배치 (기획 10번 항목)
- * 200m 정사각형(그리드 셀 1칸)당 약 5마리가 배회하도록 배치한다.
- * testMode가 켜지면 숲/바다 각 셀에 테스트몹(허수아비)을 1마리씩 추가 배치한다.
+ * 현재 맵의 필드 몬스터 배치.
+ * field 맵의 각 셀에 density 만큼 배치. testMode 면 각 셀에 허수아비 1마리 추가.
+ * town 맵(마을·아틀란티스)은 항상 빈 배열.
  */
-export function generateFieldMonsters(testMode: boolean): FieldMonster[] {
-  const rand = mulberry32(20260828)
+export function generateFieldMonsters(map: GameMap, testMode: boolean): FieldMonster[] {
+  if (map.kind !== 'field') return []
+
+  const pool: MonsterDef[] = map.monsterPool
+    ? map.monsterPool.map(monsterById).filter((m): m is MonsterDef => !!m)
+    : monstersForZoneKind(map.monsterZoneKind ?? 'field')
+  if (pool.length === 0 && !testMode) return []
+
+  const rand = mulberry32(seedForMap(map.id))
   const result: FieldMonster[] = []
   let uidCounter = 0
+  // 셀당 기대 마리수(소수 허용). 12×10 맵에서 0.28 ≈ 34마리.
+  const density = map.monsterDensity ?? 0.28
+  const testMonster = MONSTERS.find((m) => m.isTestMonster)
 
-  for (const zone of ZONES) {
-    if (!zone.hasMonsters) continue
-    const pool = monstersForZoneKind(zone.kind)
-    if (pool.length === 0) continue
-    const density = zone.monsterDensityPer200m ?? 1
+  const rollCount = (d: number) => Math.floor(d) + (rand() < d % 1 ? 1 : 0)
 
-    for (let cx = zone.cell.x0; cx < zone.cell.x1; cx++) {
-      for (let cy = zone.cell.y0; cy < zone.cell.y1; cy++) {
-        for (let i = 0; i < density; i++) {
-          const monster = pool[Math.floor(rand() * pool.length)]
-          const ox = rand() * 0.8 + 0.1
-          const oy = rand() * 0.8 + 0.1
-          const home = { x: cx + ox, y: cy + oy }
-          result.push({
-            uid: `fm-${uidCounter++}`,
-            monsterId: monster.id,
-            cell: { ...home },
-            homeCell: { ...home },
-            wanderSeed: Math.floor(rand() * 100000),
-          })
-        }
+  const place = (id: string, cx: number, cy: number, prefix: string) => {
+    const ox = rand() * 0.8 + 0.1
+    const oy = rand() * 0.8 + 0.1
+    const home = { x: cx + ox, y: cy + oy }
+    result.push({
+      uid: `${prefix}-${uidCounter++}`,
+      monsterId: id,
+      cell: { ...home },
+      homeCell: { ...home },
+      wanderSeed: Math.floor(rand() * 100000),
+    })
+  }
 
-        if (testMode) {
-          const testMonster = MONSTERS.find((m) => m.isTestMonster)
-          if (testMonster) {
-            const ox = rand() * 0.8 + 0.1
-            const oy = rand() * 0.8 + 0.1
-            const home = { x: cx + ox, y: cy + oy }
-            result.push({
-              uid: `fm-test-${uidCounter++}`,
-              monsterId: testMonster.id,
-              cell: { ...home },
-              homeCell: { ...home },
-              wanderSeed: Math.floor(rand() * 100000),
-            })
-          }
-        }
+  for (let cx = 0; cx < map.grid.w; cx++) {
+    for (let cy = 0; cy < map.grid.h; cy++) {
+      if (pool.length > 0) {
+        const n = rollCount(density)
+        for (let i = 0; i < n; i++) place(pool[Math.floor(rand() * pool.length)].id, cx, cy, 'fm')
       }
+      // 테스트 모드: 약 1/3 셀에 허수아비 추가
+      if (testMode && testMonster && rand() < 0.34) place(testMonster.id, cx, cy, 'fm-test')
     }
   }
 
@@ -66,8 +67,4 @@ export function wanderPosition(fm: FieldMonster, timeMs: number): { x: number; y
     x: fm.homeCell.x + Math.cos(t * speed) * radius,
     y: fm.homeCell.y + Math.sin(t * speed * 1.3) * radius,
   }
-}
-
-export function clampToWorld(v: number) {
-  return Math.max(0.2, Math.min(GRID_CELLS - 0.2, v))
 }

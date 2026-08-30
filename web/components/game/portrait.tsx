@@ -6,7 +6,7 @@ import type { Element, Gender } from '@/lib/types'
 // ============================================================================
 // NPC / 주인공 초상화 — 전부 코드로 그린 오리지널 (원작·나무위키 삽화 미사용).
 // 주인공은 사용자 제공 스타일 브리프(클린 라인아트 + 플랫 셀 명암) 기준의 벡터 근사치.
-// public/images/portraits/hero-<element>-<gender>.png 가 있으면 자동으로 그 이미지를 사용.
+// public/images/portraits/hero-<element>-<gender>.png 가 있으면 자동으로 그 이미지를 사용 (불/얼음/대지 = 사용자 일러스트).
 // ============================================================================
 
 type Hat = 'pointed' | 'cap' | 'hood' | 'none'
@@ -33,6 +33,9 @@ const SPECS: Record<string, Spec> = {
   'npc-elder': { bg: ['#4a4656', '#28242f'], skin: '#e8d0b8', hair: '#d8d8e0', robe: '#8a8f9c', accent: '#d9a441', hat: 'hood', prop: 'scroll', elder: true },
   'npc-arena': { bg: ['#5c2626', '#2f1414'], skin: '#d9a878', hair: '#2a1a12', robe: '#c9622b', accent: '#f0c060', hat: 'none', prop: 'shield' },
   'npc-guard': { bg: ['#2a3a5c', '#14202f'], skin: '#e0be96', hair: '#2a2a30', robe: '#5b6bd6', accent: '#c8ccd8', hat: 'cap', prop: 'shield' },
+  'npc-priest': { bg: ['#4a4636', '#2a271c'], skin: '#ecd8be', hair: '#dcd6c4', robe: '#e8dfc4', accent: '#d9a441', hat: 'hood', prop: 'staff', elder: true },
+  'npc-saint': { bg: ['#4a4656', '#2a2833'], skin: '#f0e0cc', hair: '#e8d9b8', robe: '#f2ede0', accent: '#e6c65a', hat: 'none', prop: 'scroll' },
+  'npc-farmer': { bg: ['#4a3a22', '#281f10'], skin: '#d9a878', hair: '#3a2a18', robe: '#8a6a3a', accent: '#c9a44a', hat: 'cap', prop: 'none' },
 }
 
 const FALLBACK: Spec = { bg: ['#3a3a44', '#20202a'], skin: '#e8c9a8', hair: '#2a2a2a', robe: '#6a6a7a', accent: '#d9a441', hat: 'none', prop: 'none' }
@@ -253,7 +256,7 @@ function HeroSvg({ element, gender, className }: { element: Element; gender: Gen
 /**
  * 주인공 초상화.
  * public/images/portraits/hero-<element>-<gender>.png 가 있으면 사용, 없으면 벡터(HeroSvg).
- * (현재: 불/얼음은 사용자 일러스트를 반으로 잘라 넣음. 대지는 벡터.)
+ * (현재: 불/얼음/대지 3속성 모두 사용자 일러스트를 반으로 잘라 넣음.)
  */
 export function HeroPortrait({
   element,

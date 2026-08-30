@@ -22,3 +22,6 @@ next-env.d.ts
 # next dev 가 자동 생성 (커밋하지 않음)
 /AGENTS.md
 /CLAUDE.md
+
+.vercel
+.env*

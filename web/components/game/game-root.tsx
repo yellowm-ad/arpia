@@ -6,6 +6,7 @@ import { CreateScreen } from '@/components/game/create-screen'
 import { WorldScreen } from '@/components/game/world-screen'
 import { BattleScreen } from '@/components/game/battle-screen'
 import { Hud } from '@/components/game/hud'
+import { Minimap } from '@/components/game/minimap'
 import { DialogueScreen } from '@/components/game/dialogue-screen'
 import { ShopScreen } from '@/components/game/shop-screen'
 import { InventoryScreen } from '@/components/game/inventory-screen'
@@ -26,6 +27,7 @@ function GameShell() {
     <div className="relative h-full w-full">
       <WorldScreen />
       <Hud />
+      <Minimap />
       <Toast />
       <DialogueScreen />
       <ShopScreen />

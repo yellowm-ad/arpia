@@ -3,11 +3,12 @@
 import Image from 'next/image'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useGame } from '@/lib/game-state'
-import { ELEMENT_META, GRID_CELLS, ZONES, zoneAt } from '@/lib/constants'
+import { ELEMENT_META } from '@/lib/constants'
+import { MAPS, zoneAt } from '@/lib/maps'
 import { MONSTERS, NPCS } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import { HeroPortrait } from '@/components/game/portrait'
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, MessageCircle } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, DoorOpen, MessageCircle, ShieldAlert } from 'lucide-react'
 
 const TILE = 64
 const MOVE_SPEED = 2.1 // 초당 이동 셀 수
@@ -31,6 +32,30 @@ function zoneBg(kind: string): string {
       return 'repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 16px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 16px), linear-gradient(160deg, #8a8f9c, #4a4f5c)'
     case 'ruins': // 아즈카의 폐허 — 균열
       return 'repeating-linear-gradient(70deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 22px), repeating-linear-gradient(200deg, rgba(0,0,0,0.2) 0 1px, transparent 1px 30px), linear-gradient(160deg, #4a3a5c, #221a30)'
+    case 'plaza': // 중앙 광장 — 포석 + 분수 원형
+      return 'radial-gradient(circle at 50% 42%, rgba(180,200,255,0.16) 0 26px, transparent 28px), repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 28px), linear-gradient(160deg, #6b7290, #3f4560)'
+    case 'park': // 공원 — 잔디 + 나무 점
+      return 'radial-gradient(circle at 25% 30%, rgba(120,200,110,0.35) 0 12px, transparent 14px), radial-gradient(circle at 70% 65%, rgba(100,180,95,0.3) 0 16px, transparent 18px), linear-gradient(180deg, #4e9c4a, #2f6b30)'
+    case 'farm': // 농가 — 밭이랑 줄무늬
+      return 'repeating-linear-gradient(90deg, rgba(120,80,40,0.35) 0 6px, rgba(180,140,80,0.25) 6px 20px), linear-gradient(180deg, #caa74e, #8a6a2e)'
+    case 'temple': // 신전 — 대리석 + 빛기둥
+      return 'repeating-linear-gradient(90deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 30px), radial-gradient(circle at 50% 20%, rgba(255,240,200,0.22), transparent 60%), linear-gradient(180deg, #d8c98a, #9a8a54)'
+    case 'cave': // 동굴 — 어두운 암반 + 이끼
+      return 'radial-gradient(circle at 30% 40%, rgba(90,150,90,0.18) 0 18px, transparent 20px), repeating-linear-gradient(35deg, rgba(0,0,0,0.35) 0 2px, transparent 2px 26px), linear-gradient(160deg, #2b2f33, #16181b)'
+    case 'mine': // 폐광산 — 갱목 격자 + 광맥
+      return 'repeating-linear-gradient(0deg, rgba(120,90,50,0.3) 0 3px, transparent 3px 34px), repeating-linear-gradient(90deg, rgba(200,160,90,0.12) 0 1px, transparent 1px 20px), linear-gradient(160deg, #3a332c, #201c17)'
+    case 'swamp': // 늪지 — 탁한 물 얼룩
+      return 'radial-gradient(circle at 40% 60%, rgba(80,110,70,0.4) 0 30px, transparent 34px), radial-gradient(circle at 75% 25%, rgba(60,90,60,0.35) 0 26px, transparent 30px), linear-gradient(180deg, #3f4a34, #232b1c)'
+    case 'deepsea': // 심해 — 짙은 청색 + 광선
+      return 'radial-gradient(circle at 50% 0%, rgba(120,200,255,0.14), transparent 55%), repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 3px, transparent 3px 24px), linear-gradient(180deg, #123a5c, #06131f)'
+    case 'atlantis': // 아틀란티스 — 수중 도시 석조
+      return 'repeating-linear-gradient(90deg, rgba(180,230,255,0.12) 0 2px, transparent 2px 26px), repeating-linear-gradient(0deg, rgba(180,230,255,0.10) 0 2px, transparent 2px 30px), linear-gradient(160deg, #2f7fa8, #12455f)'
+    case 'graveyard': // 묘지 — 비석 그림자
+      return 'repeating-linear-gradient(90deg, rgba(0,0,0,0.28) 0 6px, transparent 6px 40px), radial-gradient(circle at 50% 80%, rgba(120,140,160,0.12), transparent 60%), linear-gradient(180deg, #3a3f47, #1c1f24)'
+    case 'volcano': // 화산지대 — 용암 균열
+      return 'repeating-linear-gradient(50deg, rgba(255,90,20,0.22) 0 1px, transparent 1px 24px), repeating-linear-gradient(300deg, rgba(255,120,30,0.18) 0 1px, transparent 1px 32px), linear-gradient(160deg, #5a2418, #241009)'
+    case 'demon': // 마족 영역 — 검붉은 안개
+      return 'radial-gradient(circle at 50% 30%, rgba(200,40,60,0.20), transparent 60%), repeating-linear-gradient(45deg, rgba(0,0,0,0.35) 0 2px, transparent 2px 20px), linear-gradient(160deg, #3a1230, #170512)'
     default:
       return 'linear-gradient(180deg, #1a1f45, #12163a)'
   }
@@ -98,6 +123,12 @@ export function WorldScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.screen])
 
+  const map = MAPS[state.currentMapId]
+  const mapNpcs = useMemo(
+    () => NPCS.filter((n) => map.zones.some((z) => z.id === n.zoneId)),
+    [map],
+  )
+
   function tryInteract() {
     const near = nearestNpc()
     if (near) dispatch({ type: 'OPEN_NPC', npcId: near.id })
@@ -106,7 +137,7 @@ export function WorldScreen() {
   function nearestNpc() {
     let best: (typeof NPCS)[number] | null = null
     let bestDist = 1.2
-    for (const npc of NPCS) {
+    for (const npc of mapNpcs) {
       const d = Math.hypot(npc.cell.x - state.position.x, npc.cell.y - state.position.y)
       if (d < bestDist) {
         bestDist = d
@@ -126,13 +157,22 @@ export function WorldScreen() {
     })
   }, [state.fieldMonsters, state.position.x, state.position.y])
 
-  const currentZone = zoneAt(state.position.x, state.position.y)
+  // 군 통문(gate) 은 같은 셀에 여러 목적지가 겹치므로 하나의 마커로 합친다
+  const gatePortals = useMemo(() => map.portals.filter((p) => p.kind === 'gate'), [map])
+  const tilePortals = useMemo(() => map.portals.filter((p) => p.kind !== 'gate'), [map])
+  const gateCell = gatePortals[0]?.cell
+
+  const currentZone = zoneAt(map, state.position.x, state.position.y)
+  const locationName = currentZone?.name ?? map.name
   const interactTarget = nearestNpc()
   const elem = ELEMENT_META[state.player.element]
   const encounterName = state.pendingEncounterUid
     ? MONSTERS.find(
         (m) => m.id === state.fieldMonsters.find((f) => f.uid === state.pendingEncounterUid)?.monsterId,
       )?.name
+    : null
+  const pendingPortal = state.pendingPortalId
+    ? map.portals.find((p) => p.id === state.pendingPortalId)
     : null
 
   const dpadPress = (dx: number, dy: number) => {
@@ -166,18 +206,18 @@ export function WorldScreen() {
             style={{
               left: 0,
               top: 0,
-              width: GRID_CELLS * TILE,
-              height: GRID_CELLS * TILE,
+              width: map.grid.w * TILE,
+              height: map.grid.h * TILE,
               backgroundImage:
-                'linear-gradient(rgba(217,164,65,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.10) 1px, transparent 1px)',
-              backgroundSize: `${TILE}px ${TILE}px`,
+                `linear-gradient(rgba(217,164,65,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.10) 1px, transparent 1px), ${zoneBg(map.bg)}`,
+              backgroundSize: `${TILE}px ${TILE}px, ${TILE}px ${TILE}px, cover`,
               backgroundColor: '#0e1230',
               boxShadow: '0 0 0 4px rgba(217,164,65,0.4), inset 0 0 120px rgba(0,0,0,0.55)',
             }}
           />
 
-          {/* 구역 타일 */}
-          {ZONES.map((zone) => (
+          {/* 구역 타일 (마을 등 town 맵) */}
+          {map.zones.map((zone) => (
             <div key={zone.id}>
               <div
                 className="absolute"
@@ -199,8 +239,33 @@ export function WorldScreen() {
             </div>
           ))}
 
+          {/* 하위 스테이지 진입 / 상위 맵 복귀 포탈 */}
+          {tilePortals.map((p) => (
+            <Marker key={p.id} x={p.cell.x} y={p.cell.y} tile={TILE} onClick={() => dispatch({ type: 'USE_PORTAL', portalId: p.id })}>
+              <div
+                className={`flex size-8 items-center justify-center rounded-full border-2 ${p.kind === 'exit' ? 'border-sky-300 bg-sky-950/80' : 'border-fuchsia-300 bg-fuchsia-950/80'}`}
+              >
+                <DoorOpen className={`size-4 ${p.kind === 'exit' ? 'text-sky-200' : 'text-fuchsia-200'}`} />
+              </div>
+              <span className="text-[9px] font-semibold text-fuchsia-100 whitespace-nowrap">
+                {p.label}
+                {p.requiredLevel ? ` · Lv.${p.requiredLevel}+` : ''}
+              </span>
+            </Marker>
+          ))}
+
+          {/* 군 통문 */}
+          {gateCell && (
+            <Marker x={gateCell.x} y={gateCell.y} tile={TILE} onClick={() => dispatch({ type: 'OPEN_GATE' })}>
+              <div className="flex size-9 items-center justify-center rounded-md border-2 border-amber-300 bg-amber-950/80">
+                <DoorOpen className="size-5 text-amber-200" />
+              </div>
+              <span className="text-[10px] font-display text-amber-100 whitespace-nowrap">군 통문</span>
+            </Marker>
+          )}
+
           {/* NPC 마커 */}
-          {NPCS.map((npc) => (
+          {mapNpcs.map((npc) => (
             <Marker key={npc.id} x={npc.cell.x} y={npc.cell.y} tile={TILE} onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}>
               <div className="flex size-8 items-center justify-center rounded-full border-2 border-gold bg-primary-soft">
                 <Image src={npc.icon} alt={npc.name} width={18} height={18} />
@@ -243,15 +308,73 @@ export function WorldScreen() {
       {/* 상단 좌측 구역 안내 */}
       <div className="pointer-events-none absolute bottom-3 left-3 z-20">
         <div className="panel-gilded px-3 py-1.5 text-xs text-gold-soft">
-          현재 위치: <span className="font-display">{currentZone?.name ?? '광야'}</span>
+          현재 위치: <span className="font-display">{locationName}</span>
+          {map.kind === 'field' && map.recommendedLevel ? (
+            <span className="ml-1 text-muted-foreground">· 권장 Lv.{map.recommendedLevel}+</span>
+          ) : null}
         </div>
       </div>
 
       {/* 상호작용 프롬프트 */}
-      {interactTarget && !state.pendingEncounterUid && (
+      {interactTarget && !state.pendingEncounterUid && !state.pendingPortalId && !state.gateOpen && (
         <div className="pointer-events-none absolute bottom-24 left-1/2 z-20 -translate-x-1/2">
           <div className="panel-gilded flex items-center gap-2 px-3 py-1.5 text-xs text-gold-soft">
             <MessageCircle className="size-3.5" /> {interactTarget.name}와(과) 대화 (E)
+          </div>
+        </div>
+      )}
+
+      {/* 군 통문 — 목적지 선택 */}
+      {state.gateOpen && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/50">
+          <div className="panel-gilded flex w-[min(92vw,420px)] flex-col gap-3 px-6 py-5 text-center">
+            <div className="flex items-center justify-center gap-2 font-display text-sm text-gold-soft text-shadow-ink">
+              <ShieldAlert className="size-4" /> 군 통문 — 어디로 나갈까?
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {gatePortals.map((p) => {
+                const under = p.requiredLevel != null && state.player.level < p.requiredLevel
+                return (
+                  <Button
+                    key={p.id}
+                    variant={under ? 'outline' : 'default'}
+                    className="flex-col gap-0.5 py-3"
+                    onClick={() => dispatch({ type: 'USE_PORTAL', portalId: p.id })}
+                  >
+                    <span>{p.label}</span>
+                    {p.requiredLevel ? (
+                      <span className={`text-[10px] ${under ? 'text-red-300' : 'text-black/60'}`}>
+                        권장 Lv.{p.requiredLevel}+
+                      </span>
+                    ) : null}
+                  </Button>
+                )
+              })}
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => dispatch({ type: 'CLOSE_GATE' })}>
+              닫기
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 포탈 타일 접촉 — 이동 여부 확인 */}
+      {pendingPortal && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40">
+          <div className="panel-gilded flex flex-col items-center gap-3 px-6 py-5 text-center">
+            <div className="font-display text-sm text-gold-soft text-shadow-ink">
+              {pendingPortal.label}
+              {pendingPortal.requiredLevel ? ` (권장 Lv.${pendingPortal.requiredLevel}+)` : ''}
+            </div>
+            <div className="text-xs text-muted-foreground">이동할까?</div>
+            <div className="flex gap-2">
+              <Button variant="default" onClick={() => dispatch({ type: 'PORTAL_CONFIRM' })}>
+                이동하기
+              </Button>
+              <Button variant="outline" onClick={() => dispatch({ type: 'PORTAL_CANCEL' })}>
+                취소
+              </Button>
+            </div>
           </div>
         </div>
       )}
