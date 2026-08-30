@@ -13,7 +13,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, DoorOpen, MessageCircle, Shi
 
 const TILE = 64
 const MOVE_SPEED = 2.1 // 초당 이동 셀 수 (쿼터뷰 맵)
-const FLAT_MOVE_SPEED = 1.45 // 이미지 맵은 카메라를 당겨서 보므로 체감 속도 보정
+const FLAT_MOVE_SPEED = 4.3 // 이미지/아이소 맵 도보 속도
 const IMG_ZOOM = 2.7 // 이미지 맵 확대 배율 — 캐릭터가 건물 사이를 걷는 스케일
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
@@ -686,7 +686,7 @@ function HeroSprite({
           bottom: 0,
           transform: `translate(-50%, 0) scaleX(${flip ? -1 : 1})`,
           transformOrigin: 'bottom center',
-          animation: moving ? 'sprite-walk 0.4s ease-in-out infinite' : 'sprite-idle 2.6s ease-in-out infinite',
+          animation: moving ? 'sprite-walk 0.3s ease-in-out infinite' : 'sprite-idle 2.6s ease-in-out infinite',
           filter: 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))',
         }}
       >
