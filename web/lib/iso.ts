@@ -72,7 +72,8 @@ export type PropKind =
   | 'wall' // 목책/성벽 구간
   | 'tower' // 성벽 망루
   | 'tree' // 나무
-  | 'hedge' // 낮은 관목 울타리
+  | 'hedge' // 낮은 관목 울타리 (레거시 SVG)
+  | 'bush' // 관목 (라스터)
   | 'lamp' // 가로등
   | 'bench' // 벤치
   | 'banner' // 현수막 기둥

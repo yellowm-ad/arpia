@@ -115,6 +115,16 @@ const PROP_SPRITE: Partial<
   postbox: { sprite: '/images/map/props/postbox.png', px: { w: 16, h: 42 }, anchor: { x: 8, y: 42 } },
   bicycle: { sprite: '/images/map/props/bicycle.png', px: { w: 39, h: 40 }, anchor: { x: 20, y: 40 } },
   trashbin: { sprite: '/images/map/props/trashbin.png', px: { w: 16, h: 30 }, anchor: { x: 8, y: 30 } },
+  bush: { sprite: '/images/map/props/bush.png', px: { w: 28, h: 24 }, anchor: { x: 14, y: 24 } },
+}
+
+// 나무는 variant 별 스프라이트 — a/b/c 는 같은 초록나무의 소·중·대 프리스케일
+const TREE_SPRITE: Record<string, { sprite: string; px: { w: number; h: number }; anchor: { x: number; y: number } }> = {
+  b: { sprite: '/images/map/props/tree_green_sm.png', px: { w: 42, h: 48 }, anchor: { x: 21, y: 48 } },
+  a: { sprite: '/images/map/props/tree_green_md.png', px: { w: 56, h: 64 }, anchor: { x: 28, y: 64 } },
+  c: { sprite: '/images/map/props/tree_green_lg.png', px: { w: 70, h: 80 }, anchor: { x: 35, y: 80 } },
+  g: { sprite: '/images/map/props/tree_gold.png', px: { w: 64, h: 70 }, anchor: { x: 32, y: 70 } },
+  o: { sprite: '/images/map/props/tree_orange.png', px: { w: 56, h: 66 }, anchor: { x: 28, y: 66 } },
 }
 
 /** 마을 오브젝트 배치 — 모든 좌표는 격자(0..VW, 0..VH) 안에 있고 대로를 침범하지 않는다 */
@@ -187,14 +197,18 @@ function villageProps(): PropDef[] {
     [12.7, 15.4, 'b'], [24.0, 10.8, 'g'], [23.8, 12.3, 'c'], [12.6, 18.2, 'a'],
   ]
   trees.forEach(([x, y, v], i) => P.push({ id: `t${i}`, kind: 'tree', cell: { x, y }, variant: v }))
-  // ── 낮은 관목 울타리 — 광장·공원 테두리 (대로 밖) ──
-  const hedges: [number, number, number, 'left' | 'right'][] = [
-    [8.9, 1.7, 4.2, 'right'], [8.9, 5.3, 4.2, 'right'],
-    [8.9, 11.9, 4.4, 'right'], [8.9, 14.7, 4.4, 'right'],
+  // ── 관목 울타리 — 광장·공원 테두리 (대로 밖). 라스터 부시를 일정 간격으로 줄지어 배치 ──
+  const hedgeRows: [number, number, number][] = [
+    [8.9, 1.7, 4.2], [8.9, 5.3, 4.2],
+    [8.9, 11.9, 4.4], [8.9, 14.7, 4.4],
   ]
-  hedges.forEach(([x, y, w, f], i) =>
-    P.push({ id: `hd${i}`, kind: 'hedge', cell: { x, y }, size: { w, d: 0.4 }, facing: f }),
-  )
+  const BUSH_STEP = 0.72
+  hedgeRows.forEach(([x0, y, w], r) => {
+    const n = Math.max(2, Math.round(w / BUSH_STEP))
+    for (let i = 0; i < n; i++) {
+      P.push({ id: `hd${r}-${i}`, kind: 'bush', cell: { x: x0 + (i * w) / (n - 1), y } })
+    }
+  })
   // ── 가로등 (넓힌 대로변) ──
   const lamps: [number, number][] = [
     [6.9, 3], [6.9, 10.5], [6.9, 16.5], [8.9, 5.5], [8.9, 11.5],
@@ -219,11 +233,11 @@ function villageProps(): PropDef[] {
   P.push({ id: 'tb2', kind: 'trashbin', cell: { x: 6.6, y: 16.0 } })
   P.push({ id: 'tb3', kind: 'trashbin', cell: { x: 17.4, y: 9.6 } })
 
-  // 종류 기반 플래그 일괄 부여 (개별 push 에서 누락 방지)
+  // 종류 기반 플래그 + 라스터 스프라이트 일괄 부여 (개별 push 에서 누락 방지)
   for (const p of P) {
     if (SOLID_KINDS.has(p.kind)) p.solid = true
     if (RADIAL_KINDS.has(p.kind)) p.radial = true
-    const rs = PROP_SPRITE[p.kind]
+    const rs = p.kind === 'tree' ? TREE_SPRITE[p.variant ?? 'a'] : PROP_SPRITE[p.kind]
     if (rs) {
       p.sprite = rs.sprite
       p.px = rs.px
