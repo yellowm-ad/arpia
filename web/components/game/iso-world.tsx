@@ -6,8 +6,8 @@ import type { GameState } from '@/lib/types'
 import { MAPS } from '@/lib/maps'
 import { ELEMENT_META } from '@/lib/constants'
 import { NPCS } from '@/lib/mock-data'
-import { ISO_TILE_W, ISO_TILE_H, isoToScreen, isoBounds, TILE_COLORS } from '@/lib/iso'
-import type { TileKind } from '@/lib/iso'
+import { ISO_TILE_W, ISO_TILE_H, isoToScreen, isoBounds, TILE_COLORS, TILE_SPRITES } from '@/lib/iso'
+import type { TileKind, PropDef } from '@/lib/iso'
 import { renderProp, IsoChara } from '@/components/game/iso-sprites'
 
 const SCALE = 1.4
@@ -22,6 +22,25 @@ const H_BY_KIND: Record<string, number> = {
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
+
+/** 라스터(PNG) 프롭 — 발밑 앵커를 원점(0,0)에 맞춰 배치. assets:'raster' 맵에서만 사용 */
+function RasterProp({ p }: { p: PropDef }) {
+  const w = p.px?.w
+  const h = p.px?.h
+  // 앵커 미지정 시 이미지 하단-중앙을 발밑으로 가정
+  const ax = p.anchor?.x ?? (w ? w / 2 : 0)
+  const ay = p.anchor?.y ?? (h ?? 0)
+  return (
+    <image
+      href={p.sprite}
+      x={-ax}
+      y={-ay}
+      width={w}
+      height={h}
+      style={{ imageRendering: 'pixelated' }}
+    />
+  )
+}
 
 const NPC_ROLE_COLOR: Record<string, { robe: string; shade: string; hair: string }> = {
   jobTrainer: { robe: '#6b53c0', shade: '#48376f', hair: '#d8d2e8' },
@@ -70,8 +89,24 @@ export function IsoWorld({
     for (let y = 0; y < VH; y++) {
       for (let x = 0; x < VW; x++) {
         const kind: TileKind = map.tileAt ? map.tileAt(x + 0.5, y + 0.5) : 'grass'
-        const col = TILE_COLORS[kind]
         const a = isoToScreen(x, y)
+        const sprite = map.assets === 'raster' ? TILE_SPRITES[kind] : undefined
+        if (sprite) {
+          // 다이메트릭 타일 PNG: 상단 꼭짓점(a)에 맞춰 배치
+          tiles.push(
+            <image
+              key={`${x}-${y}`}
+              href={sprite}
+              x={a.sx - ISO_TILE_W / 2}
+              y={a.sy}
+              width={ISO_TILE_W}
+              height={ISO_TILE_H * 2}
+              style={{ imageRendering: 'pixelated' }}
+            />,
+          )
+          continue
+        }
+        const col = TILE_COLORS[kind]
         const b = isoToScreen(x + 1, y)
         const c = isoToScreen(x + 1, y + 1)
         const d = isoToScreen(x, y + 1)
@@ -116,16 +151,16 @@ export function IsoWorld({
   const staticEntities = useMemo(() => {
     const list: { sortY: number; node: React.ReactNode }[] = []
 
+    const raster = map.assets === 'raster'
     for (const p of map.props ?? []) {
       // 원형 구조물(콜로세움·분수)은 앵커가 중심이라 half 가산 없이 정렬
-      const radial = p.kind === 'colosseum' || p.kind === 'fountain'
-      const half = radial ? 0 : ((p.size?.w ?? 0.4) + (p.size?.d ?? 0.4)) / 2
+      const half = p.radial ? 0 : ((p.size?.w ?? 0.4) + (p.size?.d ?? 0.4)) / 2
       const s = isoToScreen(p.cell.x, p.cell.y)
       list.push({
         sortY: p.cell.x + p.cell.y + half,
         node: (
           <g key={p.id} transform={`translate(${s.sx},${s.sy})`}>
-            {renderProp(p)}
+            {raster && p.sprite ? <RasterProp p={p} /> : renderProp(p)}
           </g>
         ),
       })

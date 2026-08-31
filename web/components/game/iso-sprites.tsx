@@ -401,46 +401,74 @@ export function IsoWindmill() {
 
 // ── 원형 투기장 ────────────────────────────────────────────────────────────
 export function IsoColosseum({ label }: { label?: string }) {
-  // 앵커(0,0)는 링 중심. footprint 중심 기준으로 배치됨.
-  const rx = 3.2 * HW
-  const ry = 3.2 * HH
-  const wallH = 40
-  const innerRx = rx * 0.68
-  const innerRy = ry * 0.68
-  // 정면(아래쪽) 벽 밴드
-  const frontWall = `M${-rx},0 A${rx},${ry} 0 0 0 ${rx},0 L${rx},${wallH} A${rx},${ry} 0 0 1 ${-rx},${wallH} Z`
+  // 앵커(0,0) = 링 중심(지면 높이). 모든 지오메트리는 y ∈ [-wallH-topRise, +arenaDrop] 안 → 잔디로 삐져나오지 않음.
+  const rx = 3.0 * HW
+  const ry = 3.0 * HH
+  const wallH = 30 // 관중석 외벽 높이(px)
+  const topRise = 10 // 외벽 상단 링이 앞으로 두꺼워 보이는 정도
+  const innerRx = rx * 0.6
+  const innerRy = ry * 0.6
+  const arenaDrop = 4 // 경기장이 살짝 파여 보이게
+
+  // 정면(아래쪽) 외벽 밴드: 지면 앞선(cy=0) → 상단 앞선(cy=-wallH)
+  const frontWall =
+    `M${-rx},0 A${rx},${ry} 0 0 0 ${rx},0 ` +
+    `L${rx},${-wallH} A${rx},${ry} 0 0 1 ${-rx},${-wallH} Z`
+
+  const arches: React.ReactNode[] = []
+  for (let i = 0; i < 14; i++) {
+    const a = Math.PI * (0.04 + (i / 13) * 0.92)
+    if (a > Math.PI * 0.44 && a < Math.PI * 0.56) continue // 정문 자리 비움
+    const cx = Math.cos(a) * rx * 0.92
+    const yb = Math.sin(a) * ry * 0.92 // 0..ry (아래쪽일수록 큼)
+    const aw = 5
+    const top = yb - wallH + 6
+    const bot = yb - 4
+    arches.push(
+      <path
+        key={i}
+        d={`M${cx - aw},${bot} L${cx - aw},${top + 4} Q${cx},${top - 4} ${cx + aw},${top + 4} L${cx + aw},${bot} Z`}
+        fill="#2b231a"
+      />,
+    )
+  }
+
   return (
     <g shapeRendering="crispEdges">
-      {/* 바깥 원 바닥(윗면) */}
-      <ellipse cx={0} cy={0} rx={rx} ry={ry} fill={C.stoneL} stroke={C.line} strokeWidth={1} />
+      {/* 지면 그림자 */}
+      <ellipse cx={6} cy={4} rx={rx * 1.02} ry={ry * 1.02} fill={C.castShadow} />
+      {/* 바깥 바닥 링(윗면) — 벽 두께 */}
+      <ellipse cx={0} cy={0} rx={rx} ry={ry} fill={C.stoneR} stroke={C.line} strokeWidth={1} />
       {/* 정면 외벽 */}
-      <path d={frontWall} fill={C.stoneR} stroke={C.line} strokeWidth={1} />
-      {/* 벽면 밝은 상단 띠 */}
-      <path d={`M${-rx},0 A${rx},${ry} 0 0 0 ${rx},0 L${rx},7 A${rx},${ry} 0 0 1 ${-rx},7 Z`} fill={C.stoneL} opacity={0.8} />
-      {/* 아치 개구부 (정면, 입구는 비움) */}
-      {Array.from({ length: 13 }).map((_, i) => {
-        const a = Math.PI * (0.05 + (i / 12) * 0.9)
-        const x = Math.cos(a) * rx * 0.99
+      <path d={frontWall} fill={C.stoneL} stroke={C.line} strokeWidth={1} />
+      {/* 외벽 세로 기둥 줄눈 */}
+      {Array.from({ length: 11 }).map((_, i) => {
+        const a = Math.PI * (0.06 + (i / 10) * 0.88)
+        const cx = Math.cos(a) * rx * 0.99
         const yb = Math.sin(a) * ry * 0.99
-        if (a > Math.PI * 0.43 && a < Math.PI * 0.57) return null
-        const aw = 5.5
-        return (
-          <path
-            key={i}
-            d={`M${x - aw},${yb + wallH - 4} L${x - aw},${yb + 13} Q${x},${yb + 3} ${x + aw},${yb + 13} L${x + aw},${yb + wallH - 4} Z`}
-            fill="#2f271d"
-          />
-        )
+        return <line key={`p${i}`} x1={cx} y1={yb} x2={cx} y2={yb - wallH} stroke={C.stoneR} strokeWidth={1} opacity={0.5} />
       })}
-      {/* 입구 */}
-      <path d={`M-10,${ry} L-10,${ry + wallH - 6} L10,${ry + wallH - 6} L10,${ry} Q0,${ry - 8} -10,${ry} Z`} fill="#241d14" />
-      {/* 윗 테두리 링 */}
-      <ellipse cx={0} cy={0} rx={rx} ry={ry} fill="none" stroke={C.stoneTop} strokeWidth={3} />
-      <ellipse cx={0} cy={-3} rx={rx * 0.86} ry={ry * 0.86} fill="none" stroke={C.stoneR} strokeWidth={2} opacity={0.6} />
-      {/* 내부 모래 경기장 */}
-      <ellipse cx={0} cy={2} rx={innerRx} ry={innerRy} fill="#dcc38c" stroke={C.line} strokeWidth={1} />
-      <ellipse cx={0} cy={0} rx={innerRx * 0.5} ry={innerRy * 0.5} fill="none" stroke="#c2a874" strokeWidth={1.5} />
-      {label && <IsoLabel y={-ry - 30} text={label} />}
+      {/* 아치 개구부 */}
+      {arches}
+      {/* 상단 코니스 링(앞으로 살짝 튀어나온 테두리) */}
+      <path
+        d={`M${-rx},${-wallH} A${rx},${ry} 0 0 0 ${rx},${-wallH} L${rx},${-wallH - topRise} A${rx},${ry} 0 0 1 ${-rx},${-wallH - topRise} Z`}
+        fill={C.stoneTop}
+        stroke={C.line}
+        strokeWidth={1}
+      />
+      {/* 상단 윗면 링 */}
+      <ellipse cx={0} cy={-wallH - topRise} rx={rx} ry={ry} fill={C.stoneL} stroke={C.line} strokeWidth={1} />
+      {/* 관중석 계단(윗면 링 안쪽 동심원) */}
+      <ellipse cx={0} cy={-wallH - topRise + 1} rx={rx * 0.82} ry={ry * 0.82} fill={C.stoneR} opacity={0.55} />
+      <ellipse cx={0} cy={-wallH - topRise + 2} rx={rx * 0.7} ry={ry * 0.7} fill={C.stoneL} opacity={0.7} />
+      {/* 내부 모래 경기장(살짝 파임) */}
+      <ellipse cx={0} cy={-wallH - topRise + arenaDrop} rx={innerRx} ry={innerRy} fill="#d8bf88" stroke={C.line} strokeWidth={1} />
+      <ellipse cx={0} cy={-wallH - topRise + arenaDrop} rx={innerRx * 0.5} ry={innerRy * 0.5} fill="none" stroke="#c2a874" strokeWidth={1.4} />
+      {/* 정문(정면 중앙 아치, 크게) */}
+      <path d={`M-11,0 L-11,${-wallH + 4} Q0,${-wallH - 6} 11,${-wallH + 4} L11,0 Z`} fill="#241d14" stroke={C.line} strokeWidth={1} />
+      <path d={`M-11,${-wallH + 4} Q0,${-wallH - 6} 11,${-wallH + 4}`} fill="none" stroke={C.brass} strokeWidth={1.5} opacity={0.8} />
+      {label && <IsoLabel y={-wallH - topRise - ry - 20} text={label} />}
     </g>
   )
 }

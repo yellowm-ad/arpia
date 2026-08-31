@@ -325,6 +325,8 @@ export interface GameMap {
    *  'gradient'(기본) = CSS 쿼터뷰 · 'image' = bgImage 평면 · 'iso' = 아이소메트릭 도트 엔진
    */
   render?: 'gradient' | 'image' | 'iso'
+  /** render:'iso' 일 때 스프라이트 소스: 'svg'(손그림, 기본) · 'raster'(PropDef.sprite PNG) */
+  assets?: 'svg' | 'raster'
   /** render:'image' 일 때 배경 일러스트 경로 */
   bgImage?: string
   /** render:'iso' 일 때: 셀별 지면 타일 종류 */
