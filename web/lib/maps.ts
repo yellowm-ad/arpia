@@ -138,7 +138,8 @@ const BUILDING_SPRITE: Record<string, Rs> = {
   'b-alch': B_('b_hall_small', 157, 178, 79, 100),
   'b-arti': B_('b_hall_small', 157, 178, 79, 100),
 }
-// kind 별 (동일 스프라이트 반복) — 상점/노점/신전/헛간/풍차/망루/성문
+// kind 별 (동일 스프라이트 반복) — 상점/노점/신전/헛간/풍차/망루/성문/콜로세움/분수
+// colosseum·fountain 은 radial(cell=중심) → anchor 는 스프라이트의 지면 중심 픽셀
 const KIND_BUILDING_SPRITE: Partial<Record<PropDef['kind'], Rs>> = {
   shop: B_('b_shop', 170, 171, 85, 86),
   stall: B_('b_stall', 70, 75, 35, 40),
@@ -147,6 +148,8 @@ const KIND_BUILDING_SPRITE: Partial<Record<PropDef['kind'], Rs>> = {
   windmill: B_('b_windmill', 77, 134, 39, 96),
   tower: B_('b_tower', 58, 105, 29, 76),
   gate: B_('b_gate', 96, 94, 48, 46),
+  colosseum: B_('b_colosseum', 218, 149, 109, 89),
+  fountain: B_('b_fountain', 115, 114, 58, 82),
 }
 // 주택 지붕색 variant 별
 const COTTAGE_SPRITE: Record<string, Rs> = {
