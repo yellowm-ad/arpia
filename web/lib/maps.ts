@@ -82,8 +82,10 @@ function villageTileAt(x: number, y: number): TileKind {
   if (df < 7.4) return 'plaza'
   // 대성당 앞광장 포석
   if (Math.hypot((x - TEMPLE_YARD.x) * 1.1, y - TEMPLE_YARD.y) < 4.8) return 'plaza'
-  // 농가 밭이랑
-  if (x > 20.5 && x < 31.5 && y > 29.5 && y < 36.4) return 'field'
+  // 농가 밭이랑 (공원에 자리 내주고 남쪽으로)
+  if (x > 22.5 && x < 30.8 && y > 32.6 && y < 37.4) return 'field'
+  // 대성당 정원 연못 (앞광장 동편)
+  if (Math.hypot((x - 14.4) * 1.15, y - 32.2) < 1.7) return 'water'
   // 대로 격자 (지구 경계)
   if (between(x, AV_L) || between(x, AV_R) || between(y, ST_N) || between(y, ST_S)) return 'path'
   // 주둔지 의전 대로 (ST_S → 군 통문, 폭 4셀)
@@ -95,12 +97,14 @@ function villageTileAt(x: number, y: number): TileKind {
   if (x > AV_R.a && x < VW - 2.5 && Math.abs(y - 20.5) < 1.5) return 'path'
   // 대성당 진입로 (외곽 순환로 → 앞광장)
   if (Math.abs(x - TEMPLE_YARD.x) < 1.5 && y > ST_S.a) return 'path'
-  // 마로니에 공원 잔디(짙게) — 투기장 남측 완충
+  // 마로니에 공원 잔디(짙게) — 투기장 남측, 농가 위까지 넉넉히
   if (
-    x > 19.8 && x < 33 && y > ST_S.b && y < 30.5 &&
+    x > 19.8 && x < 33 && y > ST_S.b && y < 32.6 &&
     Math.hypot(x - COLOSSEUM.x, y - COLOSSEUM.y) >= 5.6
   )
     return 'grass-dark'
+  // 공원 산책로 (동서, 공원 한가운데)
+  if (x > 19.8 && x < 33 && Math.abs(y - 29.9) < 0.7) return 'path'
   // 나머지 잔디 — 드문 얼룩만
   return (Math.floor(x) * 7 + Math.floor(y) * 13) % 5 === 0 ? 'grass-dark' : 'grass'
 }
@@ -196,6 +200,7 @@ const WALL_SPRITE: Record<'left' | 'right', Rs> = {
 /** 마을 오브젝트 배치 — 모든 좌표는 격자(0..VW, 0..VH) 안에 있고 대로를 침범하지 않는다 */
 function villageProps(): PropDef[] {
   const P: PropDef[] = []
+  const TEMPLE_GARDEN: [number, number][] = [] // 대성당 앞광장 화단 좌표 — furniture 단계에서 배치
   // ════════ 학교 본교 쿼드 (x2–17, y2–13) — 안뜰을 건물이 둘러쌈 ════════
   P.push({ id: 'b-magic', kind: 'hall', cell: { x: 4.4, y: 2.8 }, size: { w: 5.0, d: 3.2 }, label: '마법동' })
   P.push({ id: 'b-alch', kind: 'hall', cell: { x: 2.6, y: 7.4 }, size: { w: 2.8, d: 2.6 }, label: '연금술동' })
@@ -259,14 +264,30 @@ function villageProps(): PropDef[] {
     P.push({ id: `b-cloW${i}`, kind: 'cloister', cell: { x: 3.0, y: 30.4 + i * 1.0 }, size: { w: 0.6, d: 0.9 } })
     P.push({ id: `b-cloE${i}`, kind: 'cloister', cell: { x: 15.6, y: 30.4 + i * 1.0 }, size: { w: 0.6, d: 0.9 } })
   }
-  P.push({ id: 'b-priest0', kind: 'cottage', cell: { x: 4.0, y: 35.2 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
-  P.push({ id: 'b-priest1', kind: 'cottage', cell: { x: 12.2, y: 35.4 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
-  P.push({ id: 'b-statue-saint', kind: 'statue', cell: { x: TEMPLE_YARD.x, y: 33.6 }, size: { w: 1.0, d: 1.0 }, label: '성녀 상' })
+  P.push({ id: 'b-priest0', kind: 'cottage', cell: { x: 3.6, y: 35.4 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
+  P.push({ id: 'b-priest1', kind: 'cottage', cell: { x: 6.4, y: 36.0 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
+  P.push({ id: 'b-priest2', kind: 'cottage', cell: { x: 13.6, y: 35.6 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
+  P.push({ id: 'b-statue-saint', kind: 'statue', cell: { x: TEMPLE_YARD.x, y: 32.4 }, size: { w: 1.0, d: 1.0 }, label: '성녀 상' })
+  // 앞광장 진입부 소형 봉헌 조상 2기
+  P.push({ id: 'b-shrineL', kind: 'statue', cell: { x: 7.2, y: 36.4 }, size: { w: 0.8, d: 0.8 } })
+  P.push({ id: 'b-shrineR', kind: 'statue', cell: { x: 11.8, y: 36.4 }, size: { w: 0.8, d: 0.8 } })
+  // 대성당 정원 — 앞광장 둘레 화단(부시 타원 링) + 가로수 + 벤치 (배치 헬퍼는 아래에서 재적용)
+  TEMPLE_GARDEN.push(
+    ...Array.from({ length: 18 }, (_, a) => {
+      const th = (a / 18) * Math.PI * 2
+      return [TEMPLE_YARD.x + Math.cos(th) * 5.6, TEMPLE_YARD.y + Math.sin(th) * 4.9] as [number, number]
+    }),
+  )
+  const templeGreen: [number, number, string][] = [
+    [3.4, 31.2, 'c'], [3.4, 34.0, 'a'], [15.9, 34.6, 'c'], [15.9, 30.0, 'a'],
+    [9.8, 37.2, 'a'], [6.0, 37.2, 'g'], [13.2, 37.2, 'o'], [3.6, 37.0, 'c'],
+  ]
+  templeGreen.forEach(([x, y, v], i) => P.push({ id: `tg-t${i}`, kind: 'tree', cell: { x, y }, variant: v }))
 
-  // ════════ 햇살 농가 (x20–33, y28–38) — 밭 위쪽에 헛간·풍차·농가 ════════
-  P.push({ id: 'b-barn', kind: 'barn', cell: { x: 21.0, y: 28.4 }, size: { w: 2.6, d: 2.0 } })
-  P.push({ id: 'b-mill', kind: 'windmill', cell: { x: 25.6, y: 28.2 }, size: { w: 1.6, d: 1.4 } })
-  P.push({ id: 'b-farmhouse', kind: 'cottage', cell: { x: 29.2, y: 28.6 }, size: { w: 1.8, d: 1.6 }, variant: 'red' })
+  // ════════ 햇살 농가 (x20–33, y33–38) — 밭을 서·동에서 헛간·풍차·농가가 감쌈 ════════
+  P.push({ id: 'b-barn', kind: 'barn', cell: { x: 20.0, y: 32.8 }, size: { w: 2.6, d: 2.0 } })
+  P.push({ id: 'b-mill', kind: 'windmill', cell: { x: 20.4, y: 35.6 }, size: { w: 1.6, d: 1.4 } })
+  P.push({ id: 'b-farmhouse', kind: 'cottage', cell: { x: 30.6, y: 33.0 }, size: { w: 1.8, d: 1.6 }, variant: 'red' })
 
   // ════════ 통문 주둔지 (x36–50, y27–38) — 성벽 사각 + 망루 4 + 막사 + 마구간 + 군 통문 ════════
   const BX0 = 37, BX1 = 49, BY0 = 28.5, BY1 = 36.5
@@ -316,7 +337,9 @@ function villageProps(): PropDef[] {
     (Math.abs(x - FOUNTAIN.x) < 2.4 && y > 2.0 && y < ST_N.b) || // 광장 남북 진입로
     (Math.abs(y - FOUNTAIN.y) < 2.2 && x > 2.0 && x < AV_R.b) || // 광장 동서 진입로
     (x > AV_R.a && x < VW - 2.5 && Math.abs(y - 20.5) < 1.5) || // 상점가 아케이드
-    (Math.abs(x - TEMPLE_YARD.x) < 1.5 && y > ST_S.a) // 대성당 진입로
+    (Math.abs(x - TEMPLE_YARD.x) < 1.5 && y > ST_S.a) || // 대성당 진입로
+    (x > 19.8 && x < 33 && Math.abs(y - 29.6) < 0.7) || // 공원 산책로
+    Math.hypot((x - 14.4) * 1.15, y - 32.2) < 2.0 // 대성당 정원 연못
   const place = (id: string, kind: PropDef['kind'], x: number, y: number, extra: Partial<PropDef> = {}) => {
     if (blocked(x, y) || onRoad(x, y) || onPlaza(x, y) || onSand(x, y)) return
     P.push({ id, kind, cell: { x, y }, ...extra })
@@ -332,9 +355,22 @@ function villageProps(): PropDef[] {
   }
   bushRow('plazN', 20.5, 2.9, 32.5) // 광장 북
   bushRow('plazS', 20.5, 12.2, 32.5) // 광장 남
-  bushRow('parkN', 20.0, 28.2, 33.0) // 공원 북
-  bushRow('parkS', 20.0, 30.4, 33.0) // 공원 남
-  bushRow('yardN', 5.5, 27.9, 13.5) // 대성당 앞광장 북
+  bushRow('parkN', 20.0, 28.0, 33.0) // 공원 북 (산책로 위)
+  bushRow('parkS', 20.0, 32.1, 33.0) // 공원 남
+  bushRow('parkMidL', 20.0, 30.9, 24.8, 0.7) // 산책로 남측 화단 좌
+  bushRow('parkMidR', 28.6, 30.9, 33.0, 0.7) // 산책로 남측 화단 우
+
+  // 대성당 앞광장 화단 링 + 벤치 (앞광장 포장 위 벤치는 직접 push)
+  TEMPLE_GARDEN.forEach(([x, y], i) => {
+    if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `tg-bush${i}`, kind: 'bush', cell: { x, y } })
+  })
+  const yardBench: [number, number, 'l' | 'r'][] = [
+    [TEMPLE_YARD.x - 2.8, TEMPLE_YARD.y + 0.4, 'l'], [TEMPLE_YARD.x + 2.8, TEMPLE_YARD.y + 0.4, 'r'],
+    [TEMPLE_YARD.x - 2.8, TEMPLE_YARD.y - 2.6, 'l'], [TEMPLE_YARD.x + 2.8, TEMPLE_YARD.y - 2.6, 'r'],
+  ]
+  yardBench.forEach(([x, y, v], i) => {
+    if (!blocked(x, y)) P.push({ id: `be-tp${i}`, kind: 'bench', cell: { x, y }, variant: v })
+  })
 
   // ── 가로등 — 대로 양편(4셀 간격) + 광장·투기장·앞광장·의전대로 둘레 ──
   const lamps: [number, number][] = []
@@ -349,7 +385,13 @@ function villageProps(): PropDef[] {
   for (let y = 29; y <= 36; y += 3) { lamps.push([GATE_WAY.a - 0.6, y]); lamps.push([GATE_WAY.b + 0.6, y]) }
   for (let a = 0; a < 6; a++)
     lamps.push([TEMPLE_YARD.x + Math.cos((a / 6) * 6.283) * 5.2, TEMPLE_YARD.y + Math.sin((a / 6) * 6.283) * 4.8])
-  lamps.forEach(([x, y], i) => place(`l${i}`, 'lamp', x, y))
+  // 근접 중복 제거 (2.6셀 이내면 스킵)
+  const keptLamps: [number, number][] = []
+  for (const [x, y] of lamps) {
+    if (keptLamps.some(([kx, ky]) => Math.hypot(kx - x, ky - y) < 2.6)) continue
+    keptLamps.push([x, y])
+  }
+  keptLamps.forEach(([x, y], i) => place(`l${i}`, 'lamp', x, y))
 
   // ── 현수막 — 광장 남측 진입부 · 의전 대로 입구 ──
   place('bn0', 'banner', FOUNTAIN.x - 2.8, 12.4, { variant: '#5b6bd6' })
@@ -361,7 +403,7 @@ function villageProps(): PropDef[] {
   const benchSpots: [number, number, 'l' | 'r'][] = [
     [FOUNTAIN.x - 3.4, FOUNTAIN.y - 2.2, 'l'], [FOUNTAIN.x + 3.4, FOUNTAIN.y - 2.2, 'r'],
     [FOUNTAIN.x - 3.4, FOUNTAIN.y + 2.2, 'r'], [FOUNTAIN.x + 3.4, FOUNTAIN.y + 2.2, 'l'],
-    [22.5, 29.3, 'r'], [26.5, 29.3, 'l'], [30.5, 29.3, 'r'], // 공원
+    [21.6, 29.0, 'l'], [21.6, 30.9, 'r'], [24.2, 29.0, 'l'], [31.4, 29.0, 'r'], [31.4, 30.9, 'l'], // 공원 산책로 양편 페어
     [40.2, 19.2, 'l'], [43.5, 22.2, 'r'], [46.6, 19.2, 'l'], // 아케이드
     [TEMPLE_YARD.x - 3.0, TEMPLE_YARD.y - 1.6, 'l'], [TEMPLE_YARD.x + 3.0, TEMPLE_YARD.y - 1.6, 'r'], // 앞광장
     [COLOSSEUM.x - 6.9, COLOSSEUM.y, 'r'], [COLOSSEUM.x + 6.9, COLOSSEUM.y, 'l'], // 투기장 동서
@@ -401,16 +443,23 @@ function villageProps(): PropDef[] {
     [24.0, 3.4, 'a'], [29.5, 4.0, 'o'], [22.0, 11.0, 'g'], [31.0, 11.5, 'c'], // 광장 코너
     [38.5, 11.0, 'a'], [43.0, 11.2, 'g'], [48.0, 5.5, 'o'], // 하우징 정원
     [12.5, 22.5, 'c'], [7.0, 15.5, 'g'], [3.5, 22.0, 'a'], // 기숙사
-    [22.0, 33.0, 'o'], [31.5, 33.5, 'g'], // 농가
-    [6.5, 33.0, 'c'], [13.0, 32.0, 'a'], [9.5, 37.0, 'g'], // 대성당
+    [21.5, 35.0, 'o'], [31.6, 36.0, 'g'], // 농가 구석
     [48.0, 20.5, 'c'], [48.5, 30.0, 'g'], // 상점가·주둔지 동편
     [COLOSSEUM.x - 7.5, COLOSSEUM.y - 5, 'b'], [COLOSSEUM.x + 7.5, COLOSSEUM.y - 5, 'b'],
+    // 마로니에 공원 — 밤나무 가로수 밀집. 산책로 y29.9 위·아래 2열 + 양 끝 큰나무
+    [20.6, 28.3, 'c'], [23.0, 28.3, 'a'], [25.4, 28.3, 'c'], [28.0, 28.3, 'a'], [30.4, 28.3, 'c'], [32.3, 28.4, 'a'],
+    [20.6, 31.7, 'a'], [23.6, 31.8, 'c'], [29.4, 31.8, 'c'], [32.4, 31.7, 'a'],
+    [19.9, 29.9, 'g'], [32.8, 29.9, 'g'],
   ]
   trees.push(...clusters)
   trees.forEach(([x, y, v], i) => {
     if (!blocked(x, y, 0.6) && !onRoad(x, y) && !onPlaza(x, y) && !onSand(x, y))
       P.push({ id: `t${i}`, kind: 'tree', cell: { x, y }, variant: v })
   })
+  // 공원 중앙 정자(연주대) + 산책로변 쓰레기통
+  P.push({ id: 'b-parkgazebo', kind: 'gazebo', cell: { x: 26.6, y: 31.6 }, size: { w: 1.8, d: 1.6 } })
+  place('tb-pk0', 'trashbin', 23.0, 30.9)
+  place('tb-pk1', 'trashbin', 30.2, 29.0)
 
   // 종류 기반 플래그 + 라스터 스프라이트 일괄 부여 (개별 push 에서 누락 방지)
   for (const p of P) {
