@@ -10,7 +10,7 @@ import { ISO_TILE_W, ISO_TILE_H, isoToScreen, isoBounds, TILE_COLORS, TILE_SPRIT
 import type { TileKind, PropDef } from '@/lib/iso'
 import { renderProp, IsoChara } from '@/components/game/iso-sprites'
 
-const SCALE = 1.4
+const SCALE = 1.15 // 맵 4배 확장(52×40)에 맞춰 축소 (기존 1.4)
 const PAD_TOP = 240 // 키 큰 건물이 앵커 위로 솟는 여유
 const PAD_BOTTOM = 60
 const HW = ISO_TILE_W / 2

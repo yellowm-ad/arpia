@@ -141,14 +141,28 @@ type Rs = { sprite: string; px: { w: number; h: number }; anchor: { x: number; y
 const B_ = (n: string, w: number, h: number, ax: number, ay: number): Rs => ({
   sprite: `/images/map/props/${n}.png`, px: { w, h }, anchor: { x: ax, y: ay },
 })
-// id 별 (개별 footprint) — 학교 건물동
+// id 별 (개별 footprint)
 const BUILDING_SPRITE: Record<string, Rs> = {
   'b-magic': B_('b_hall_magic', 259, 283, 130, 150),
   'b-alch': B_('b_hall_small', 157, 178, 79, 100),
   'b-arti': B_('b_hall_small', 157, 178, 79, 100),
+  'b-auditorium': B_('b_hall_small', 157, 178, 79, 100),
+  'b-library': B_('b_hall_small', 157, 178, 79, 100),
+  'b-commons': B_('b_hall_small', 157, 178, 79, 100),
+  'b-clock': B_('b_clocktower', 83, 195, 42, 153),
+  'b-belltower': B_('b_belltower', 90, 236, 45, 191),
+  'b-market': B_('b_market', 198, 175, 99, 76),
+  'b-inn': B_('b_inn', 173, 197, 87, 111),
+  'b-guild': B_('b_guildhall', 173, 204, 87, 118),
+  'b-gate': B_('b_gate_grand', 192, 171, 96, 75),
+  'b-stable': B_('b_stable', 141, 121, 71, 51),
+  'b-barrack0': B_('b_barrack', 154, 117, 77, 40),
+  'b-barrack1': B_('b_barrack', 154, 117, 77, 40),
+  'b-statue': B_('b_statue', 86, 156, 43, 134),
+  'b-statue-saint': B_('b_statue', 86, 156, 43, 134),
+  'b-gazebo': B_('b_gazebo', 120, 143, 60, 114),
 }
-// kind 별 (동일 스프라이트 반복) — 상점/노점/신전/헛간/풍차/망루/성문/콜로세움/분수
-// colosseum·fountain 은 radial(cell=중심) → anchor 는 스프라이트의 지면 중심 픽셀
+// kind 별 (동일 스프라이트 반복)
 const KIND_BUILDING_SPRITE: Partial<Record<PropDef['kind'], Rs>> = {
   shop: B_('b_shop', 170, 171, 85, 86),
   stall: B_('b_stall', 70, 75, 35, 40),
@@ -156,15 +170,27 @@ const KIND_BUILDING_SPRITE: Partial<Record<PropDef['kind'], Rs>> = {
   barn: B_('b_barn', 115, 111, 58, 53),
   windmill: B_('b_windmill', 77, 134, 39, 96),
   tower: B_('b_tower', 58, 105, 29, 76),
-  gate: B_('b_gate', 96, 94, 48, 46),
   colosseum: B_('b_colosseum', 218, 149, 109, 89),
   fountain: B_('b_fountain', 115, 114, 58, 82),
+  statue: B_('b_statue', 86, 156, 43, 134),
+  gazebo: B_('b_gazebo', 120, 143, 60, 114),
+  cloister: B_('b_cloister', 58, 44, 29, 44),
 }
 // 주택 지붕색 variant 별
 const COTTAGE_SPRITE: Record<string, Rs> = {
   red: B_('b_cottage_red', 96, 111, 48, 63),
   slate: B_('b_cottage_slate', 96, 98, 48, 50),
   teal: B_('b_cottage_teal', 96, 115, 48, 67),
+}
+// 벤치 방향 variant (아이소 격자축 평행)
+const BENCH_SPRITE: Record<string, Rs> = {
+  l: B_('b_bench_l', 30, 30, 15, 30),
+  r: B_('b_bench_r', 28, 30, 14, 30),
+}
+// 성벽 세그먼트 (타일링) — facing 별 축
+const WALL_SPRITE: Record<'left' | 'right', Rs> = {
+  right: B_('b_wall_se', 46, 40, 23, 40), // +x 축 (화면 우하)
+  left: B_('b_wall_sw', 46, 40, 23, 40), // +y 축 (화면 좌하)
 }
 
 /** 마을 오브젝트 배치 — 모든 좌표는 격자(0..VW, 0..VH) 안에 있고 대로를 침범하지 않는다 */
@@ -181,10 +207,10 @@ function villageProps(): PropDef[] {
   // ════════ 중앙 대광장 (x20–33, y2–13) ════════
   P.push({
     id: 'b-fountain', kind: 'fountain', cell: { x: FOUNTAIN.x, y: FOUNTAIN.y },
-    size: { w: 2.2, d: 2.2 }, collide: { w: 3.6, d: 3.6 },
+    size: { w: 2.8, d: 2.8 }, collide: { w: 4.2, d: 4.2 },
   })
-  P.push({ id: 'b-statue', kind: 'statue', cell: { x: FOUNTAIN.x, y: 3.6 }, size: { w: 1.0, d: 1.0 }, label: '창립자 상' })
-  P.push({ id: 'b-gazebo', kind: 'gazebo', cell: { x: 30.6, y: 10.6 }, size: { w: 1.8, d: 1.8 } })
+  P.push({ id: 'b-statue', kind: 'statue', cell: { x: 21.5, y: 4.6 }, size: { w: 1.0, d: 1.0 }, label: '창립자 상' })
+  P.push({ id: 'b-gazebo', kind: 'gazebo', cell: { x: 32.0, y: 10.8 }, size: { w: 1.8, d: 1.8 } })
 
   // ════════ 하우징 마을 (x36–50, y2–13) — 2줄 8동 ════════
   const houseVariants = ['red', 'slate', 'teal', 'red', 'slate', 'teal', 'red', 'slate']
@@ -229,8 +255,10 @@ function villageProps(): PropDef[] {
   // ════════ 성역 대성당 (x2–17, y27–38) — 돔 + 종탑 + 회랑 + 숙소 + 앞광장 ════════
   P.push({ id: 'b-temple', kind: 'dome', cell: { x: 3.0, y: 27.8 }, size: { w: 4.8, d: 3.8 }, label: '성역 대성당' })
   P.push({ id: 'b-belltower', kind: 'tower', cell: { x: 13.4, y: 28.0 }, size: { w: 1.4, d: 1.4 }, label: '종탑' })
-  P.push({ id: 'b-cloisterW', kind: 'cloister', cell: { x: 2.8, y: 31.4 }, size: { w: 0.6, d: 4.2 }, facing: 'left' })
-  P.push({ id: 'b-cloisterE', kind: 'cloister', cell: { x: 15.6, y: 31.4 }, size: { w: 0.6, d: 4.2 }, facing: 'left' })
+  for (let i = 0; i < 5; i++) {
+    P.push({ id: `b-cloW${i}`, kind: 'cloister', cell: { x: 3.0, y: 30.4 + i * 1.0 }, size: { w: 0.6, d: 0.9 } })
+    P.push({ id: `b-cloE${i}`, kind: 'cloister', cell: { x: 15.6, y: 30.4 + i * 1.0 }, size: { w: 0.6, d: 0.9 } })
+  }
   P.push({ id: 'b-priest0', kind: 'cottage', cell: { x: 4.0, y: 35.2 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
   P.push({ id: 'b-priest1', kind: 'cottage', cell: { x: 12.2, y: 35.4 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
   P.push({ id: 'b-statue-saint', kind: 'statue', cell: { x: TEMPLE_YARD.x, y: 33.6 }, size: { w: 1.0, d: 1.0 }, label: '성녀 상' })
@@ -246,15 +274,24 @@ function villageProps(): PropDef[] {
   P.push({ id: 'b-tw1', kind: 'tower', cell: { x: BX1, y: BY0 }, size: { w: 1.1, d: 1.1 } })
   P.push({ id: 'b-tw2', kind: 'tower', cell: { x: BX1, y: BY1 }, size: { w: 1.1, d: 1.1 } })
   P.push({ id: 'b-tw3', kind: 'tower', cell: { x: BX0, y: BY1 }, size: { w: 1.1, d: 1.1 } })
-  // 북벽 (ST_S 쪽 진입 개구부 x41.5~45.5)
-  P.push({ id: 'b-wN0', kind: 'wall', cell: { x: BX0 + 1.1, y: BY0 + 0.2 }, size: { w: 3.4, d: 0.5 }, facing: 'right' })
-  P.push({ id: 'b-wN1', kind: 'wall', cell: { x: 45.4, y: BY0 + 0.2 }, size: { w: 3.4, d: 0.5 }, facing: 'right' })
-  // 남벽 (군 통문 개구부)
-  P.push({ id: 'b-wS0', kind: 'wall', cell: { x: BX0 + 1.1, y: BY1 + 0.2 }, size: { w: 3.3, d: 0.5 }, facing: 'right' })
-  P.push({ id: 'b-wS1', kind: 'wall', cell: { x: 45.4, y: BY1 + 0.2 }, size: { w: 3.3, d: 0.5 }, facing: 'right' })
-  // 서·동벽
-  P.push({ id: 'b-wW', kind: 'wall', cell: { x: BX0 + 0.2, y: BY0 + 1.1 }, size: { w: BY1 - BY0 - 1.1, d: 0.5 }, facing: 'left' })
-  P.push({ id: 'b-wE', kind: 'wall', cell: { x: BX1 + 0.2, y: BY0 + 1.1 }, size: { w: BY1 - BY0 - 1.1, d: 0.5 }, facing: 'left' })
+  // 성벽 세그먼트 타일링 — 개구부(북: ST_S 진입 x41.5~45.5 / 남: 군 통문 x41~45) 남기고
+  const WSEG = 0.95
+  const wallRunX = (tag: string, x0: number, x1: number, y: number) => {
+    const n = Math.max(1, Math.round((x1 - x0) / WSEG))
+    for (let i = 0; i < n; i++)
+      P.push({ id: `b-w${tag}${i}`, kind: 'wall', cell: { x: x0 + (i + 0.5) * ((x1 - x0) / n), y }, size: { w: 0.9, d: 0.5 }, facing: 'right' })
+  }
+  const wallRunY = (tag: string, y0: number, y1: number, x: number) => {
+    const n = Math.max(1, Math.round((y1 - y0) / WSEG))
+    for (let i = 0; i < n; i++)
+      P.push({ id: `b-w${tag}${i}`, kind: 'wall', cell: { x, y: y0 + (i + 0.5) * ((y1 - y0) / n) }, size: { w: 0.5, d: 0.9 }, facing: 'left' })
+  }
+  wallRunX('N0', BX0 + 1.0, 41.3, BY0 + 0.2) // 북벽 좌
+  wallRunX('N1', 45.7, BX1 - 1.0, BY0 + 0.2) // 북벽 우
+  wallRunX('S0', BX0 + 1.0, 40.8, BY1 + 0.2) // 남벽 좌
+  wallRunX('S1', 45.2, BX1 - 1.0, BY1 + 0.2) // 남벽 우
+  wallRunY('W', BY0 + 1.0, BY1 - 1.0, BX0 + 0.2) // 서벽
+  wallRunY('E', BY0 + 1.0, BY1 - 1.0, BX1 + 0.2) // 동벽
   P.push({ id: 'b-barrack0', kind: 'hall', cell: { x: 38.0, y: 29.8 }, size: { w: 3.0, d: 1.8 }, label: '막사' })
   P.push({ id: 'b-barrack1', kind: 'hall', cell: { x: 38.0, y: 33.0 }, size: { w: 3.0, d: 1.8 }, label: '막사' })
   P.push({ id: 'b-stable', kind: 'hall', cell: { x: 46.0, y: 33.4 }, size: { w: 2.4, d: 2.0 }, label: '마구간' })
@@ -320,16 +357,17 @@ function villageProps(): PropDef[] {
   place('bn2', 'banner', GATE_WAY.a - 0.7, ST_S.b + 0.6, { variant: '#b64430' })
   place('bn3', 'banner', GATE_WAY.b + 0.7, ST_S.b + 0.6, { variant: '#b64430' })
 
-  // ── 벤치 — 분수 둘레 / 공원 / 아케이드 / 앞광장 (blocked·plaza 통과 허용 위해 직접 push) ──
-  const benchSpots: [number, number][] = [
-    [FOUNTAIN.x, FOUNTAIN.y - 3.2], [FOUNTAIN.x - 3.4, FOUNTAIN.y], [FOUNTAIN.x + 3.4, FOUNTAIN.y], [FOUNTAIN.x, FOUNTAIN.y + 3.2],
-    [22.5, 29.3], [26.5, 29.3], [30.5, 29.3], // 공원
-    [40.5, 19.2], [43.5, 22.0], [46.5, 19.2], // 아케이드
-    [TEMPLE_YARD.x - 3.0, TEMPLE_YARD.y], [TEMPLE_YARD.x + 3.0, TEMPLE_YARD.y], // 앞광장
-    [COLOSSEUM.x - 6.8, COLOSSEUM.y], [COLOSSEUM.x + 6.8, COLOSSEUM.y], // 투기장 동서
+  // ── 벤치 — 분수 둘레 / 공원 / 아케이드 / 앞광장. variant l|r = 아이소 축 방향 ──
+  const benchSpots: [number, number, 'l' | 'r'][] = [
+    [FOUNTAIN.x - 3.4, FOUNTAIN.y - 2.2, 'l'], [FOUNTAIN.x + 3.4, FOUNTAIN.y - 2.2, 'r'],
+    [FOUNTAIN.x - 3.4, FOUNTAIN.y + 2.2, 'r'], [FOUNTAIN.x + 3.4, FOUNTAIN.y + 2.2, 'l'],
+    [22.5, 29.3, 'r'], [26.5, 29.3, 'l'], [30.5, 29.3, 'r'], // 공원
+    [40.2, 19.2, 'l'], [43.5, 22.2, 'r'], [46.6, 19.2, 'l'], // 아케이드
+    [TEMPLE_YARD.x - 3.0, TEMPLE_YARD.y - 1.6, 'l'], [TEMPLE_YARD.x + 3.0, TEMPLE_YARD.y - 1.6, 'r'], // 앞광장
+    [COLOSSEUM.x - 6.9, COLOSSEUM.y, 'r'], [COLOSSEUM.x + 6.9, COLOSSEUM.y, 'l'], // 투기장 동서
   ]
-  benchSpots.forEach(([x, y], i) => {
-    if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be${i}`, kind: 'bench', cell: { x, y } })
+  benchSpots.forEach(([x, y, v], i) => {
+    if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be${i}`, kind: 'bench', cell: { x, y }, variant: v })
   })
 
   // ── 쓰레기통 — 대로 교차점 4곳 + 분수/공원 벤치 옆 ──
@@ -384,7 +422,11 @@ function villageProps(): PropDef[] {
         ? COTTAGE_SPRITE[p.variant ?? 'slate']
         : p.kind === 'tree'
           ? TREE_SPRITE[p.variant ?? 'a']
-          : KIND_BUILDING_SPRITE[p.kind] ?? PROP_SPRITE[p.kind])
+          : p.kind === 'bench'
+            ? BENCH_SPRITE[p.variant ?? 'l']
+            : p.kind === 'wall'
+              ? WALL_SPRITE[p.facing ?? 'right']
+              : KIND_BUILDING_SPRITE[p.kind] ?? PROP_SPRITE[p.kind])
     if (rs) {
       p.sprite = rs.sprite
       p.px = rs.px
