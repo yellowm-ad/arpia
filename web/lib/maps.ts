@@ -165,14 +165,14 @@ function villageProps(): PropDef[] {
   P.push({ id: 'b-magic', kind: 'hall', cell: { x: 1.8, y: 1.7 }, size: { w: 4.6, d: 3.0 }, label: '마법동' })
   P.push({ id: 'b-alch', kind: 'hall', cell: { x: 0.8, y: 8.4 }, size: { w: 2.7, d: 2.2 }, label: '연금술동' })
   P.push({ id: 'b-arti', kind: 'hall', cell: { x: 0.8, y: 10.8 }, size: { w: 2.7, d: 2.1 }, label: '마도구동' })
-  // ── 기숙사 (dorm 지구: x4~6.6, y8.2~13.2) ──
-  P.push({ id: 'b-dorm1', kind: 'cottage', cell: { x: 4.7, y: 8.3 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
-  P.push({ id: 'b-dorm2', kind: 'cottage', cell: { x: 4.7, y: 10.2 }, size: { w: 1.6, d: 1.4 }, variant: 'teal' })
-  P.push({ id: 'b-dorm3', kind: 'cottage', cell: { x: 4.7, y: 12.0 }, size: { w: 1.6, d: 1.3 }, variant: 'slate' })
-  // ── 하우징 마을 (북동 지구: x15.4~24.4, y1.6~5.6) ──
+  // ── 기숙사 (dorm 지구) — 세로로 간격 벌려 3동 ──
+  P.push({ id: 'b-dorm1', kind: 'cottage', cell: { x: 4.5, y: 8.1 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
+  P.push({ id: 'b-dorm2', kind: 'cottage', cell: { x: 4.5, y: 10.4 }, size: { w: 1.6, d: 1.4 }, variant: 'teal' })
+  P.push({ id: 'b-dorm3', kind: 'cottage', cell: { x: 4.5, y: 12.7 }, size: { w: 1.6, d: 1.3 }, variant: 'slate' })
+  // ── 하우징 마을 (북동 지구) — 2줄 그리드, 스프라이트 폭(≈3셀) 고려해 3.0셀 간격 ──
   const houseSpots: [number, number, string][] = [
-    [15.6, 1.7, 'red'], [18.2, 1.6, 'slate'], [20.8, 1.8, 'teal'], [22.8, 1.7, 'red'],
-    [16.3, 4.0, 'slate'], [19.1, 3.8, 'red'], [21.9, 4.0, 'teal'],
+    [15.9, 1.9, 'red'], [18.9, 1.8, 'slate'], [21.9, 1.9, 'teal'],
+    [16.4, 4.7, 'slate'], [19.4, 4.6, 'red'], [22.4, 4.7, 'teal'],
   ]
   houseSpots.forEach(([x, y, v], i) =>
     P.push({ id: `b-house${i}`, kind: 'cottage', cell: { x, y }, size: { w: 1.6, d: 1.4 }, variant: v }),
@@ -187,10 +187,11 @@ function villageProps(): PropDef[] {
     id: 'b-colosseum', kind: 'colosseum', cell: { x: COLOSSEUM.x, y: COLOSSEUM.y },
     size: { w: 3.4, d: 3.4 }, collide: { w: 5.6, d: 5.2 }, label: '수련의 광장',
   })
-  // ── 상점가 (AV_R 오른쪽) ──
-  P.push({ id: 'b-shop', kind: 'shop', cell: { x: 15.3, y: 7.7 }, size: { w: 3.0, d: 2.3 } })
+  // ── 상점가 (AV_R 오른쪽) — 상점 본동 + 아케이드 통로(y≈9.2) 양옆으로 노점 줄 ──
+  P.push({ id: 'b-shop', kind: 'shop', cell: { x: 15.3, y: 7.5 }, size: { w: 3.0, d: 2.3 } })
   const stalls: [number, number, string][] = [
-    [18.7, 7.6, '#c76153'], [20.6, 10.6, '#4f9b93'], [22.5, 7.7, '#c58f42'], [23.7, 10.9, '#6b6a9c'],
+    [19.3, 8.0, '#c76153'], [21.4, 8.0, '#4f9b93'], [23.3, 8.0, '#c58f42'],
+    [19.3, 10.5, '#6b6a9c'], [21.4, 10.5, '#c76153'], [23.3, 10.5, '#4f9b93'],
   ]
   stalls.forEach(([x, y, c], i) =>
     P.push({ id: `b-stall${i}`, kind: 'stall', cell: { x, y }, size: { w: 1.2, d: 1 }, variant: c }),
@@ -218,20 +219,21 @@ function villageProps(): PropDef[] {
   P.push({ id: 'b-brk1', kind: 'cottage', cell: { x: 16.6, y: 15.9 }, size: { w: 1.6, d: 1.3 }, variant: 'slate' })
   P.push({ id: 'b-brk2', kind: 'cottage', cell: { x: 21.2, y: 15.9 }, size: { w: 1.6, d: 1.3 }, variant: 'slate' })
   P.push({ id: 'b-gate', kind: 'gate', cell: { x: 19.5, y: 18.9 }, size: { w: 2.2, d: 0.8 }, label: '군 통문' })
-  // ── 나무 (길·광장·모래밭·건물 피해서, 단풍 섞어서) ──
-  const trees: [number, number, string][] = [
-    [2.2, 6.0, 'g'], [6.4, 6.0, 'a'], [6.2, 3.2, 'c'], [1.7, 3.7, 'o'],
-    [16.0, 6.0, 'b'], [19.4, 6.0, 'g'], [23.4, 6.0, 'c'], [17.6, 2.6, 'a'], [23.4, 2.9, 'o'], [21.2, 6.0, 'b'],
-    [3.9, 9.7, 'a'], [3.8, 12.5, 'g'], [6.6, 9.4, 'c'], [6.5, 12.6, 'o'],
-    [9.0, 12.4, 'b'], [12.7, 12.4, 'c'], [6.9, 15.4, 'g'],
-    [6.8, 16.4, 'a'], [7.0, 18.2, 'c'], [3.2, 17.0, 'g'], [3.4, 12.9, 'o'],
-    [12.7, 15.4, 'b'], [24.0, 10.8, 'g'], [23.8, 12.3, 'c'], [12.6, 18.2, 'a'],
-  ]
-  trees.forEach(([x, y, v], i) => P.push({ id: `t${i}`, kind: 'tree', cell: { x, y }, variant: v }))
-  // ── 관목 울타리 — 광장·공원 테두리 (대로 밖). 라스터 부시를 일정 간격으로 줄지어 배치 ──
+  // ════════════════════════════════════════════════════════════════════
+  //  거리 furniture — 유럽 공원/거리 배치 관례
+  //   · 가로등: 보도/대로 가장자리(연석 밖) 규칙적 간격, 교차로·광장 둘레
+  //   · 벤치: 울타리·건물 등지고 좌석은 열린 쪽(분수·길). 라스터 1방향뿐이라
+  //     "북쪽에 두고 남향" 배치로 통일
+  //   · 쓰레기통: 벤치 옆 + 대로 교차점
+  //   · 우체통: 광장 모서리·건물 앞선
+  //   · 자전거: 상점·집 입구에만
+  //   · 나무: 대로 verge 열 + 잔디 군집(건물 footprint 회피)
+  // ════════════════════════════════════════════════════════════════════
+
+  // ── 관목 울타리 — 광장·공원 테두리(대로 밖) 부시 줄 ──
   const hedgeRows: [number, number, number][] = [
-    [8.9, 1.7, 4.2], [8.9, 5.3, 4.2],
-    [8.9, 11.9, 4.4], [8.9, 14.7, 4.4],
+    [8.9, 1.7, 4.2], [8.9, 5.3, 4.2], // 광장 북/남 테두리
+    [8.9, 11.9, 4.4], [8.9, 14.7, 4.4], // 마로니에 공원 북/남 테두리
   ]
   const BUSH_STEP = 0.72
   hedgeRows.forEach(([x0, y, w], r) => {
@@ -240,29 +242,77 @@ function villageProps(): PropDef[] {
       P.push({ id: `hd${r}-${i}`, kind: 'bush', cell: { x: x0 + (i * w) / (n - 1), y } })
     }
   })
-  // ── 가로등 (넓힌 대로변) ──
+
+  // ── 가로등 — 대로 가장자리 열 + 광장·콜로세움 둘레 ──
   const lamps: [number, number][] = [
-    [6.9, 3], [6.9, 10.5], [6.9, 16.5], [8.9, 5.5], [8.9, 11.5],
-    [13.0, 3], [13.0, 10.5], [13.0, 16.5], [15.0, 5.5], [15.0, 11.5],
-    [11, 7.4], [17, 9.2], [5.4, 13.4], [19.5, 15.6],
+    // 세로 대로 AV_L 양편
+    [6.6, 2.4], [6.6, 5.6], [6.6, 10.0], [6.6, 12.6], [6.6, 16.6], [6.6, 19.4],
+    [9.15, 2.4], [9.15, 10.0], [9.15, 12.6], [9.15, 16.6],
+    // 세로 대로 AV_R 양편
+    [12.85, 2.4], [12.85, 5.6], [12.85, 12.6], [12.85, 16.6], [12.85, 19.4],
+    [15.2, 5.6], [15.2, 12.6], [15.2, 16.6],
+    // 가로 대로 ST_N 남편 / ST_S 양편
+    [3.2, 8.4], [10.4, 8.4], [17.8, 8.4], [22.0, 8.4],
+    [3.6, 12.7], [10.4, 12.7], [17.2, 12.7], [22.0, 12.7],
+    [3.6, 15.0], [17.2, 15.0], [22.0, 15.0],
+    // 광장 둘레
+    [6.5, 3.4], [15.5, 3.4], [8.2, 6.2], [13.8, 6.2], [8.6, 0.9], [13.4, 0.9],
+    // 콜로세움 둘레
+    [11.0, 6.5], [14.6, 9.8], [7.4, 9.8],
   ]
   lamps.forEach(([x, y], i) => P.push({ id: `l${i}`, kind: 'lamp', cell: { x, y } }))
-  // ── 광장 현수막 + 벤치 ──
-  P.push({ id: 'bn1', kind: 'banner', cell: { x: 8.9, y: 1.7 }, variant: '#5b6bd6' })
-  P.push({ id: 'bn2', kind: 'banner', cell: { x: 13.0, y: 1.7 }, variant: '#c58f42' })
-  P.push({ id: 'be1', kind: 'bench', cell: { x: 9.4, y: 5.0 } })
-  P.push({ id: 'be2', kind: 'bench', cell: { x: 12.6, y: 5.0 } })
-  P.push({ id: 'be3', kind: 'bench', cell: { x: 11, y: 15.3 } })
 
-  // ── 거리 소품 (우체통·자전거·쓰레기통) — 대로변·상점가에 흩뿌림 ──
-  P.push({ id: 'pb1', kind: 'postbox', cell: { x: 7.7, y: 8.6 } })
-  P.push({ id: 'pb2', kind: 'postbox', cell: { x: 14.2, y: 13.4 } })
-  P.push({ id: 'bi1', kind: 'bicycle', cell: { x: 8.4, y: 3.4 } })
-  P.push({ id: 'bi2', kind: 'bicycle', cell: { x: 15.4, y: 8.0 } })
-  P.push({ id: 'bi3', kind: 'bicycle', cell: { x: 5.9, y: 12.0 } })
-  P.push({ id: 'tb1', kind: 'trashbin', cell: { x: 13.2, y: 7.6 } })
-  P.push({ id: 'tb2', kind: 'trashbin', cell: { x: 6.6, y: 16.0 } })
-  P.push({ id: 'tb3', kind: 'trashbin', cell: { x: 17.4, y: 9.6 } })
+  // ── 현수막 — 광장 남측 진입부 양쪽 ──
+  P.push({ id: 'bn1', kind: 'banner', cell: { x: 9.4, y: 6.0 }, variant: '#5b6bd6' })
+  P.push({ id: 'bn2', kind: 'banner', cell: { x: 12.6, y: 6.0 }, variant: '#c58f42' })
+
+  // ── 벤치 — 분수 둘레(북·동·서) / 공원 / 아케이드 / 콜로세움 ──
+  const benchSpots: [number, number][] = [
+    [11.0, 6.0], [7.8, 3.4], [14.2, 3.4], // 분수 둘레 (남향으로 분수 바라봄)
+    [9.4, 12.5], [12.6, 12.5], // 공원 북 테두리 (남향)
+    [10.0, 15.3], [12.4, 15.3], // 공원 남 테두리
+    [19.0, 10.4], [22.5, 10.4], // 별빛 상점가 아케이드
+    [8.6, 9.4], [13.4, 9.4], // 콜로세움 동·서
+  ]
+  benchSpots.forEach(([x, y], i) => P.push({ id: `be${i}`, kind: 'bench', cell: { x, y } }))
+
+  // ── 쓰레기통 — 벤치 옆 + 대로 교차점 ──
+  const bins: [number, number][] = [
+    [12.2, 6.0], [8.5, 3.4], [13.5, 12.5], [10.0, 15.3], [19.9, 10.4],
+    [9.15, 8.4], [12.85, 8.4], [9.15, 12.7], [12.85, 12.7],
+  ]
+  bins.forEach(([x, y], i) => P.push({ id: `tb${i}`, kind: 'trashbin', cell: { x, y } }))
+
+  // ── 우체통 — 광장 모서리·건물 앞선 ──
+  const postboxes: [number, number][] = [[9.2, 1.2], [12.9, 6.1], [15.3, 6.3], [6.4, 8.4]]
+  postboxes.forEach(([x, y], i) => P.push({ id: `pb${i}`, kind: 'postbox', cell: { x, y } }))
+
+  // ── 자전거 — 상점·집 입구에만 ──
+  const bikes: [number, number][] = [[16.2, 10.3], [17.6, 10.3], [15.9, 2.9], [21.5, 2.7]]
+  bikes.forEach(([x, y], i) => P.push({ id: `bi${i}`, kind: 'bicycle', cell: { x, y } }))
+
+  // ── 나무 — 대로 verge 열 + 잔디 군집 (건물 footprint·길 회피) ──
+  const trees: [number, number, string][] = [
+    // 하우징 마을 앞 가로수 열 (ST_N 북편 verge)
+    [16.2, 5.9, 'a'], [18.7, 5.9, 'g'], [21.2, 5.9, 'a'], [23.6, 5.9, 'o'],
+    // 기숙사 동편 verge (AV_L 서편, 기숙사와 대로 사이)
+    [6.4, 8.6, 'c'], [6.4, 11.0, 'a'], [6.4, 13.4, 'g'],
+    // 북서 잔디밭 (마법동 남·서)
+    [2.4, 5.6, 'c'], [4.2, 5.9, 'o'], [6.0, 5.7, 'g'], [2.0, 3.6, 'a'],
+    // 남서 잔디밭 (신전·성역 주변)
+    [3.0, 12.9, 'o'], [3.3, 15.6, 'c'], [3.1, 17.4, 'g'], [7.0, 18.2, 'a'], [6.9, 15.6, 'b'],
+    // 마로니에 공원 잔디 (벤치 사이)
+    [9.0, 13.7, 'a'], [13.0, 13.7, 'o'], [11.0, 15.8, 'b'],
+    // 콜로세움-공원 사이 완충 녹지
+    [8.6, 11.6, 'b'], [13.4, 11.6, 'b'],
+    // 농가 동편 verge
+    [13.6, 15.6, 'g'], [13.5, 17.8, 'c'],
+    // 상점가 동편 잔디
+    [24.0, 8.0, 'c'], [24.0, 11.0, 'g'],
+    // 주둔지 앞 (ST_S 남편)
+    [16.2, 15.4, 'a'], [22.4, 15.4, 'o'],
+  ]
+  trees.forEach(([x, y, v], i) => P.push({ id: `t${i}`, kind: 'tree', cell: { x, y }, variant: v }))
 
   // 종류 기반 플래그 + 라스터 스프라이트 일괄 부여 (개별 push 에서 누락 방지)
   for (const p of P) {

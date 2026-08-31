@@ -286,12 +286,12 @@ export const NPCS: NpcDef[] = [
   { id: 'npc-job-trainer', name: '미르엘 교수', role: 'jobTrainer', icon: '/images/npc/professor.svg', zoneId: 'z-magic-hall', cell: { x: 3.6, y: 5.7 }, greeting: ['어서 오렴, 견습생. 나는 전직을 담당하는 미르엘이란다.', '레벨이 충분히 오르면 언제든 찾아오렴 — 다음 단계로 이끌어주마.'] },
   { id: 'npc-librarian', name: '사서 오웬', role: 'flavor', icon: '/images/npc/librarian.svg', zoneId: 'z-magic-hall', cell: { x: 5.6, y: 6 }, greeting: ['마법동 도서관에는 아직 정리 중인 마법서가 많단다. 조용히 둘러보렴.', '연금술동과 마도구동도 둘러보면 좋을 게야.'] },
   // ── 별빛 상점가 ──
-  { id: 'npc-weapon', name: '대장장이 반', role: 'weaponMerchant', icon: '/images/npc/blacksmith.svg', zoneId: 'z-shops', cell: { x: 18.2, y: 9.4 }, greeting: ['속성별 완드, 다 갖춰놨다네. 전직 단계에 맞는 걸로 골라 가시게.'], shopItemIds: [...wands.map((w) => w.id), ...robes.map((r) => r.id), ...hats.map((h) => h.id), ...accessories.map((a) => a.id)] },
-  { id: 'npc-potion', name: '약사 셀린', role: 'potionMerchant', icon: '/images/npc/alchemist.svg', zoneId: 'z-shops', cell: { x: 19.9, y: 11 }, greeting: ['신선한 물약이 방금 들어왔어요. 통문 밖으로 나가기 전엔 꼭 챙기세요!'], shopItemIds: potions.map((p) => p.id) },
+  { id: 'npc-weapon', name: '대장장이 반', role: 'weaponMerchant', icon: '/images/npc/blacksmith.svg', zoneId: 'z-shops', cell: { x: 16.8, y: 10.6 }, greeting: ['속성별 완드, 다 갖춰놨다네. 전직 단계에 맞는 걸로 골라 가시게.'], shopItemIds: [...wands.map((w) => w.id), ...robes.map((r) => r.id), ...hats.map((h) => h.id), ...accessories.map((a) => a.id)] },
+  { id: 'npc-potion', name: '약사 셀린', role: 'potionMerchant', icon: '/images/npc/alchemist.svg', zoneId: 'z-shops', cell: { x: 20.4, y: 9.3 }, greeting: ['신선한 물약이 방금 들어왔어요. 통문 밖으로 나가기 전엔 꼭 챙기세요!'], shopItemIds: potions.map((p) => p.id) },
   { id: 'npc-tool', name: '만물상 토비', role: 'toolMerchant', icon: '/images/npc/tinker.svg', zoneId: 'z-shops', cell: { x: 21.6, y: 9.6 }, greeting: ['도구는 다 여기 있습니다. 가속의 모래, 이거 전투에서 꽤 쓸만해요.'], shopItemIds: tools.map((t) => t.id) },
   { id: 'npc-tamer', name: '조련사 리코', role: 'petTamer', icon: '/images/npc/librarian.svg', zoneId: 'z-shops', cell: { x: 23, y: 11.6 }, greeting: ['펫한테 새 재주를 가르쳐 볼까? 먹이도 팔고 있어.', '햇살 농가에서 펫 농장도 준비 중이라던데.'], shopItemIds: feeds.map((f) => f.id) },
   // ── 하우징 마을 ──
-  { id: 'npc-elder', name: '촌장 헬가', role: 'housing', icon: '/images/npc/elder.svg', zoneId: 'z-housing', cell: { x: 17, y: 6 }, greeting: ['하우징 마을에 온 걸 환영하네. 집을 짓는 기능은 다음 업데이트에서 만나볼 걸세.', '지친 견습생은 여기서 쉬어 가도 좋네.'] },
+  { id: 'npc-elder', name: '촌장 헬가', role: 'housing', icon: '/images/npc/elder.svg', zoneId: 'z-housing', cell: { x: 18.2, y: 6.2 }, greeting: ['하우징 마을에 온 걸 환영하네. 집을 짓는 기능은 다음 업데이트에서 만나볼 걸세.', '지친 견습생은 여기서 쉬어 가도 좋네.'] },
   // ── 수련의 광장 ──
   { id: 'npc-arena', name: '투기장장 그로먼', role: 'arenaMaster', icon: '/images/npc/arena-master.svg', zoneId: 'z-plaza', cell: { x: 11, y: 9.6 }, greeting: ['콜로세움 대전은 준비 중이다! 조금만 기다려다오.'] },
   // ── 통문 주둔지 ──
