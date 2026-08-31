@@ -76,6 +76,9 @@ export type PropKind =
   | 'lamp' // 가로등
   | 'bench' // 벤치
   | 'banner' // 현수막 기둥
+  | 'postbox' // 우체통
+  | 'bicycle' // 자전거
+  | 'trashbin' // 쓰레기통
 
 export interface PropDef {
   id: string

@@ -104,6 +104,19 @@ const SOLID_KINDS = new Set<PropDef['kind']>([
 // 앵커가 footprint 중심인 원형 구조물 (z정렬·충돌 모두 중심 기준)
 const RADIAL_KINDS = new Set<PropDef['kind']>(['colosseum', 'fountain'])
 
+// ── Phase 2 라스터 소품 세트 (PixelLab 생성 → 축소·트림 완료) ──
+// px = 파일 실제 픽셀, anchor = 파일 좌상단 기준 발밑 오프셋
+const PROP_SPRITE: Partial<
+  Record<PropDef['kind'], { sprite: string; px: { w: number; h: number }; anchor: { x: number; y: number } }>
+> = {
+  lamp: { sprite: '/images/map/props/lamp.png', px: { w: 14, h: 72 }, anchor: { x: 7, y: 72 } },
+  bench: { sprite: '/images/map/props/bench.png', px: { w: 44, h: 30 }, anchor: { x: 22, y: 30 } },
+  banner: { sprite: '/images/map/props/banner.png', px: { w: 23, h: 66 }, anchor: { x: 12, y: 66 } },
+  postbox: { sprite: '/images/map/props/postbox.png', px: { w: 16, h: 42 }, anchor: { x: 8, y: 42 } },
+  bicycle: { sprite: '/images/map/props/bicycle.png', px: { w: 39, h: 40 }, anchor: { x: 20, y: 40 } },
+  trashbin: { sprite: '/images/map/props/trashbin.png', px: { w: 16, h: 30 }, anchor: { x: 8, y: 30 } },
+}
+
 /** 마을 오브젝트 배치 — 모든 좌표는 격자(0..VW, 0..VH) 안에 있고 대로를 침범하지 않는다 */
 function villageProps(): PropDef[] {
   const P: PropDef[] = []
@@ -196,10 +209,26 @@ function villageProps(): PropDef[] {
   P.push({ id: 'be2', kind: 'bench', cell: { x: 12.6, y: 5.0 } })
   P.push({ id: 'be3', kind: 'bench', cell: { x: 11, y: 15.3 } })
 
+  // ── 거리 소품 (우체통·자전거·쓰레기통) — 대로변·상점가에 흩뿌림 ──
+  P.push({ id: 'pb1', kind: 'postbox', cell: { x: 7.7, y: 8.6 } })
+  P.push({ id: 'pb2', kind: 'postbox', cell: { x: 14.2, y: 13.4 } })
+  P.push({ id: 'bi1', kind: 'bicycle', cell: { x: 8.4, y: 3.4 } })
+  P.push({ id: 'bi2', kind: 'bicycle', cell: { x: 15.4, y: 8.0 } })
+  P.push({ id: 'bi3', kind: 'bicycle', cell: { x: 5.9, y: 12.0 } })
+  P.push({ id: 'tb1', kind: 'trashbin', cell: { x: 13.2, y: 7.6 } })
+  P.push({ id: 'tb2', kind: 'trashbin', cell: { x: 6.6, y: 16.0 } })
+  P.push({ id: 'tb3', kind: 'trashbin', cell: { x: 17.4, y: 9.6 } })
+
   // 종류 기반 플래그 일괄 부여 (개별 push 에서 누락 방지)
   for (const p of P) {
     if (SOLID_KINDS.has(p.kind)) p.solid = true
     if (RADIAL_KINDS.has(p.kind)) p.radial = true
+    const rs = PROP_SPRITE[p.kind]
+    if (rs) {
+      p.sprite = rs.sprite
+      p.px = rs.px
+      p.anchor = rs.anchor
+    }
   }
   return P
 }
@@ -219,7 +248,7 @@ export const MAPS: Record<MapId, GameMap> = {
     grid: { w: VW, h: VH },
     bg: 'school',
     render: 'iso',
-    assets: 'svg',
+    assets: 'raster', // Phase 2 테스트: 가로등만 PNG, 나머지는 sprite 없어 SVG 폴백
     tileAt: villageTileAt,
     props: VILLAGE_PROPS,
     zones: VILLAGE_ZONES,
