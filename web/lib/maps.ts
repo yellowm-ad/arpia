@@ -84,8 +84,9 @@ function villageTileAt(x: number, y: number): TileKind {
   if (Math.hypot((x - TEMPLE_YARD.x) * 1.1, y - TEMPLE_YARD.y) < 4.8) return 'plaza'
   // 농가 밭이랑 (공원에 자리 내주고 남쪽으로)
   if (x > 22.5 && x < 30.8 && y > 32.6 && y < 37.4) return 'field'
-  // 대성당 정원 연못 (앞광장 동편)
-  if (Math.hypot((x - 14.4) * 1.15, y - 32.2) < 1.7) return 'water'
+  // 대성당 앞광장 좌·우 대칭 반사 연못 (parterre d'eau)
+  if (Math.hypot((x - 5.7) * 0.85, y - 33.4) < 1.5) return 'water'
+  if (Math.hypot((x - 13.3) * 0.85, y - 33.4) < 1.5) return 'water'
   // 대로 격자 (지구 경계)
   if (between(x, AV_L) || between(x, AV_R) || between(y, ST_N) || between(y, ST_S)) return 'path'
   // 주둔지 의전 대로 (ST_S → 군 통문, 폭 4셀)
@@ -260,9 +261,10 @@ function villageProps(): PropDef[] {
   // ════════ 성역 대성당 (x2–17, y27–38) — 돔 + 종탑 + 회랑 + 숙소 + 앞광장 ════════
   P.push({ id: 'b-temple', kind: 'dome', cell: { x: 3.0, y: 27.8 }, size: { w: 4.8, d: 3.8 }, label: '성역 대성당' })
   P.push({ id: 'b-belltower', kind: 'tower', cell: { x: 13.4, y: 28.0 }, size: { w: 1.4, d: 1.4 }, label: '종탑' })
-  for (let i = 0; i < 5; i++) {
-    P.push({ id: `b-cloW${i}`, kind: 'cloister', cell: { x: 3.0, y: 30.4 + i * 1.0 }, size: { w: 0.6, d: 0.9 } })
-    P.push({ id: `b-cloE${i}`, kind: 'cloister', cell: { x: 15.6, y: 30.4 + i * 1.0 }, size: { w: 0.6, d: 0.9 } })
+  // 회랑 — 앞광장 좌·우를 짧게 감싸는 콜로네이드 (돔 옆 3칸씩)
+  for (let i = 0; i < 4; i++) {
+    P.push({ id: `b-cloW${i}`, kind: 'cloister', cell: { x: 3.4, y: 28.6 + i * 0.95 }, size: { w: 0.6, d: 0.85 } })
+    P.push({ id: `b-cloE${i}`, kind: 'cloister', cell: { x: 15.6, y: 28.6 + i * 0.95 }, size: { w: 0.6, d: 0.85 } })
   }
   P.push({ id: 'b-priest0', kind: 'cottage', cell: { x: 3.6, y: 35.4 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
   P.push({ id: 'b-priest1', kind: 'cottage', cell: { x: 6.4, y: 36.0 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
@@ -338,8 +340,9 @@ function villageProps(): PropDef[] {
     (Math.abs(y - FOUNTAIN.y) < 2.2 && x > 2.0 && x < AV_R.b) || // 광장 동서 진입로
     (x > AV_R.a && x < VW - 2.5 && Math.abs(y - 20.5) < 1.5) || // 상점가 아케이드
     (Math.abs(x - TEMPLE_YARD.x) < 1.5 && y > ST_S.a) || // 대성당 진입로
-    (x > 19.8 && x < 33 && Math.abs(y - 29.6) < 0.7) || // 공원 산책로
-    Math.hypot((x - 14.4) * 1.15, y - 32.2) < 2.0 // 대성당 정원 연못
+    (x > 19.8 && x < 33 && Math.abs(y - 29.9) < 0.7) || // 공원 산책로
+    Math.hypot((x - 5.7) * 0.85, y - 33.4) < 1.9 || // 대성당 연못 좌
+    Math.hypot((x - 13.3) * 0.85, y - 33.4) < 1.9 // 대성당 연못 우
   const place = (id: string, kind: PropDef['kind'], x: number, y: number, extra: Partial<PropDef> = {}) => {
     if (blocked(x, y) || onRoad(x, y) || onPlaza(x, y) || onSand(x, y)) return
     P.push({ id, kind, cell: { x, y }, ...extra })
@@ -364,9 +367,11 @@ function villageProps(): PropDef[] {
   TEMPLE_GARDEN.forEach(([x, y], i) => {
     if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `tg-bush${i}`, kind: 'bush', cell: { x, y } })
   })
+  // 앞광장 — 성녀 상을 둘러싼 벤치 링 (좌·우 대칭)
   const yardBench: [number, number, 'l' | 'r'][] = [
-    [TEMPLE_YARD.x - 2.8, TEMPLE_YARD.y + 0.4, 'l'], [TEMPLE_YARD.x + 2.8, TEMPLE_YARD.y + 0.4, 'r'],
-    [TEMPLE_YARD.x - 2.8, TEMPLE_YARD.y - 2.6, 'l'], [TEMPLE_YARD.x + 2.8, TEMPLE_YARD.y - 2.6, 'r'],
+    [TEMPLE_YARD.x - 3.0, TEMPLE_YARD.y - 1.4, 'l'], [TEMPLE_YARD.x + 3.0, TEMPLE_YARD.y - 1.4, 'r'],
+    [TEMPLE_YARD.x - 3.0, TEMPLE_YARD.y + 1.4, 'r'], [TEMPLE_YARD.x + 3.0, TEMPLE_YARD.y + 1.4, 'l'],
+    [TEMPLE_YARD.x - 1.6, TEMPLE_YARD.y - 3.0, 'l'], [TEMPLE_YARD.x + 1.6, TEMPLE_YARD.y - 3.0, 'r'],
   ]
   yardBench.forEach(([x, y, v], i) => {
     if (!blocked(x, y)) P.push({ id: `be-tp${i}`, kind: 'bench', cell: { x, y }, variant: v })
@@ -399,17 +404,27 @@ function villageProps(): PropDef[] {
   place('bn2', 'banner', GATE_WAY.a - 0.7, ST_S.b + 0.6, { variant: '#b64430' })
   place('bn3', 'banner', GATE_WAY.b + 0.7, ST_S.b + 0.6, { variant: '#b64430' })
 
-  // ── 벤치 — 분수 둘레 / 공원 / 아케이드 / 앞광장. variant l|r = 아이소 축 방향 ──
+  // ── 벤치 — 분수 둘레 / 아케이드 / 투기장. variant l|r = 아이소 축 방향 ──
   const benchSpots: [number, number, 'l' | 'r'][] = [
     [FOUNTAIN.x - 3.4, FOUNTAIN.y - 2.2, 'l'], [FOUNTAIN.x + 3.4, FOUNTAIN.y - 2.2, 'r'],
     [FOUNTAIN.x - 3.4, FOUNTAIN.y + 2.2, 'r'], [FOUNTAIN.x + 3.4, FOUNTAIN.y + 2.2, 'l'],
-    [21.6, 29.0, 'l'], [21.6, 30.9, 'r'], [24.2, 29.0, 'l'], [31.4, 29.0, 'r'], [31.4, 30.9, 'l'], // 공원 산책로 양편 페어
     [40.2, 19.2, 'l'], [43.5, 22.2, 'r'], [46.6, 19.2, 'l'], // 아케이드
-    [TEMPLE_YARD.x - 3.0, TEMPLE_YARD.y - 1.6, 'l'], [TEMPLE_YARD.x + 3.0, TEMPLE_YARD.y - 1.6, 'r'], // 앞광장
     [COLOSSEUM.x - 6.9, COLOSSEUM.y, 'r'], [COLOSSEUM.x + 6.9, COLOSSEUM.y, 'l'], // 투기장 동서
   ]
   benchSpots.forEach(([x, y, v], i) => {
     if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be${i}`, kind: 'bench', cell: { x, y }, variant: v })
+  })
+
+  // ── 마로니에 공원 벤치 — 뤽상부르/튈르리식: 산책로 양편 화단 등지고 촘촘히 (약 2.3셀 간격) ──
+  const parkBench: { x: number; y: number; v: 'l' | 'r' }[] = []
+  for (let x = 20.8; x <= 32.4; x += 2.3) {
+    parkBench.push({ x, y: 28.7, v: 'l' }) // 북측: 화단 등지고 남향(산책로)
+    parkBench.push({ x: x + 1.15, y: 31.1, v: 'r' }) // 남측: 반 칸 엇갈려 북향
+  }
+  // 중앙 연주대(정자) 둘레 벤치 4
+  parkBench.push({ x: 24.4, y: 31.4, v: 'r' }, { x: 28.8, y: 31.4, v: 'l' }, { x: 24.4, y: 32.0, v: 'l' }, { x: 28.8, y: 32.0, v: 'r' })
+  parkBench.forEach(({ x, y, v }, i) => {
+    if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be-pk${i}`, kind: 'bench', cell: { x, y }, variant: v })
   })
 
   // ── 쓰레기통 — 대로 교차점 4곳 + 분수/공원 벤치 옆 ──
