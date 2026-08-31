@@ -80,6 +80,9 @@ export type PropKind =
   | 'postbox' // 우체통
   | 'bicycle' // 자전거
   | 'trashbin' // 쓰레기통
+  | 'statue' // 동상·기념비 (radial)
+  | 'gazebo' // 정자
+  | 'cloister' // 회랑 (긴 아케이드 복도)
 
 export interface PropDef {
   id: string
