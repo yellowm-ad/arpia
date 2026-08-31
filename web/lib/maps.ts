@@ -127,6 +127,34 @@ const TREE_SPRITE: Record<string, { sprite: string; px: { w: number; h: number }
   o: { sprite: '/images/map/props/tree_orange.png', px: { w: 56, h: 66 }, anchor: { x: 28, y: 66 } },
 }
 
+// 건물 라스터 스프라이트. anchor = 이미지 좌상단 기준, footprint 뒤쪽(격자 원점측) 꼭짓점 픽셀 위치.
+type Rs = { sprite: string; px: { w: number; h: number }; anchor: { x: number; y: number } }
+const B_ = (n: string, w: number, h: number, ax: number, ay: number): Rs => ({
+  sprite: `/images/map/props/${n}.png`, px: { w, h }, anchor: { x: ax, y: ay },
+})
+// id 별 (개별 footprint) — 학교 건물동
+const BUILDING_SPRITE: Record<string, Rs> = {
+  'b-magic': B_('b_hall_magic', 259, 283, 130, 150),
+  'b-alch': B_('b_hall_small', 157, 178, 79, 100),
+  'b-arti': B_('b_hall_small', 157, 178, 79, 100),
+}
+// kind 별 (동일 스프라이트 반복) — 상점/노점/신전/헛간/풍차/망루/성문
+const KIND_BUILDING_SPRITE: Partial<Record<PropDef['kind'], Rs>> = {
+  shop: B_('b_shop', 170, 171, 85, 86),
+  stall: B_('b_stall', 70, 75, 35, 40),
+  dome: B_('b_temple', 243, 232, 122, 110),
+  barn: B_('b_barn', 115, 111, 58, 53),
+  windmill: B_('b_windmill', 77, 134, 39, 96),
+  tower: B_('b_tower', 58, 105, 29, 76),
+  gate: B_('b_gate', 96, 94, 48, 46),
+}
+// 주택 지붕색 variant 별
+const COTTAGE_SPRITE: Record<string, Rs> = {
+  red: B_('b_cottage_red', 96, 111, 48, 63),
+  slate: B_('b_cottage_slate', 96, 98, 48, 50),
+  teal: B_('b_cottage_teal', 96, 115, 48, 67),
+}
+
 /** 마을 오브젝트 배치 — 모든 좌표는 격자(0..VW, 0..VH) 안에 있고 대로를 침범하지 않는다 */
 function villageProps(): PropDef[] {
   const P: PropDef[] = []
@@ -237,7 +265,13 @@ function villageProps(): PropDef[] {
   for (const p of P) {
     if (SOLID_KINDS.has(p.kind)) p.solid = true
     if (RADIAL_KINDS.has(p.kind)) p.radial = true
-    const rs = p.kind === 'tree' ? TREE_SPRITE[p.variant ?? 'a'] : PROP_SPRITE[p.kind]
+    const rs =
+      BUILDING_SPRITE[p.id] ??
+      (p.kind === 'cottage'
+        ? COTTAGE_SPRITE[p.variant ?? 'slate']
+        : p.kind === 'tree'
+          ? TREE_SPRITE[p.variant ?? 'a']
+          : KIND_BUILDING_SPRITE[p.kind] ?? PROP_SPRITE[p.kind])
     if (rs) {
       p.sprite = rs.sprite
       p.px = rs.px

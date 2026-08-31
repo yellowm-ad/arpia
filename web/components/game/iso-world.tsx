@@ -129,6 +129,7 @@ export function IsoWorld({
   const castShadows = useMemo(() => {
     const out: React.ReactNode[] = []
     for (const p of map.props ?? []) {
+      if (p.sprite) continue // 라스터 스프라이트는 그림자를 자체 포함
       const H = H_BY_KIND[p.kind]
       if (!H || !p.size) continue
       const { w, d } = p.size
