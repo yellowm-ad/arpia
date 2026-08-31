@@ -41,7 +41,16 @@ export type TileKind =
  * 라스터 모드에서 지면 타일 PNG 경로 (다이메트릭 2:1, 폭 = ISO_TILE_W 배수).
  * 비어있으면 iso-world 가 TILE_COLORS 폴리곤으로 폴백.
  */
-export const TILE_SPRITES: Partial<Record<TileKind, string>> = {}
+export const TILE_SPRITES: Partial<Record<TileKind, string>> = {
+  grass: '/images/map/tiles/grass.png',
+  'grass-dark': '/images/map/tiles/grass-dark.png',
+  path: '/images/map/tiles/path.png',
+  plaza: '/images/map/tiles/plaza.png',
+  sand: '/images/map/tiles/sand.png',
+  field: '/images/map/tiles/field.png',
+  water: '/images/map/tiles/water.png',
+  dirt: '/images/map/tiles/dirt.png',
+}
 
 /** 타일별 상/좌/우 면 색 (좌·우는 살짝 어둡게 해 미세 입체) */
 export const TILE_COLORS: Record<TileKind, { top: string; edge: string }> = {

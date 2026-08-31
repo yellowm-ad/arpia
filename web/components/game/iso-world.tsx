@@ -92,17 +92,24 @@ export function IsoWorld({
         const a = isoToScreen(x, y)
         const sprite = map.assets === 'raster' ? TILE_SPRITES[kind] : undefined
         if (sprite) {
-          // 다이메트릭 타일 PNG: 상단 꼭짓점(a)에 맞춰 배치
+          // 다이메트릭 타일 PNG: 상단 꼭짓점(a)에 맞춰 배치.
+          // 셀 해시로 좌우/상하 뒤집어 반복 패턴(솔기) 완화.
+          const h = ((x * 73856093) ^ (y * 19349663)) >>> 0
+          const fx = h & 1 ? -1 : 1
+          const fy = h & 2 ? -1 : 1
+          const px = fx < 0 ? 2 * a.sx : 0
+          const py = fy < 0 ? 2 * (a.sy + ISO_TILE_H / 2) : 0
           tiles.push(
-            <image
-              key={`${x}-${y}`}
-              href={sprite}
-              x={a.sx - ISO_TILE_W / 2}
-              y={a.sy}
-              width={ISO_TILE_W}
-              height={ISO_TILE_H * 2}
-              style={{ imageRendering: 'pixelated' }}
-            />,
+            <g key={`${x}-${y}`} transform={`translate(${px},${py}) scale(${fx},${fy})`}>
+              <image
+                href={sprite}
+                x={a.sx - ISO_TILE_W / 2}
+                y={a.sy}
+                width={ISO_TILE_W}
+                height={ISO_TILE_H * 2}
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </g>,
           )
           continue
         }
