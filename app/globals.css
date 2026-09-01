@@ -1,0 +1,248 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-parchment: var(--parchment);
+  --color-parchment-foreground: var(--parchment-foreground);
+  --color-ink: var(--ink);
+
+  --color-hp: var(--hp);
+  --color-mp: var(--mp);
+  --color-exp: var(--exp);
+
+  --color-elem-fire: var(--elem-fire);
+  --color-elem-water: var(--elem-water);
+  --color-elem-wind: var(--elem-wind);
+  --color-elem-earth: var(--elem-earth);
+
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  color-scheme: dark;
+
+  /* 세계 배경 - 깊은 마법 남색 */
+  --background: #0d1024;
+  --foreground: #f2ecd8;
+  --surface: #14173a;
+
+  --card: #1c2044;
+  --card-foreground: #f2ecd8;
+  --popover: #1c2044;
+  --popover-foreground: #f2ecd8;
+
+  --primary: #d9a441;
+  --primary-foreground: #241a05;
+  --primary-hover: #e8b95c;
+  --primary-soft: #3a2d10;
+
+  --secondary: #2a2f5c;
+  --secondary-foreground: #f2ecd8;
+  --muted: #232752;
+  --muted-foreground: #9aa0c8;
+  --accent: #3a2d10;
+  --accent-foreground: #e8b95c;
+
+  --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
+
+  --border: #33386b;
+  --input: #262b58;
+  --ring: #d9a441;
+
+  /* 울토르 UI 팔레트: 금테 + 양피지 */
+  --gold: #d9a441;
+  --gold-soft: #f0d999;
+  --parchment: #ece0bd;
+  --parchment-foreground: #2b230f;
+  --ink: #241a05;
+
+  --hp: #d5473f;
+  --mp: #3f7fd5;
+  --exp: #6fcf6f;
+
+  --elem-fire: #e2542a;
+  --elem-water: #2b8fd6;
+  --elem-wind: #4caf7d;
+  --elem-earth: #a97c3f;
+
+  --radius: 0.75rem;
+
+  --font-sans: Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  --font-display: 'Gowun Batang', Pretendard, 'Noto Serif KR', serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    background-image: radial-gradient(circle at 20% 10%, #1c2461 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, #241748 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  /* 울토르풍 금테 양피지 패널 */
+  .panel-gilded {
+    position: relative;
+    background: linear-gradient(180deg, #22265a 0%, #191c40 100%);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 0 0 1px rgba(217, 164, 65, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .panel-parchment {
+    background: linear-gradient(180deg, #f4e8c8 0%, #e9d8ab 100%);
+    color: var(--parchment-foreground);
+    border: 2px solid #8a6a2c;
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 0 0 1px rgba(138, 106, 44, 0.4), 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .text-shadow-ink {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @keyframes wander-0 {
+    0%, 100% { transform: translate(0px, 0px); }
+    50% { transform: translate(6px, -4px); }
+  }
+  @keyframes wander-1 {
+    0%, 100% { transform: translate(0px, 0px); }
+    50% { transform: translate(-5px, 5px); }
+  }
+  @keyframes wander-2 {
+    0%, 100% { transform: translate(0px, 0px); }
+    50% { transform: translate(5px, 5px); }
+  }
+  @keyframes wander-3 {
+    0%, 100% { transform: translate(0px, 0px); }
+    50% { transform: translate(-6px, -3px); }
+  }
+
+  .pixel-corners {
+    clip-path: polygon(
+      0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+      100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+      8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+    );
+  }
+
+  /* ── 전투 화면: 초원 필드 (저장된 예시 참고, CSS로 자체 제작) ── */
+  .battle-field {
+    background:
+      /* 잔디 이랑 결 */
+      repeating-linear-gradient(93deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 16px),
+      repeating-linear-gradient(180deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 22px),
+      /* 원경 능선 2겹 */
+      linear-gradient(180deg, transparent 0 36%, rgba(74, 92, 132, 0.5) 36% 38%, transparent 38%),
+      linear-gradient(180deg, transparent 0 39%, rgba(52, 66, 104, 0.55) 39% 42%, transparent 42%),
+      /* 하늘 → 지평선 → 들판 */
+      linear-gradient(180deg,
+        #7fb0dc 0%, #a2c8e6 22%, #d3e4ee 39%,
+        #7cb154 42%, #5c9a41 58%, #468433 78%, #356a29 100%);
+  }
+  .battle-field::before {
+    /* 원경 언덕 실루엣 */
+    content: '';
+    position: absolute;
+    left: -5%;
+    right: -5%;
+    top: 33%;
+    height: 12%;
+    background:
+      radial-gradient(55% 100% at 18% 100%, rgba(86, 122, 74, 0.8), transparent 70%),
+      radial-gradient(65% 100% at 62% 100%, rgba(70, 104, 60, 0.8), transparent 72%),
+      radial-gradient(45% 100% at 92% 100%, rgba(96, 128, 82, 0.7), transparent 70%);
+    pointer-events: none;
+  }
+  .battle-field::after {
+    /* 근경 바닥 비네팅 */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(130% 55% at 50% 118%, transparent 45%, rgba(18, 44, 20, 0.5) 100%);
+    pointer-events: none;
+  }
+
+  .battle-active {
+    animation: battle-bob 0.9s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px rgba(240, 217, 153, 0.85));
+  }
+  @keyframes battle-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  /* 주인공 공격 시 앞으로 돌진했다 복귀 */
+  .hero-lunge-right { animation: lunge-right 0.42s ease-out; }
+  .hero-lunge-left { animation: lunge-left 0.42s ease-out; }
+  @keyframes lunge-right {
+    0% { transform: translateX(0); }
+    45% { transform: translateX(38px) translateY(-2px); }
+    70% { transform: translateX(38px); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes lunge-left {
+    0% { transform: translateX(0); }
+    45% { transform: translateX(-38px) translateY(-2px); }
+    70% { transform: translateX(-38px); }
+    100% { transform: translateX(0); }
+  }
+}

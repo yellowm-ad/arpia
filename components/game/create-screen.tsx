@@ -1,0 +1,100 @@
+'use client'
+
+import Image from 'next/image'
+import { useState } from 'react'
+import { useGame } from '@/lib/game-state'
+import { Button } from '@/components/ui/button'
+import { HeroPortrait } from '@/components/game/portrait'
+import { ELEMENTS, ELEMENT_META } from '@/lib/constants'
+// 삼원(三源) 계통 선택. 각 계통은 불→번개→빛 처럼 3단계로 각성한다.
+import type { Element, Gender } from '@/lib/types'
+
+export function CreateScreen() {
+  const { dispatch } = useGame()
+  const [name, setName] = useState('')
+  const [element, setElement] = useState<Element>('fire')
+  const [gender, setGender] = useState<Gender>('male')
+
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-[#0a0d20] px-4">
+      <div className="panel-gilded w-full max-w-lg p-5">
+        <h1 className="mb-4 text-center font-display text-xl text-gold-soft text-shadow-ink">캐릭터 생성</h1>
+
+        <div className="mb-4 flex gap-4">
+          {/* 초상화 미리보기 */}
+          <div className="h-40 w-32 shrink-0 overflow-hidden rounded-lg border-2 border-gold/70">
+            <HeroPortrait element={element} gender={gender} className="h-full w-full" />
+          </div>
+
+          <div className="flex-1">
+            <label className="mb-1 block text-xs text-muted-foreground">이름</label>
+            <input
+              value={name}
+              maxLength={10}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="견습생의 이름"
+              className="mb-3 w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm outline-none focus:border-gold"
+            />
+
+            <label className="mb-1.5 block text-xs text-muted-foreground">성별</label>
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              {(['male', 'female'] as Gender[]).map((gd) => (
+                <button
+                  key={gd}
+                  onClick={() => setGender(gd)}
+                  className="rounded-lg border-2 py-2 text-xs font-semibold transition-all"
+                  style={{
+                    borderColor: gender === gd ? 'var(--gold, #d9a441)' : 'var(--border)',
+                    background: gender === gd ? 'rgba(217,164,65,0.14)' : 'transparent',
+                  }}
+                >
+                  {gd === 'male' ? '남성' : '여성'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <label className="mb-2 block text-xs text-muted-foreground">계통 선택 (삼원)</label>
+        <div className="mb-4 grid grid-cols-3 gap-2">
+          {ELEMENTS.map((el) => {
+            const meta = ELEMENT_META[el]
+            const active = element === el
+            return (
+              <button
+                key={el}
+                onClick={() => setElement(el)}
+                className="flex flex-col items-center gap-1.5 rounded-lg border-2 p-2.5 transition-all"
+                style={{
+                  borderColor: active ? (meta.color as string) : 'var(--border)',
+                  background: active ? `${meta.color}22` : 'transparent',
+                }}
+              >
+                <Image src={meta.icon} alt={meta.name} width={30} height={30} />
+                <span className="text-xs font-semibold">{meta.line}</span>
+                <span className="text-[9px] text-muted-foreground">{meta.evolution.join(' → ')}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mb-4 rounded-lg border border-border/60 bg-black/20 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
+          {ELEMENT_META[element].blurb}
+        </div>
+        <p className="mb-4 text-center text-[10px] text-muted-foreground/70">상성 순환: 화염 → 빙결 → 대지 → 화염</p>
+
+        <div className="flex justify-between gap-2">
+          <Button variant="ghost" onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'title' })}>
+            뒤로
+          </Button>
+          <Button
+            variant="default"
+            onClick={() => dispatch({ type: 'START_GAME', name: name.trim() || '이름없는 견습생', element, gender })}
+          >
+            모험 시작
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
