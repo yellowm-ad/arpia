@@ -7,7 +7,7 @@ const EARTH = '/images/elements/earth.svg'
 const NEUT = '/images/elements/neutral.svg'
 
 // ============================================================================
-// 스킬 — 설계: Documents/아르피아 시스템 DB.md §7
+// 스킬 — 설계: Documents/울토르 시스템 DB.md §7
 //  · 속성 스킬 (불꽃/얼음/대지 × 5전직)
 //  · 무속성 공용 스킬
 //  · 펫 스킬 (고유 + 훈련)
@@ -164,7 +164,7 @@ const robes: ItemDef[] = ([1, 2, 3, 4, 5] as Tier[]).map(
     name: ['견습생', '초보 마법사', '숙련 마법사', '마도사', '대마도사'][t - 1] + '의 로브',
     type: 'armor',
     icon: '/images/items/robe.svg',
-    description: '아르피아 마법학교 지급 로브.',
+    description: '울토르 마법학교 지급 로브.',
     price: ROBE_PRICE[t],
     sellPrice: Math.round(ROBE_PRICE[t] * 0.3),
     requiredJobTier: REQ_TIER[t],

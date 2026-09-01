@@ -1,0 +1,53 @@
+{
+  "character": {
+    "id": "62522008-42ca-4a1d-a802-e698b26a9a60",
+    "name": "Idle",
+    "prompt": "Chibi 4-head-tall JRPG mage cadet, male, front view idle pose. Salmon-pink hair fading to crimson red at the tips, short messy hair with a small high ponytail, thin black band across the forehead. Long black military academy greatcoat with bright crimson-red piping and trim, tall stiff collar, white dress shirt with black cravat at the throat, black gloves, black trousers, tall black buckled boots with red trim. Brass star buckle at the waist, small flame emblem on the coat. Confident smirk, amber eyes. Dark-fantasy magic-school uniform, black and crimson palette. Crisp pixel art, bold dark outline, flat cel shading.",
+    "size": {
+      "width": 64,
+      "height": 64
+    },
+    "directions": 8,
+    "view": "low top-down"
+  },
+  "spritesheet": {
+    "path": "Chibi_4-head-tall_JRPG_m-Idle.png",
+    "cell_size": {
+      "width": 88,
+      "height": 88
+    },
+    "sheet_size": {
+      "width": 704,
+      "height": 176
+    },
+    "columns": 8,
+    "pivot": "cell-center",
+    "rows": [
+      {
+        "row": 0,
+        "type": "rotations",
+        "frame_count": 8,
+        "directions": [
+          "south",
+          "south-east",
+          "east",
+          "north-east",
+          "north",
+          "north-west",
+          "west",
+          "south-west"
+        ]
+      },
+      {
+        "row": 1,
+        "type": "animation",
+        "frame_count": 8,
+        "animation": "Walking",
+        "animation_group_id": "b0e2b1ae-0ead-4e08-b1e2-1e5151eb9288",
+        "direction": "south"
+      }
+    ]
+  },
+  "export_version": "1.0",
+  "export_date": "2026-09-01T12:15:00.485953+00:00"
+}

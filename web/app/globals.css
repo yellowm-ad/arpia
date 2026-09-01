@@ -82,7 +82,7 @@
   --input: #262b58;
   --ring: #d9a441;
 
-  /* 아르피아풍 UI 팔레트: 금테 + 양피지 */
+  /* 울토르풍 UI 팔레트: 금테 + 양피지 */
   --gold: #d9a441;
   --gold-soft: #f0d999;
   --parchment: #ece0bd;
@@ -126,7 +126,7 @@
     font-family: var(--font-display);
   }
 
-  /* 아르피아풍 금테 양피지 패널 */
+  /* 울토르풍 금테 양피지 패널 */
   .panel-gilded {
     position: relative;
     background: linear-gradient(180deg, #22265a 0%, #191c40 100%);
@@ -201,5 +201,66 @@
       100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
       8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
     );
+  }
+  /* ── 전투 화면: 초원 필드 (저장된 예시 참고, CSS로 자체 제작) ── */
+  .battle-field {
+    background:
+      /* 잔디 이랑 결 */
+      repeating-linear-gradient(93deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 16px),
+      repeating-linear-gradient(180deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 22px),
+      /* 원경 능선 2겹 */
+      linear-gradient(180deg, transparent 0 36%, rgba(74, 92, 132, 0.5) 36% 38%, transparent 38%),
+      linear-gradient(180deg, transparent 0 39%, rgba(52, 66, 104, 0.55) 39% 42%, transparent 42%),
+      /* 하늘 → 지평선 → 들판 */
+      linear-gradient(180deg,
+        #7fb0dc 0%, #a2c8e6 22%, #d3e4ee 39%,
+        #7cb154 42%, #5c9a41 58%, #468433 78%, #356a29 100%);
+  }
+  .battle-field::before {
+    /* 원경 언덕 실루엣 */
+    content: '';
+    position: absolute;
+    left: -5%;
+    right: -5%;
+    top: 33%;
+    height: 12%;
+    background:
+      radial-gradient(55% 100% at 18% 100%, rgba(86, 122, 74, 0.8), transparent 70%),
+      radial-gradient(65% 100% at 62% 100%, rgba(70, 104, 60, 0.8), transparent 72%),
+      radial-gradient(45% 100% at 92% 100%, rgba(96, 128, 82, 0.7), transparent 70%);
+    pointer-events: none;
+  }
+  .battle-field::after {
+    /* 근경 바닥 비네팅 */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(130% 55% at 50% 118%, transparent 45%, rgba(18, 44, 20, 0.5) 100%);
+    pointer-events: none;
+  }
+
+  .battle-active {
+    animation: battle-bob 0.9s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px rgba(240, 217, 153, 0.85));
+  }
+  @keyframes battle-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  /* 주인공 공격 시 앞으로 돌진했다 복귀 */
+  .hero-lunge-right { animation: lunge-right 0.42s ease-out; }
+  .hero-lunge-left { animation: lunge-left 0.42s ease-out; }
+  @keyframes lunge-right {
+    0% { transform: translateX(0); }
+    45% { transform: translateX(38px) translateY(-2px); }
+    70% { transform: translateX(38px); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes lunge-left {
+    0% { transform: translateX(0); }
+    45% { transform: translateX(-38px) translateY(-2px); }
+    70% { transform: translateX(-38px); }
+    100% { transform: translateX(0); }
   }
 }

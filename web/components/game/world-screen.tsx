@@ -8,6 +8,7 @@ import { MAPS, zoneAt } from '@/lib/maps'
 import { MONSTERS, NPCS } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import { HeroPortrait } from '@/components/game/portrait'
+import { HeroSprite as PixelHero } from '@/components/game/pixel-hero'
 import { IsoWorld } from '@/components/game/iso-world'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, DoorOpen, MessageCircle, ShieldAlert } from 'lucide-react'
 
@@ -267,6 +268,7 @@ export function WorldScreen() {
         y={state.position.y}
         eff={EFF}
         element={state.player.element}
+        gender={state.player.gender}
         facing={state.facing}
         moving={moving}
       />
@@ -330,7 +332,7 @@ export function WorldScreen() {
           className="h-14 w-11 overflow-hidden rounded-md border-2"
           style={{ borderColor: elem.color as string, background: '#1a1435' }}
         >
-          <HeroPortrait element={state.player.element} gender={state.player.gender} className="h-full w-full" />
+          <PixelHero element={state.player.element} gender={state.player.gender} dir={state.facing} walking={moving} px={52} className="h-full w-full" />
         </div>
         <span className="text-[10px] font-semibold text-white whitespace-nowrap">{state.player.name}</span>
       </Marker>
@@ -652,6 +654,7 @@ function HeroSprite({
   y,
   eff,
   element,
+  gender,
   facing,
   moving,
 }: {
@@ -659,6 +662,7 @@ function HeroSprite({
   y: number
   eff: number
   element: string
+  gender: 'male' | 'female'
   facing: 'up' | 'down' | 'left' | 'right'
   moving: boolean
 }) {
@@ -684,13 +688,13 @@ function HeroSprite({
           position: 'absolute',
           left: 0,
           bottom: 0,
-          transform: `translate(-50%, 0) scaleX(${flip ? -1 : 1})`,
+          transform: `translate(-50%, 0)`,
           transformOrigin: 'bottom center',
           animation: moving ? 'sprite-walk 0.3s ease-in-out infinite' : 'sprite-idle 2.6s ease-in-out infinite',
           filter: 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))',
         }}
       >
-        <ChibiFigure robe={p.robe} shade={p.shade} hair={p.hair} accent={p.accent} back={back} />
+        <PixelHero element={element} gender={gender} dir={facing} walking={moving} px={72} />
       </div>
     </div>
   )

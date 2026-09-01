@@ -10,11 +10,11 @@ export const MONSTERS_PER_CELL = 1 // 200m 정사각형(셀 1칸)당 1마리
 // 전직 5단계 — 견습 → 초보 → 숙련 → 마도사 → 대마도사 (Lv 1/10/20/30/40)
 // ────────────────────────────────────────────────────────────────
 export const JOB_TIERS: JobTier[] = [
-  { id: 'apprentice', order: 0, name: '견습 마법사', shortName: '견습', minLevel: 1, description: '아르피아 마법학교에 갓 입학한 견습생.' },
+  { id: 'apprentice', order: 0, name: '견습 마법사', shortName: '견습', minLevel: 1, description: '울토르 마법학교에 갓 입학한 견습생.' },
   { id: 'novice', order: 1, name: '초보 마법사', shortName: '초보', minLevel: 10, description: '기초 마법 과정을 수료한 초보 마법사.' },
   { id: 'adept', order: 2, name: '숙련 마법사', shortName: '숙련', minLevel: 20, description: '실전 경험을 쌓은 숙련 마법사.' },
   { id: 'magus', order: 3, name: '마도사', shortName: '마도사', minLevel: 30, description: '독자적 마법 체계를 다루는 마도사.' },
-  { id: 'archmagus', order: 4, name: '대마도사', shortName: '대마도사', minLevel: 40, description: '아르피아 최고위 전직, 대마도사.' },
+  { id: 'archmagus', order: 4, name: '대마도사', shortName: '대마도사', minLevel: 40, description: '울토르 최고위 전직, 대마도사.' },
 ]
 
 export const JOB_TIER_ORDER: JobTierId[] = ['apprentice', 'novice', 'adept', 'magus', 'archmagus']

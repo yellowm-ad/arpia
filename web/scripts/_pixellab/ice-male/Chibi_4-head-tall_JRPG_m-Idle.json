@@ -1,0 +1,53 @@
+{
+  "character": {
+    "id": "a9b48a80-d2d2-47c0-827d-590009fc2294",
+    "name": "Idle",
+    "prompt": "Chibi 4-head-tall JRPG mage cadet, male, front view idle pose. Silver-white hair with pale ice-blue streaks, short tousled hair, round thin glasses. Long ivory-white military academy greatcoat with navy-blue piping and trim, tall stiff collar, navy-blue necktie, dark gloves, white trousers, tall white buckled boots. Sky-blue gem accents, ornate frost emblem. Calm cool expression, blue eyes. Dark-fantasy magic-school uniform, ivory-white and navy palette. Crisp pixel art, bold dark outline, flat cel shading.",
+    "size": {
+      "width": 64,
+      "height": 64
+    },
+    "directions": 8,
+    "view": "low top-down"
+  },
+  "spritesheet": {
+    "path": "Chibi_4-head-tall_JRPG_m-Idle.png",
+    "cell_size": {
+      "width": 88,
+      "height": 88
+    },
+    "sheet_size": {
+      "width": 704,
+      "height": 176
+    },
+    "columns": 8,
+    "pivot": "cell-center",
+    "rows": [
+      {
+        "row": 0,
+        "type": "rotations",
+        "frame_count": 8,
+        "directions": [
+          "south",
+          "south-east",
+          "east",
+          "north-east",
+          "north",
+          "north-west",
+          "west",
+          "south-west"
+        ]
+      },
+      {
+        "row": 1,
+        "type": "animation",
+        "frame_count": 8,
+        "animation": "Walking",
+        "animation_group_id": "fd77befe-cddc-4fdd-a1ed-d02d88ead03a",
+        "direction": "south"
+      }
+    ]
+  },
+  "export_version": "1.0",
+  "export_date": "2026-09-01T12:37:34.507941+00:00"
+}

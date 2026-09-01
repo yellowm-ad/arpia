@@ -510,7 +510,7 @@ const NO_ZONES: ZoneDef[] = []
 export const MAPS: Record<MapId, GameMap> = {
   village: {
     id: 'village',
-    name: '아르피아 마법학교 마을',
+    name: '울토르 마법학교 마을',
     kind: 'town',
     grid: { w: VW, h: VH },
     bg: 'school',

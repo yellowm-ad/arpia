@@ -1,0 +1,61 @@
+{
+  "character": {
+    "id": "d4d14b7f-007e-4176-9884-7e9b987d6707",
+    "name": "Idle",
+    "prompt": "Chibi 4-head-tall JRPG mage cadet, female, front view idle pose. Salmon-pink hair with crimson-red tips, chin-length wavy bob with a thin black hairband. Black military academy dress-coat with crimson-red piping and trim, flared pleated skirt, high stiff collar with black cravat, black gloves, black tights, short black heeled boots with red trim. Small flame emblem on the coat. Amber eyes, calm confident expression. Dark-fantasy magic-school uniform, black and crimson palette. Crisp pixel art, bold dark outline, flat cel shading.",
+    "size": {
+      "width": 64,
+      "height": 64
+    },
+    "directions": 8,
+    "view": "low top-down"
+  },
+  "spritesheet": {
+    "path": "Chibi_4-head-tall_JRPG_m-Idle.png",
+    "cell_size": {
+      "width": 88,
+      "height": 88
+    },
+    "sheet_size": {
+      "width": 704,
+      "height": 264
+    },
+    "columns": 8,
+    "pivot": "cell-center",
+    "rows": [
+      {
+        "row": 0,
+        "type": "rotations",
+        "frame_count": 8,
+        "directions": [
+          "south",
+          "south-east",
+          "east",
+          "north-east",
+          "north",
+          "north-west",
+          "west",
+          "south-west"
+        ]
+      },
+      {
+        "row": 1,
+        "type": "animation",
+        "frame_count": 8,
+        "animation": "Walking",
+        "animation_group_id": "797e8260-7eb6-47db-a0f6-8677c8b6a721",
+        "direction": "south"
+      },
+      {
+        "row": 2,
+        "type": "animation",
+        "frame_count": 8,
+        "animation": "Walking_2",
+        "animation_group_id": "c898d872-692a-453b-95a2-eba1015c0482",
+        "direction": "south"
+      }
+    ]
+  },
+  "export_version": "1.0",
+  "export_date": "2026-09-01T12:36:25.206279+00:00"
+}

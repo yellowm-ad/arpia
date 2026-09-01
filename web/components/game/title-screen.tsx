@@ -15,7 +15,7 @@ export function TitleScreen() {
             'radial-gradient(circle at 30% 20%, rgba(91,107,214,0.35), transparent 55%), radial-gradient(circle at 75% 75%, rgba(217,164,65,0.25), transparent 50%)',
         }}
       />
-      <Image src="/images/ui/logo.svg" alt="마법학교 아르피아" width={300} height={140} className="mb-6 drop-shadow-[0_4px_20px_rgba(217,164,65,0.5)]" priority />
+      <Image src="/images/ui/logo.svg" alt="마법학교 울토르" width={300} height={140} className="mb-6 drop-shadow-[0_4px_20px_rgba(217,164,65,0.5)]" priority />
       <p className="mb-8 max-w-md text-sm leading-relaxed text-muted-foreground">
         쿼터뷰 턴제 RPG 웹게임 초안 — 마법학교를 배경으로 파티를 꾸려 몬스터와 맞서 싸우세요.
       </p>
