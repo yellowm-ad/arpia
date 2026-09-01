@@ -7,14 +7,15 @@ export const CELL_SIZE_METERS = 200
 export const MONSTERS_PER_CELL = 1 // 200m 정사각형(셀 1칸)당 1마리
 
 // ────────────────────────────────────────────────────────────────
-// 전직 5단계 — 견습 → 초보 → 숙련 → 마도사 → 대마도사 (Lv 1/10/20/30/40)
+// 전직 5단계 — 견습생 → 수습 마도사 → 정마도사 → 상급 마도사 → 삼원 대현자
+// (Lv 1/10/20/30/40). 울토르 마법학교의 삼원(三源) 학제 승급 단계.
 // ────────────────────────────────────────────────────────────────
 export const JOB_TIERS: JobTier[] = [
-  { id: 'apprentice', order: 0, name: '견습 마법사', shortName: '견습', minLevel: 1, description: '울토르 마법학교에 갓 입학한 견습생.' },
-  { id: 'novice', order: 1, name: '초보 마법사', shortName: '초보', minLevel: 10, description: '기초 마법 과정을 수료한 초보 마법사.' },
-  { id: 'adept', order: 2, name: '숙련 마법사', shortName: '숙련', minLevel: 20, description: '실전 경험을 쌓은 숙련 마법사.' },
-  { id: 'magus', order: 3, name: '마도사', shortName: '마도사', minLevel: 30, description: '독자적 마법 체계를 다루는 마도사.' },
-  { id: 'archmagus', order: 4, name: '대마도사', shortName: '대마도사', minLevel: 40, description: '울토르 최고위 전직, 대마도사.' },
+  { id: 'apprentice', order: 0, name: '견습생', shortName: '견습', minLevel: 1, description: '울토르 마법학교에 갓 입학한 삼원 견습생.' },
+  { id: 'novice', order: 1, name: '수습 마도사', shortName: '수습', minLevel: 10, description: '삼원 기초 학제를 수료한 수습 마도사.' },
+  { id: 'adept', order: 2, name: '정마도사', shortName: '정마도사', minLevel: 20, description: '한 계통을 온전히 다루는 정식 마도사.' },
+  { id: 'magus', order: 3, name: '상급 마도사', shortName: '상급', minLevel: 30, description: '계통의 2차 정수(번개·물·풀)를 각성한 상급 마도사.' },
+  { id: 'archmagus', order: 4, name: '삼원 대현자', shortName: '대현자', minLevel: 40, description: '계통의 극의(빛·우주·어둠)에 도달한 울토르 최고위, 삼원 대현자.' },
 ]
 
 export const JOB_TIER_ORDER: JobTierId[] = ['apprentice', 'novice', 'adept', 'magus', 'archmagus']
@@ -35,7 +36,10 @@ export function jobTierAtLeast(have: JobTierId, need: JobTierId): boolean {
 }
 
 // ────────────────────────────────────────────────────────────────
-// 속성 — 불꽃 > 얼음 > 대지 > 불꽃 (3속성 상성 순환)
+// 삼원(三源) — 화염계 > 빙결계 > 대지계 > 화염계 (상성 순환)
+//   화염계: 불 → 번개 → 빛 (시간)   빙결계: 얼음 → 물 → 우주 (공간)
+//   대지계: 흙 → 풀 → 어둠 (죽음)
+//   evolution = [Lv1 1차, Lv30 2차, Lv40 극의]
 // ────────────────────────────────────────────────────────────────
 export const ELEMENTS: Element[] = ['fire', 'ice', 'earth']
 
@@ -43,6 +47,9 @@ export const ELEMENT_META: Record<
   ElementOrNeutral,
   {
     name: string
+    line: string
+    evolution: [string, string, string]
+    apex: string
     color: string
     icon: string
     leanStats: Partial<Stats>
@@ -52,40 +59,52 @@ export const ELEMENT_META: Record<
   }
 > = {
   fire: {
-    name: '불꽃',
+    name: '불',
+    line: '화염계',
+    evolution: ['불', '번개', '빛'],
+    apex: '시간',
     color: 'var(--elem-fire)',
     icon: '/images/elements/fire.svg',
     leanStats: { matk: 3, atk: 1 },
     strongAgainst: 'ice',
     weakAgainst: 'earth',
-    blurb: '강력한 화염 마법으로 적을 태우고 화상·출혈을 입힌다. 마법공격력에 특화되며 얼음에 강하고 대지에 약하다.',
+    blurb: '화염계 — 불로 시작해 번개를 거쳐 빛(시간)에 이르는 계통. 폭발적인 마법공격력으로 적을 태우고 화상을 입힌다. 빙결계에 강하고 대지계에 약하다.',
   },
   ice: {
     name: '얼음',
+    line: '빙결계',
+    evolution: ['얼음', '물', '우주'],
+    apex: '공간',
     color: 'var(--elem-ice)',
     icon: '/images/elements/ice.svg',
     leanStats: { mdef: 2, maxMp: 10, spd: -1 },
     strongAgainst: 'earth',
     weakAgainst: 'fire',
-    blurb: '냉기로 적의 행동을 묶는 제어 마법. 감속·마비에 특화되며 대지에 강하고 불꽃에 약하다.',
+    blurb: '빙결계 — 얼음에서 물을 거쳐 우주(공간)에 이르는 계통. 냉기로 적의 행동을 묶는 제어 마법. 감속·마비에 특화되며 대지계에 강하고 화염계에 약하다.',
   },
   earth: {
-    name: '대지',
+    name: '흙',
+    line: '대지계',
+    evolution: ['흙', '풀', '어둠'],
+    apex: '죽음',
     color: 'var(--elem-earth)',
     icon: '/images/elements/earth.svg',
     leanStats: { def: 2, maxHp: 15 },
     strongAgainst: 'fire',
     weakAgainst: 'ice',
-    blurb: '단단한 방어와 약화·수면. 체력과 방어력에 특화되며 불꽃에 강하고 얼음에 약하다.',
+    blurb: '대지계 — 흙에서 풀을 거쳐 어둠(죽음)에 이르는 계통. 단단한 방어와 약화·수면. 체력과 방어력에 특화되며 화염계에 강하고 빙결계에 약하다.',
   },
   neutral: {
     name: '무',
+    line: '무속성',
+    evolution: ['무', '무', '무'],
+    apex: '무',
     color: 'var(--elem-neutral)',
     icon: '/images/elements/neutral.svg',
     leanStats: {},
     strongAgainst: 'neutral',
     weakAgainst: 'neutral',
-    blurb: '속성 없음. 상성의 영향을 주고받지 않는다.',
+    blurb: '삼원 어디에도 속하지 않는다. 상성의 영향을 주고받지 않는다.',
   },
 }
 

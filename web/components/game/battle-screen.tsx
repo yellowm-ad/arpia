@@ -338,9 +338,9 @@ function CombatantSprite({
 }) {
   // 필드 배치: 적은 위쪽(작게, 원경), 아군은 아래쪽(크게, 근경)
   const spread = count > 1 ? index / (count - 1) - 0.5 : 0
-  const left = side === 'enemy' ? 62 + spread * 26 : 20 + spread * 26
-  const top = side === 'enemy' ? 14 + Math.abs(spread) * 8 + (index % 2) * 6 : 52 + (index % 2) * 10
-  const scale = side === 'enemy' ? 0.82 : 1
+  const left = side === 'enemy' ? 60 + spread * 30 : 22 + spread * 30
+  const top = side === 'enemy' ? 24 + Math.abs(spread) * 10 + (index % 2) * 8 : 58 + (index % 2) * 9
+  const scale = side === 'enemy' ? 0.92 : 1.15
 
   const statuses = c.effects.filter((e) => e.kind === 'status')
   const buffs = c.effects.filter((e) => e.kind === 'buff')
@@ -389,15 +389,15 @@ function CombatantSprite({
               gender={heroGender}
               dir="right"
               walking={heroAnim === 'lunge'}
-              px={68}
+              px={150}
               className="drop-shadow-[0_3px_4px_rgba(0,0,0,0.55)]"
             />
           ) : (
             <div
-              className="flex size-14 items-center justify-center rounded-full border-2 border-white/40 bg-black/45"
+              className="flex size-24 items-center justify-center rounded-full border-2 border-white/40 bg-black/45"
               style={{ transform: side === 'enemy' ? 'scaleX(-1)' : undefined }}
             >
-              <Image src={c.icon} alt={c.name} width={34} height={34} />
+              <Image src={c.icon} alt={c.name} width={64} height={64} />
             </div>
           )}
         </div>

@@ -38,7 +38,7 @@ export function Hud() {
               <Badge>Lv.{player.level}</Badge>
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {jobTier.name} · {elem.name}속성
+              {jobTier.name} · {elem.line}
               {canJobChange && player.level < MAX_LEVEL ? (
                 <span className="ml-1 text-gold-soft">· 전직 가능!</span>
               ) : null}

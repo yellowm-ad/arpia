@@ -240,21 +240,21 @@ function mstat(level: number, mult: Partial<Stats> = {}): Stats {
 }
 
 export const MONSTERS: MonsterDef[] = [
-  // 위습 숲
+  // 에르디아 숲
   { id: 'mon-forest-raccoon', name: '숲너구리', level: 2, icon: '/images/monsters/raccoon.svg', element: 'earth', family: 'beast', stats: mstat(2), skills: [], expReward: 18, goldReward: 12, zoneKinds: ['forest'], dropTable: [{ itemId: 'potion-hp-s', chance: 0.3 }, { itemId: 'feed-any', chance: 0.15 }] },
   { id: 'mon-thorn-vine', name: '가시덩굴', level: 3, icon: '/images/monsters/vine.svg', element: 'earth', family: 'plant', stats: mstat(3, { maxHp: 1.4, def: 1.3, spd: 0.6 }), traits: ['tank'], skills: [], expReward: 26, goldReward: 15, zoneKinds: ['forest'], dropTable: [{ itemId: 'potion-hp-s', chance: 0.25 }] },
   { id: 'mon-sprite-green', name: '초록 요정', level: 4, icon: '/images/monsters/bubble.svg', element: 'neutral', family: 'beast', stats: mstat(4, { spd: 1.4, luck: 1.5 }), traits: ['swift'], skills: [], expReward: 30, goldReward: 22, zoneKinds: ['forest'], dropTable: [{ itemId: 'potion-mp-s', chance: 0.3 }] },
   { id: 'mon-grey-wolf', name: '회색 늑대', level: 5, icon: '/images/monsters/wolf.svg', element: 'ice', family: 'beast', stats: mstat(5, { atk: 1.2, spd: 1.2 }), traits: ['aggressive'], skills: [], expReward: 38, goldReward: 24, zoneKinds: ['forest'] },
   { id: 'mon-mush-cap', name: '독버섯 갓', level: 6, icon: '/images/monsters/vine.svg', element: 'earth', family: 'plant', stats: mstat(6, { matk: 1.4, maxMp: 1.6 }), traits: ['caster'], skills: ['earth-t3-2'], expReward: 46, goldReward: 28, zoneKinds: ['forest'], dropTable: [{ itemId: 'tool-antidote', chance: 0.2 }] },
   { id: 'mon-bark-golem', name: '나무 골렘', level: 8, icon: '/images/monsters/dummy.svg', element: 'earth', family: 'construct', stats: mstat(8, { maxHp: 1.6, def: 1.5, spd: 0.6 }), traits: ['tank'], skills: [], expReward: 62, goldReward: 40, zoneKinds: ['forest'], dropTable: [{ itemId: 'robe-t1', chance: 0.1 }] },
-  // 가나폴리 해안
+  // 스톰헤이븐 해안
   { id: 'mon-bubble-spirit', name: '물거품 정령', level: 2, icon: '/images/monsters/bubble.svg', element: 'ice', family: 'aquatic', stats: mstat(2), skills: [], expReward: 17, goldReward: 11, zoneKinds: ['sea'], dropTable: [{ itemId: 'potion-mp-s', chance: 0.25 }] },
   { id: 'mon-crab-soldier', name: '게 껍질병정', level: 3, icon: '/images/monsters/crab.svg', element: 'ice', family: 'aquatic', stats: mstat(3, { def: 1.4, maxHp: 1.2 }), traits: ['tank'], skills: [], expReward: 24, goldReward: 16, zoneKinds: ['sea'] },
   { id: 'mon-shallows-eel', name: '얕은여울 뱀장어', level: 5, icon: '/images/monsters/eel.svg', element: 'ice', family: 'aquatic', stats: mstat(5, { spd: 1.4 }), traits: ['swift'], skills: [], expReward: 42, goldReward: 26, zoneKinds: ['sea'] },
   { id: 'mon-siren-larva', name: '세이렌 유충', level: 7, icon: '/images/monsters/bubble.svg', element: 'neutral', family: 'aquatic', stats: mstat(7, { matk: 1.3 }), traits: ['caster'], skills: ['pet-silence-hiss'], expReward: 54, goldReward: 34, zoneKinds: ['sea'], dropTable: [{ itemId: 'acc-amulet-mana', chance: 0.05 }] },
   { id: 'mon-reef-turtle', name: '암초 거북', level: 9, icon: '/images/monsters/crab.svg', element: 'ice', family: 'aquatic', stats: mstat(9, { maxHp: 1.7, def: 1.6, spd: 0.5 }), traits: ['tank'], skills: [], expReward: 70, goldReward: 44, zoneKinds: ['sea'] },
   { id: 'mon-tide-elemental', name: '밀물 정령', level: 11, icon: '/images/monsters/bubble.svg', element: 'ice', family: 'aquatic', stats: mstat(11, { matk: 1.5, maxMp: 1.6 }), traits: ['caster'], skills: ['ice-t2-1'], expReward: 88, goldReward: 52, zoneKinds: ['sea'], dropTable: [{ itemId: 'wand-ice-t2', chance: 0.06 }] },
-  // 아즈카의 폐허
+  // 하늘 유적
   { id: 'mon-ember-imp', name: '잉걸 임프', level: 10, icon: '/images/monsters/raccoon.svg', element: 'fire', family: 'beast', stats: mstat(10, { atk: 1.2, spd: 1.2 }), traits: ['aggressive'], skills: ['fire-t1-1'], expReward: 82, goldReward: 50, zoneKinds: ['ruins'] },
   { id: 'mon-ash-hound', name: '잿빛 사냥개', level: 12, icon: '/images/monsters/wolf.svg', element: 'fire', family: 'beast', stats: mstat(12, { spd: 1.5, atk: 1.2 }), traits: ['swift', 'aggressive'], skills: [], expReward: 96, goldReward: 58, zoneKinds: ['ruins'] },
   { id: 'mon-bone-archer', name: '해골 궁수', level: 13, icon: '/images/monsters/eel.svg', element: 'neutral', family: 'undead', stats: mstat(13, { atk: 1.3 }), traits: ['caster'], skills: ['fire-t2-2'], expReward: 104, goldReward: 62, zoneKinds: ['ruins'], dropTable: [{ itemId: 'potion-hp-m', chance: 0.2 }] },
@@ -265,7 +265,7 @@ export const MONSTERS: MonsterDef[] = [
   { id: 'mon-frost-revenant', name: '서리 망령', level: 22, icon: '/images/monsters/bubble.svg', element: 'ice', family: 'undead', stats: mstat(22, { matk: 1.6, spd: 1.1 }), traits: ['caster'], skills: ['ice-t2-1', 'ice-t2-2'], expReward: 200, goldReward: 122, zoneKinds: ['ruins'] },
   { id: 'mon-dark-mage', name: '흑마법사', level: 25, icon: '/images/monsters/vine.svg', element: 'neutral', family: 'darkmage', stats: mstat(25, { matk: 1.8, maxMp: 1.8 }), traits: ['caster'], skills: ['fire-t3-1', 'ice-t3-1'], expReward: 240, goldReward: 150, zoneKinds: ['ruins'], dropTable: [{ itemId: 'acc-charm-ward', chance: 0.1 }] },
   { id: 'mon-stone-titan', name: '석상 거인', level: 28, icon: '/images/monsters/dummy.svg', element: 'earth', family: 'construct', stats: mstat(28, { maxHp: 2.2, def: 1.9, spd: 0.5, atk: 1.3 }), traits: ['tank'], skills: ['earth-t4-1'], expReward: 300, goldReward: 190, zoneKinds: ['ruins'], dropTable: [{ itemId: 'robe-t4', chance: 0.1 }] },
-  { id: 'mon-azka-herald', name: '아즈카의 전령', level: 32, icon: '/images/monsters/wolf.svg', element: 'fire', family: 'darkmage', stats: mstat(32, { maxHp: 2.4, matk: 2.0, maxMp: 2.0, atk: 1.4 }), traits: ['caster', 'aggressive'], skills: ['fire-t4-1', 'fire-t3-2'], expReward: 420, goldReward: 280, zoneKinds: ['ruins'], dropTable: [{ itemId: 'wand-fire-t4', chance: 0.15 }, { itemId: 'potion-elixir', chance: 0.3 }] },
+  { id: 'mon-azka-herald', name: '모르스의 전령', level: 32, icon: '/images/monsters/wolf.svg', element: 'fire', family: 'darkmage', stats: mstat(32, { maxHp: 2.4, matk: 2.0, maxMp: 2.0, atk: 1.4 }), traits: ['caster', 'aggressive'], skills: ['fire-t4-1', 'fire-t3-2'], expReward: 420, goldReward: 280, zoneKinds: ['ruins'], dropTable: [{ itemId: 'wand-fire-t4', chance: 0.15 }, { itemId: 'potion-elixir', chance: 0.3 }] },
   // 테스트몹
   { id: 'mon-training-dummy', name: '훈련용 허수아비', level: 1, icon: '/images/monsters/dummy.svg', element: 'neutral', family: 'test', stats: { maxHp: 30, maxMp: 0, atk: 1, def: 1, matk: 0, mdef: 1, spd: 1, luck: 0 }, skills: [], expReward: 0, goldReward: 0, zoneKinds: ['forest', 'sea', 'ruins'], isTestMonster: true },
 ]

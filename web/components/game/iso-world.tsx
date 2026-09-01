@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, type Dispatch } from 'react'
+import { useMemo, useState, useEffect, type Dispatch } from 'react'
 import type { Action } from '@/lib/game-state'
 import type { GameState } from '@/lib/types'
 import { MAPS } from '@/lib/maps'
@@ -76,6 +76,12 @@ export function IsoWorld({
   interactId: string | null
 }) {
   const map = MAPS[state.currentMapId]
+  const [heroFrame, setHeroFrame] = useState(0)
+  useEffect(() => {
+    if (!moving) { setHeroFrame(0); return }
+    const id = setInterval(() => setHeroFrame((f) => (f + 1) % 8), 95)
+    return () => clearInterval(id)
+  }, [moving])
   const { w: VW, h: VH } = map.grid
   const bounds = useMemo(() => isoBounds(VW, VH), [VW, VH])
   const originX = -bounds.minSx
@@ -202,8 +208,15 @@ export function IsoWorld({
       })
     }
 
-    // 포탈: gate(같은 셀 중복) 1개 + 타일 포탈
+    list.sort((a, b) => a.sortY - b.sortY)
+    return list
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, interactId])
+
+  // ── 포탈/통문: 푸른 계열 마법진 (도트). 건물 위에 항상 렌더 → 클릭 보장 ──
+  const portalNodes = useMemo(() => {
     const seen = new Set<string>()
+    const nodes: React.ReactNode[] = []
     for (const p of map.portals) {
       if (p.kind === 'gate') {
         const k = `${p.cell.x},${p.cell.y}`
@@ -211,55 +224,78 @@ export function IsoWorld({
         seen.add(k)
       }
       const s = isoToScreen(p.cell.x, p.cell.y)
-      const color = p.kind === 'gate' ? '#f0c040' : p.kind === 'exit' ? '#7fd0f0' : '#e879f9'
       const isGate = p.kind === 'gate'
-      list.push({
-        sortY: p.cell.x + p.cell.y + 0.1,
-        node: (
-          <g
-            key={p.id}
-            transform={`translate(${s.sx},${s.sy})`}
-            style={{ cursor: 'pointer' }}
-            onClick={() => dispatch(isGate ? { type: 'OPEN_GATE' } : { type: 'USE_PORTAL', portalId: p.id })}
-          >
-            <ellipse cx={0} cy={0} rx={isGate ? 26 : 18} ry={isGate ? 13 : 9} fill={`${color}55`} style={{ animation: 'portal-pulse 2s ease-in-out infinite' }} />
-            <ellipse cx={0} cy={0} rx={isGate ? 14 : 10} ry={isGate ? 7 : 5} fill={`${color}aa`} />
-            <g transform="translate(0,-30)">
-              <rect x={isGate ? -12 : -9} y={isGate ? -12 : -9} width={isGate ? 24 : 18} height={isGate ? 24 : 18} rx={3} fill="rgba(10,8,16,0.8)" stroke={color} strokeWidth={2} />
-              <path d={isGate ? 'M-5 6 L-5 -4 Q0 -9 5 -4 L5 6' : 'M-4 4 L-4 -3 Q0 -7 4 -3 L4 4'} fill="none" stroke={color} strokeWidth={2} />
-            </g>
-            <g transform="translate(0,-46)">
-              <rect x={-(isGate ? p.label : p.label + (p.requiredLevel ? ` Lv.${p.requiredLevel}+` : '')).length * 4 - 4} y={-8} width={(isGate ? p.label : p.label + (p.requiredLevel ? ` Lv.${p.requiredLevel}+` : '')).length * 8 + 8} height={13} rx={2} fill="rgba(10,8,16,0.7)" />
-              <text x={0} y={2} textAnchor="middle" fontSize={9} fontWeight={700} fill={color}>
-                {isGate ? p.label : p.label + (p.requiredLevel ? ` Lv.${p.requiredLevel}+` : '')}
-              </text>
-            </g>
-          </g>
-        ),
+      const c1 = isGate ? '#3f8cff' : p.kind === 'exit' ? '#5fd0ff' : '#8f7bff' // 링
+      const c2 = isGate ? '#a9d4ff' : p.kind === 'exit' ? '#bff0ff' : '#d9d0ff' // 코어
+      const R = isGate ? 30 : 22
+      const label = isGate ? p.label : p.label + (p.requiredLevel ? ` Lv.${p.requiredLevel}+` : '')
+      // 8방향 룬 마크 (마법진 테두리)
+      const runes = Array.from({ length: 8 }).map((_, i) => {
+        const a = (i / 8) * Math.PI * 2
+        return <rect key={i} x={Math.cos(a) * R - 2} y={Math.sin(a) * R * 0.5 - 2} width={4} height={4} fill={c1} />
       })
+      nodes.push(
+        <g
+          key={p.id}
+          transform={`translate(${s.sx},${s.sy})`}
+          style={{ cursor: 'pointer' }}
+          onClick={() => dispatch(isGate ? { type: 'OPEN_GATE' } : { type: 'USE_PORTAL', portalId: p.id })}
+        >
+          {/* 바깥 마법진 */}
+          <ellipse cx={0} cy={0} rx={R} ry={R * 0.5} fill="none" stroke={`${c1}66`} strokeWidth={5} style={{ animation: 'portal-pulse 2s ease-in-out infinite' }} />
+          <ellipse cx={0} cy={0} rx={R - 6} ry={(R - 6) * 0.5} fill={`${c1}22`} stroke={c1} strokeWidth={2} />
+          {runes}
+          {/* 회전 다이아 */}
+          <g style={{ animation: 'mill-spin 6s linear infinite' }}>
+            <rect x={-3} y={-R * 0.5} width={6} height={6} fill={c2} />
+            <rect x={-3} y={R * 0.5 - 6} width={6} height={6} fill={c2} />
+            <rect x={-R + 2} y={-3} width={6} height={6} fill={c2} />
+            <rect x={R - 8} y={-3} width={6} height={6} fill={c2} />
+          </g>
+          {/* 코어 광원 */}
+          <ellipse cx={0} cy={0} rx={R * 0.42} ry={R * 0.24} fill={c2} opacity={0.9} />
+          <ellipse cx={0} cy={-2} rx={R * 0.22} ry={R * 0.12} fill="#ffffff" opacity={0.85} />
+          {/* 위로 솟는 빛 기둥 */}
+          <rect x={-2} y={-R * 1.6} width={4} height={R * 1.6} fill={`url(#portalBeam)`} opacity={0.5} />
+          {/* 라벨 */}
+          <g transform={`translate(0,${-R - 18})`}>
+            <rect x={-label.length * 4 - 5} y={-9} width={label.length * 8 + 10} height={15} rx={3} fill="rgba(8,10,22,0.82)" stroke={`${c1}88`} strokeWidth={1} />
+            <text x={0} y={2} textAnchor="middle" fontSize={9} fontWeight={700} fill={c2}>{label}</text>
+          </g>
+          {/* 넉넉한 클릭 히트영역 (투명) */}
+          <rect x={-R - 6} y={-R - 26} width={R * 2 + 12} height={R + 34} fill="transparent" />
+        </g>,
+      )
     }
-
-    list.sort((a, b) => a.sortY - b.sortY)
-    return list
+    return nodes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, interactId])
+  }, [map])
 
   // 플레이어
   const pe = ELEM_SPRITE[state.player.element] ?? ELEM_SPRITE.fire
   const ps = isoToScreen(state.position.x, state.position.y)
   const playerSortY = state.position.x + state.position.y
+  // PixelLab 4등신 스프라이트 시트: 88px 셀, 8열 × 2행 (row0 = 8방향 회전, row1 = 정면 걷기 8프레임)
+  const DIR_COL: Record<string, number> = { down: 0, right: 2, up: 4, left: 6 }
+  const frontWalk = moving && state.facing === 'down'
+  const heroCol = frontWalk ? heroFrame : DIR_COL[state.facing] ?? 0
+  const heroRow = frontWalk ? 1 : 0
+  const HD = 88
+  const heroBob = moving && !frontWalk && heroFrame % 2 === 1 ? -2 : 0
   const playerNode = (
-    <g key="__player" transform={`translate(${ps.sx},${ps.sy}) scale(1.18)`}>
-      <IsoChara
-        robe={pe.robe}
-        shade={pe.shade}
-        hair={pe.hair}
-        accent={pe.accent}
-        hat={pe.robe}
-        back={state.facing === 'up'}
-        flip={state.facing === 'left'}
-        moving={moving}
-      />
+    <g key="__player" transform={`translate(${ps.sx},${ps.sy})`}>
+      <ellipse cx={0} cy={2} rx={17} ry={5.5} fill="rgba(0,0,0,0.34)" />
+      <svg
+        x={-HD / 2}
+        y={-HD + 10 + heroBob}
+        width={HD}
+        height={HD}
+        viewBox={`${heroCol * 88} ${heroRow * 88} 88 88`}
+        overflow="hidden"
+        style={{ imageRendering: 'pixelated' }}
+      >
+        <image href={`/images/sprites/hero-${state.player.element}-${state.player.gender}.png`} width={704} height={176} />
+      </svg>
     </g>
   )
 
@@ -278,6 +314,12 @@ export function IsoWorld({
         style={{ display: 'block', overflow: 'visible' }}
         shapeRendering="crispEdges"
       >
+        <defs>
+          <linearGradient id="portalBeam" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stopColor="#bfe4ff" stopOpacity="0.9" />
+            <stop offset="1" stopColor="#bfe4ff" stopOpacity="0" />
+          </linearGradient>
+        </defs>
         {/* 지면 */}
         <g>{ground}</g>
         {/* 건물 그림자 */}
@@ -293,6 +335,8 @@ export function IsoWorld({
         {behind}
         {playerNode}
         {front}
+        {/* 마법진 포탈 — 건물보다 위에 그려 클릭 보장 */}
+        {portalNodes}
       </svg>
     </div>
   )

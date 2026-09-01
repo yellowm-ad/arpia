@@ -54,7 +54,7 @@ export function CreateScreen() {
           </div>
         </div>
 
-        <label className="mb-2 block text-xs text-muted-foreground">속성 선택</label>
+        <label className="mb-2 block text-xs text-muted-foreground">계통 선택</label>
         <div className="mb-4 grid grid-cols-3 gap-2">
           {ELEMENTS.map((el) => {
             const meta = ELEMENT_META[el]
@@ -70,7 +70,7 @@ export function CreateScreen() {
                 }}
               >
                 <Image src={meta.icon} alt={meta.name} width={30} height={30} />
-                <span className="text-xs font-semibold">{meta.name}</span>
+                <span className="text-xs font-semibold">{meta.line}</span>
               </button>
             )
           })}

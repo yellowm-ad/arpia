@@ -50,7 +50,7 @@ export function CharacterScreen() {
           <div className="text-center">
             <div className="font-display text-lg text-gold-soft">{player.name}</div>
             <div className="text-xs text-muted-foreground">
-              Lv.{player.level} · {jobTier.name} · {elem.name}속성
+              Lv.{player.level} · {jobTier.name} · {elem.line}
             </div>
           </div>
           <div className="w-full space-y-1">

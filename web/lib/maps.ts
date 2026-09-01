@@ -523,9 +523,9 @@ export const MAPS: Record<MapId, GameMap> = {
     spawn: { x: 26.5, y: 12.2 },
     respawn: { x: 9.5, y: 30.0 },
     portals: [
-      { id: 'gate-forest', cell: { x: 43.5, y: 36.6 }, to: 'forest', label: '숲', kind: 'gate' },
-      { id: 'gate-sea', cell: { x: 43.5, y: 36.6 }, to: 'sea', label: '바다', kind: 'gate', requiredLevel: 3 },
-      { id: 'gate-ruins', cell: { x: 43.5, y: 36.6 }, to: 'ruins', label: '폐허', kind: 'gate', requiredLevel: 10 },
+      { id: 'gate-forest', cell: { x: 43.5, y: 36.6 }, to: 'forest', label: '에르디아 숲', kind: 'gate' },
+      { id: 'gate-sea', cell: { x: 43.5, y: 36.6 }, to: 'sea', label: '스톰헤이븐', kind: 'gate', requiredLevel: 3 },
+      { id: 'gate-ruins', cell: { x: 43.5, y: 36.6 }, to: 'ruins', label: '하늘 유적', kind: 'gate', requiredLevel: 10 },
       { id: 'gate-volcano', cell: { x: 43.5, y: 36.6 }, to: 'volcano', label: '화산지대', kind: 'gate', requiredLevel: 20 },
     ],
   },
@@ -533,7 +533,7 @@ export const MAPS: Record<MapId, GameMap> = {
   // ── 숲 계열 ───────────────────────────────────────────────────────────────
   forest: {
     id: 'forest',
-    name: '위습 숲',
+    name: '에르디아 숲',
     kind: 'field',
     grid: { w: 12, h: 10 },
     bg: 'forest',
@@ -594,7 +594,7 @@ export const MAPS: Record<MapId, GameMap> = {
   // ── 바다 계열 ─────────────────────────────────────────────────────────────
   sea: {
     id: 'sea',
-    name: '가나폴리 해안',
+    name: '스톰헤이븐 해안',
     kind: 'field',
     grid: { w: 12, h: 10 },
     bg: 'sea',
@@ -610,7 +610,7 @@ export const MAPS: Record<MapId, GameMap> = {
   },
   deepsea: {
     id: 'deepsea',
-    name: '심해',
+    name: '스톰헤이븐 심연',
     kind: 'field',
     grid: { w: 10, h: 8 },
     bg: 'deepsea',
@@ -640,7 +640,7 @@ export const MAPS: Record<MapId, GameMap> = {
   // ── 폐허 계열 ─────────────────────────────────────────────────────────────
   ruins: {
     id: 'ruins',
-    name: '아즈카의 폐허',
+    name: '하늘 유적',
     kind: 'field',
     grid: { w: 12, h: 10 },
     bg: 'ruins',
@@ -651,7 +651,7 @@ export const MAPS: Record<MapId, GameMap> = {
     portals: [
       { id: 'ruins-exit', cell: { x: 6, y: 9.4 }, to: 'village', toSpawn: { x: 43.5, y: 35.4 }, label: '마을로 돌아가기', kind: 'exit' },
       { id: 'ruins-graveyard', cell: { x: 2, y: 1.6 }, to: 'graveyard', label: '버려진 묘지', kind: 'portal', requiredLevel: 13 },
-      { id: 'ruins-temple', cell: { x: 10, y: 1.6 }, to: 'temple-ruin', label: '고대 신전', kind: 'portal', requiredLevel: 18 },
+      { id: 'ruins-temple', cell: { x: 10, y: 1.6 }, to: 'temple-ruin', label: '천공 신전', kind: 'portal', requiredLevel: 18 },
     ],
   },
   graveyard: {
@@ -670,7 +670,7 @@ export const MAPS: Record<MapId, GameMap> = {
   },
   'temple-ruin': {
     id: 'temple-ruin',
-    name: '고대 신전',
+    name: '천공 신전',
     kind: 'field',
     grid: { w: 10, h: 8 },
     bg: 'temple',
@@ -696,13 +696,13 @@ export const MAPS: Record<MapId, GameMap> = {
     spawn: { x: 6, y: 8.6 },
     portals: [
       { id: 'volcano-exit', cell: { x: 6, y: 9.4 }, to: 'village', toSpawn: { x: 43.5, y: 35.4 }, label: '마을로 돌아가기', kind: 'exit' },
-      { id: 'volcano-demon-village', cell: { x: 2, y: 1.6 }, to: 'demon-village', label: '마족 마을', kind: 'portal', requiredLevel: 25 },
-      { id: 'volcano-demon-castle', cell: { x: 10, y: 1.6 }, to: 'demon-castle', label: '마왕성', kind: 'portal', requiredLevel: 32 },
+      { id: 'volcano-demon-village', cell: { x: 2, y: 1.6 }, to: 'demon-village', label: '마물 마을', kind: 'portal', requiredLevel: 25 },
+      { id: 'volcano-demon-castle', cell: { x: 10, y: 1.6 }, to: 'demon-castle', label: '모르스의 성', kind: 'portal', requiredLevel: 32 },
     ],
   },
   'demon-village': {
     id: 'demon-village',
-    name: '마족 마을',
+    name: '마물 마을',
     kind: 'field',
     grid: { w: 10, h: 8 },
     bg: 'demon',
@@ -716,7 +716,7 @@ export const MAPS: Record<MapId, GameMap> = {
   },
   'demon-castle': {
     id: 'demon-castle',
-    name: '마왕성',
+    name: '모르스의 성',
     kind: 'field',
     grid: { w: 10, h: 8 },
     bg: 'demon',
