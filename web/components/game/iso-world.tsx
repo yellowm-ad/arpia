@@ -79,7 +79,7 @@ export function IsoWorld({
   const [heroFrame, setHeroFrame] = useState(0)
   useEffect(() => {
     if (!moving) { setHeroFrame(0); return }
-    const id = setInterval(() => setHeroFrame((f) => (f + 1) % 8), 95)
+    const id = setInterval(() => setHeroFrame((f) => (f + 1) % 8), 115)
     return () => clearInterval(id)
   }, [moving])
   const { w: VW, h: VH } = map.grid
@@ -275,45 +275,38 @@ export function IsoWorld({
   const pe = ELEM_SPRITE[state.player.element] ?? ELEM_SPRITE.fire
   const ps = isoToScreen(state.position.x, state.position.y)
   const playerSortY = state.position.x + state.position.y
-  // PixelLab 4등신 스프라이트 시트: 88px 셀, 8열 × 2행 (row0 = 8방향 회전, row1 = 정면 걷기 8프레임)
+  // PixelLab 4등신 스프라이트 시트: 88px 셀, 8열 × 4행.
+  //   row0 = 8방향 회전 (s0 se1 e2 ne3 n4 nw5 w6 sw7), row1/2/3 = south/east/north 걷기 8프레임.
+  //   west(좌) 걷기는 east 행(row2)을 좌우 반전.
   const DIR_COL: Record<string, number> = { down: 0, right: 2, up: 4, left: 6 }
-  // row0 방향순서: s0 se1 e2 ne3 n4 nw5 w6 sw7
-  // 정면(아래) 이동 = 전용 걷기 행(row1) 8프레임.
-  // 좌·우·위 이동 = 회전 프레임을 카디널 ↔ 인접 대각으로 흔들어 다리 스텝처럼 + 상하 바운스.
-  const SIDE_WALK: Record<string, number[]> = {
-    right: [2, 1, 2, 3],
-    left: [6, 7, 6, 5],
-    up: [4, 5, 4, 3],
-  }
+  const WALK_ROW: Record<string, number> = { down: 1, right: 2, left: 2, up: 3 }
   const facing = state.facing
-  const frontWalk = moving && facing === 'down'
   let heroCol: number
   let heroRow = 0
-  if (frontWalk) {
+  if (moving && WALK_ROW[facing] != null) {
+    heroRow = WALK_ROW[facing]
     heroCol = heroFrame % 8
-    heroRow = 1
-  } else if (moving && SIDE_WALK[facing]) {
-    const cyc = SIDE_WALK[facing]
-    heroCol = cyc[heroFrame % cyc.length]
   } else {
     heroCol = DIR_COL[facing] ?? 0
   }
+  const heroFlip = moving && facing === 'left'
   const HD = 88
-  const heroBob = moving && !frontWalk && heroFrame % 2 === 1 ? -2 : 0
   const playerNode = (
     <g key="__player" transform={`translate(${ps.sx},${ps.sy})`}>
       <ellipse cx={0} cy={2} rx={17} ry={5.5} fill="rgba(0,0,0,0.34)" />
-      <svg
-        x={-HD / 2}
-        y={-HD + 10 + heroBob}
-        width={HD}
-        height={HD}
-        viewBox={`${heroCol * 88} ${heroRow * 88} 88 88`}
-        overflow="hidden"
-        style={{ imageRendering: 'pixelated' }}
-      >
-        <image href={`/images/sprites/hero-${state.player.element}-${state.player.gender}.png`} width={704} height={176} />
-      </svg>
+      <g transform={heroFlip ? 'scale(-1,1)' : undefined}>
+        <svg
+          x={-HD / 2}
+          y={-HD + 10}
+          width={HD}
+          height={HD}
+          viewBox={`${heroCol * 88} ${heroRow * 88} 88 88`}
+          overflow="hidden"
+          style={{ imageRendering: 'pixelated' }}
+        >
+          <image href={`/images/sprites/hero-${state.player.element}-${state.player.gender}.png`} width={704} height={352} />
+        </svg>
+      </g>
     </g>
   )
 

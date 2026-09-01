@@ -47,8 +47,8 @@ function zoneBg(kind: string): string {
   switch (kind) {
     case 'school': // 마법학교 — 자수정 석조 + 창문 격자
       return 'repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 26px), repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 30px), linear-gradient(160deg, #3a3a78, #232152)'
-    case 'forest': // 숲 — 층층 나뭇잎 캐노피
-      return 'radial-gradient(circle at 20% 25%, rgba(120,190,110,0.35) 0 14px, transparent 15px), radial-gradient(circle at 70% 60%, rgba(90,160,90,0.3) 0 20px, transparent 22px), radial-gradient(circle at 45% 85%, rgba(140,200,120,0.25) 0 16px, transparent 18px), linear-gradient(180deg, #2f6b3a, #1c4726)'
+    case 'forest': // 숲 — 층층 나뭇잎 캐노피 + 흙 패치
+      return 'radial-gradient(circle at 33% 48%, rgba(96,72,48,0.38) 0 22px, transparent 26px), radial-gradient(circle at 78% 22%, rgba(88,66,44,0.32) 0 18px, transparent 22px), radial-gradient(circle at 20% 25%, rgba(120,190,110,0.35) 0 14px, transparent 15px), radial-gradient(circle at 70% 60%, rgba(90,160,90,0.3) 0 20px, transparent 22px), radial-gradient(circle at 45% 85%, rgba(140,200,120,0.25) 0 16px, transparent 18px), linear-gradient(180deg, #2f6b3a, #1c4726)'
     case 'sea': // 바다 — 물결 줄무늬
       return 'repeating-linear-gradient(115deg, rgba(255,255,255,0.10) 0 3px, transparent 3px 18px), linear-gradient(180deg, #2f86c0, #16466e)'
     case 'colosseum': // 콜로세움 — 모래 + 원형 경기장
@@ -461,6 +461,14 @@ export function WorldScreen() {
               </div>
             ))}
 
+            {/* 필드 지역 프롭 (숲 등) — 빌보드 PNG. 뒤(작은 x+y)부터 그려 앞 물체가 가리게 */}
+            {map.props
+              ?.slice()
+              .sort((a, b) => a.cell.x + a.cell.y - (b.cell.x + b.cell.y))
+              .map((p) => (
+                <FieldProp key={p.id} p={p} tile={TILE} />
+              ))}
+
             {renderQuarterMarkers()}
           </div>
         </div>
@@ -696,7 +704,7 @@ function HeroSprite({
           bottom: 0,
           transform: `translate(-50%, 0)`,
           transformOrigin: 'bottom center',
-          animation: moving ? 'sprite-walk 0.3s ease-in-out infinite' : 'sprite-idle 2.6s ease-in-out infinite',
+          animation: moving ? 'sprite-walk 0.5s ease-in-out infinite' : 'sprite-idle 2.6s ease-in-out infinite',
           filter: 'drop-shadow(0 3px 4px rgba(0,0,0,0.45))',
         }}
       >
@@ -887,6 +895,44 @@ function BillboardLabel({ x, y, tile, children }: { x: number; y: number; tile: 
   return (
     <div className="absolute" style={{ left: x * tile, top: y * tile, transformStyle: 'preserve-3d' }}>
       <div style={{ transform: 'rotateX(-55deg) rotateZ(-45deg) translateY(-14px)' }}>{children}</div>
+    </div>
+  )
+}
+
+/** 필드 지역 소품 — 쿼터뷰 지면에 발밑 앵커를 맞춰 세우는 빌보드 스프라이트 */
+function FieldProp({ p, tile }: { p: { cell: { x: number; y: number }; sprite?: string; px?: { w: number; h: number }; anchor?: { x: number; y: number } }; tile: number }) {
+  const S = 0.55 // 파일 픽셀 → 화면 배율 (52px 주인공 대비 균형)
+  const fw = p.px?.w ?? 48
+  const fh = p.px?.h ?? 48
+  const w = fw * S
+  const h = fh * S
+  const ax = (p.anchor?.x ?? fw / 2) * S
+  const ay = (p.anchor?.y ?? fh) * S
+  if (!p.sprite) return null
+  return (
+    <div className="absolute" style={{ left: p.cell.x * tile, top: p.cell.y * tile, transformStyle: 'preserve-3d' }}>
+      <div style={{ transform: 'rotateX(-55deg) rotateZ(-45deg)' }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: -w * 0.3,
+            top: -7,
+            width: w * 0.6,
+            height: 9,
+            borderRadius: '50%',
+            background: 'rgba(0,0,0,0.32)',
+            filter: 'blur(2px)',
+          }}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={p.sprite}
+          alt=""
+          width={w}
+          height={h}
+          style={{ position: 'absolute', left: -ax, top: -ay, imageRendering: 'pixelated', pointerEvents: 'none' }}
+        />
+      </div>
     </div>
   )
 }

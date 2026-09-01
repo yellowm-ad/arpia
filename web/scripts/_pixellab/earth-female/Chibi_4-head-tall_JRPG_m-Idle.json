@@ -17,10 +17,10 @@
       "height": 88
     },
     "sheet_size": {
-      "width": 704,
-      "height": 176
+      "width": 792,
+      "height": 352
     },
-    "columns": 8,
+    "columns": 9,
     "pivot": "cell-center",
     "rows": [
       {
@@ -45,9 +45,25 @@
         "animation": "Walking",
         "animation_group_id": "dcff1ae8-64a5-4102-b208-29fef7945147",
         "direction": "south"
+      },
+      {
+        "row": 2,
+        "type": "animation",
+        "frame_count": 9,
+        "animation": "Walking",
+        "animation_group_id": "dcff1ae8-64a5-4102-b208-29fef7945147",
+        "direction": "east"
+      },
+      {
+        "row": 3,
+        "type": "animation",
+        "frame_count": 9,
+        "animation": "Walking",
+        "animation_group_id": "dcff1ae8-64a5-4102-b208-29fef7945147",
+        "direction": "north"
       }
     ]
   },
   "export_version": "1.0",
-  "export_date": "2026-09-01T12:16:20.533940+00:00"
+  "export_date": "2026-09-01T15:20:09.305572+00:00"
 }

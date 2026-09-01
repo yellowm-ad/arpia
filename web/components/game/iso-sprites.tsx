@@ -654,7 +654,7 @@ export function IsoChara({
       style={{
         transform: `scaleX(${flip ? -1 : 1})`,
         transformOrigin: 'bottom center',
-        animation: moving ? 'sprite-walk 0.3s ease-in-out infinite' : 'sprite-idle 2.6s ease-in-out infinite',
+        animation: moving ? 'sprite-walk 0.5s ease-in-out infinite' : 'sprite-idle 2.6s ease-in-out infinite',
       }}
     >
       <ellipse cx={0} cy={-1} rx={10} ry={4.2} fill={C.shadow} />

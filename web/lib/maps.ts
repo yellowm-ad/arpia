@@ -506,6 +506,69 @@ const VILLAGE_BLOCKERS = buildBlockers(VILLAGE_PROPS)
 // 야생 필드 맵은 라벨 구역을 두지 않고 맵 이름/배경으로 표시한다.
 const NO_ZONES: ZoneDef[] = []
 
+// ── 필드(야생) 지역 프롭 세트 ────────────────────────────────────────────────
+// world-screen 의 쿼터뷰 경로에서 빌보드 PNG 로 세워 렌더한다(FieldProp).
+// kind 는 쿼터뷰 빌보드에서 쓰이지 않으므로 형식상 근사값을 넣는다.
+// px = 파일 실제 픽셀, anchor = 파일 좌상단 기준 발밑(그라운드) 오프셋.
+type FieldSprite = { sprite: string; px: { w: number; h: number }; anchor: { x: number; y: number }; kind: PropDef['kind'] }
+const FIELD_SPRITES = {
+  forest: {
+    tree: { sprite: '/images/map/props/f_forest_tree.png', px: { w: 128, h: 160 }, anchor: { x: 64, y: 150 }, kind: 'tree' },
+    bush: { sprite: '/images/map/props/f_forest_bush.png', px: { w: 96, h: 56 }, anchor: { x: 48, y: 52 }, kind: 'bush' },
+    rock: { sprite: '/images/map/props/f_forest_rock.png', px: { w: 88, h: 64 }, anchor: { x: 44, y: 60 }, kind: 'bush' },
+    mushroom: { sprite: '/images/map/props/f_forest_mushroom.png', px: { w: 72, h: 56 }, anchor: { x: 36, y: 52 }, kind: 'bush' },
+    log: { sprite: '/images/map/props/f_forest_log.png', px: { w: 120, h: 56 }, anchor: { x: 60, y: 48 }, kind: 'bush' },
+    firefly: { sprite: '/images/map/props/f_forest_firefly.png', px: { w: 56, h: 96 }, anchor: { x: 28, y: 92 }, kind: 'lamp' },
+  },
+  volcano: {
+    spire: { sprite: '/images/map/props/f_volcano_spire.png', px: { w: 72, h: 144 }, anchor: { x: 36, y: 134 }, kind: 'tree' },
+    deadtree: { sprite: '/images/map/props/f_volcano_deadtree.png', px: { w: 104, h: 136 }, anchor: { x: 52, y: 128 }, kind: 'tree' },
+    rock: { sprite: '/images/map/props/f_volcano_rock.png', px: { w: 88, h: 64 }, anchor: { x: 44, y: 58 }, kind: 'bush' },
+    vent: { sprite: '/images/map/props/f_volcano_vent.png', px: { w: 88, h: 56 }, anchor: { x: 44, y: 50 }, kind: 'bush' },
+    sulfur: { sprite: '/images/map/props/f_volcano_sulfur.png', px: { w: 64, h: 64 }, anchor: { x: 32, y: 58 }, kind: 'bush' },
+    ashmound: { sprite: '/images/map/props/f_volcano_ashmound.png', px: { w: 72, h: 48 }, anchor: { x: 36, y: 44 }, kind: 'bush' },
+  },
+} as const satisfies Record<string, Record<string, FieldSprite>>
+
+function fprop<B extends keyof typeof FIELD_SPRITES>(
+  biome: B,
+  key: keyof (typeof FIELD_SPRITES)[B],
+  id: string,
+  x: number,
+  y: number,
+): PropDef {
+  const s = FIELD_SPRITES[biome][key] as FieldSprite
+  return { id, kind: s.kind, cell: { x, y }, sprite: s.sprite, px: s.px, anchor: s.anchor }
+}
+
+// 에르디아 숲 (12×10) — 스폰(6,8.6)·포탈(6,9.4 / 2,1.6 / 10,1.6) 셀은 비워 둔다.
+// 가장자리를 큰나무로 둘러 개활지(클리어링)를 만들고 안쪽에 낮은 소품을 흩뿌린다.
+const FOREST_PROPS: PropDef[] = [
+  fprop('forest', 'tree', 'ft1', 1.2, 2.3), fprop('forest', 'tree', 'ft2', 3.6, 1.1), fprop('forest', 'tree', 'ft3', 8.0, 1.0),
+  fprop('forest', 'tree', 'ft4', 11.0, 2.6), fprop('forest', 'tree', 'ft5', 0.8, 5.6), fprop('forest', 'tree', 'ft6', 11.2, 6.2),
+  fprop('forest', 'tree', 'ft7', 2.0, 8.6), fprop('forest', 'tree', 'ft8', 9.7, 8.8), fprop('forest', 'tree', 'ft9', 6.2, 0.7),
+  fprop('forest', 'bush', 'fb1', 4.4, 3.2), fprop('forest', 'bush', 'fb2', 8.6, 4.0), fprop('forest', 'bush', 'fb3', 2.7, 6.7),
+  fprop('forest', 'bush', 'fb4', 10.2, 4.7),
+  fprop('forest', 'rock', 'fr1', 7.4, 2.6), fprop('forest', 'rock', 'fr2', 3.0, 4.6),
+  fprop('forest', 'log', 'fl1', 5.6, 5.2), fprop('forest', 'log', 'fl2', 8.8, 6.8),
+  fprop('forest', 'mushroom', 'fm1', 4.8, 6.3), fprop('forest', 'mushroom', 'fm2', 6.9, 4.1), fprop('forest', 'mushroom', 'fm3', 9.4, 2.2),
+  fprop('forest', 'firefly', 'ff1', 3.9, 7.7), fprop('forest', 'firefly', 'ff2', 7.7, 7.6),
+]
+
+// 화산지대 (12×10) — 스폰(6,8.6)·포탈(6,9.4 / 2,1.6 / 10,1.6) 셀은 비워 둔다.
+// forest 와 동일 배치 골격(가장자리 큰 실루엣 + 안쪽 산개)을 재사용, 소품만 화산 세트로 교체.
+const VOLCANO_PROPS: PropDef[] = [
+  fprop('volcano', 'spire', 'vt1', 1.2, 2.3), fprop('volcano', 'spire', 'vt2', 3.6, 1.1), fprop('volcano', 'spire', 'vt3', 8.0, 1.0),
+  fprop('volcano', 'deadtree', 'vt4', 11.0, 2.6), fprop('volcano', 'deadtree', 'vt5', 0.8, 5.6), fprop('volcano', 'deadtree', 'vt6', 11.2, 6.2),
+  fprop('volcano', 'deadtree', 'vt7', 2.0, 8.6), fprop('volcano', 'spire', 'vt8', 9.7, 8.8), fprop('volcano', 'spire', 'vt9', 6.2, 0.7),
+  fprop('volcano', 'sulfur', 'vb1', 4.4, 3.2), fprop('volcano', 'ashmound', 'vb2', 8.6, 4.0), fprop('volcano', 'sulfur', 'vb3', 2.7, 6.7),
+  fprop('volcano', 'ashmound', 'vb4', 10.2, 4.7),
+  fprop('volcano', 'rock', 'vr1', 7.4, 2.6), fprop('volcano', 'rock', 'vr2', 3.0, 4.6),
+  fprop('volcano', 'rock', 'vl1', 5.6, 5.2), fprop('volcano', 'rock', 'vl2', 8.8, 6.8),
+  fprop('volcano', 'vent', 'vm1', 4.8, 6.3), fprop('volcano', 'vent', 'vm2', 6.9, 4.1), fprop('volcano', 'vent', 'vm3', 9.4, 2.2),
+  fprop('volcano', 'ashmound', 'vf1', 3.9, 7.7), fprop('volcano', 'sulfur', 'vf2', 7.7, 7.6),
+]
+
 export const MAPS: Record<MapId, GameMap> = {
   village: {
     id: 'village',
@@ -538,6 +601,7 @@ export const MAPS: Record<MapId, GameMap> = {
     kind: 'field',
     grid: { w: 12, h: 10 },
     bg: 'forest',
+    props: FOREST_PROPS,
     zones: NO_ZONES,
     monsterZoneKind: 'forest',
     recommendedLevel: 2,
@@ -753,6 +817,7 @@ export const MAPS: Record<MapId, GameMap> = {
     kind: 'field',
     grid: { w: 12, h: 10 },
     bg: 'volcano',
+    props: VOLCANO_PROPS,
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
     recommendedLevel: 20,

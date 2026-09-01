@@ -4,9 +4,9 @@
 // 4등신 주인공 도트 스프라이트 — 《마법학교 울토르》 삼면도 기반
 //
 // 우선순위:
-//   1) public/images/sprites/hero-<element>-<gender>.png (PixelLab 등에서 뽑은
-//      4방향 걷기 스프라이트 시트, 4열 × 3행 = 방향 down/left/right/up × 프레임 3)
-//      이 파일이 있으면 자동으로 그것을 잘라 애니메이션한다.
+//   1) public/images/sprites/hero-<element>-<gender>.png (PixelLab 에서 뽑은
+//      8열 × 4행 시트: row0 = 8방향 회전(정지), row1/2/3 = south/east/north 걷기 8프레임.
+//      이 파일이 있으면 자동으로 그것을 잘라 애니메이션한다. (west 걷기 = east 좌우 반전)
 //   2) 없으면 아래 SvgHero — 삼면도 팔레트로 그린 절차적 픽셀 스프라이트(폴백).
 //
 // 두 경로 모두 dir(down/up/left/right) + walking(bool) 인터페이스가 같다.
@@ -221,19 +221,23 @@ function SvgHero({
 }
 
 // ─── PixelLab 스프라이트 시트 ───────────────────────────────────────────────
-// scripts/build-hero-sheets 로 생성: 88px 셀, 8열 × 2행.
+// scripts/build-hero-sheets 로 생성: 88px 셀, 8열 × 4행.
 //   row 0 = 8방향 회전 (south, south-east, east, north-east, north, north-west, west, south-west)
-//   row 1 = south(정면) 걷기 8프레임 (걷기 애니 없는 캐릭터는 대기+상하 바운스로 대체)
+//   row 1 = south(정면) 걷기 8프레임
+//   row 2 = east(우) 걷기 8프레임   ← west(좌) 는 이 행을 좌우 반전해서 사용
+//   row 3 = north(후면) 걷기 8프레임
 function sheetSrc(element: Element, gender: Gender) {
   return `/images/sprites/hero-${element}-${gender}.png`
 }
 
 const SHEET_COLS = 8
-const SHEET_ROWS = 2
+const SHEET_ROWS = 4
 /** 4방향 → row 0 회전 컬럼 (PixelLab 방향 순서 기준) */
 const DIR_COL: Record<Facing, number> = { down: 0, right: 2, up: 4, left: 6 }
+/** 4방향 → 걷기 행. left 는 right(row2) 를 좌우 반전. */
+const WALK_ROW: Record<Facing, number> = { down: 1, right: 2, left: 2, up: 3 }
 const WALK_FRAMES = 8
-const WALK_MS = 95
+const WALK_MS = 115
 
 /**
  * 주인공 스프라이트. PixelLab 시트가 있으면 그것을, 없으면 절차적 SVG를 쓴다.
@@ -288,29 +292,18 @@ export function HeroSprite({
   }, [walking])
 
   if (sheetOk) {
-    // 정면 걷기 = row1 8프레임. 좌·우·위 걷기 = 회전 프레임을 카디널 ↔ 인접 대각으로
-    // 흔들어(다리 스텝) + 상하 바운스. row0 방향순서: s0 se1 e2 ne3 n4 nw5 w6 sw7
-    const SIDE_WALK: Record<Facing, number[]> = {
-      down: [0],
-      right: [2, 1, 2, 3],
-      left: [6, 7, 6, 5],
-      up: [4, 5, 4, 3],
-    }
-    const frontWalk = walking && dir === 'down'
-    const row = frontWalk ? 1 : 0
-    const col = frontWalk
-      ? frame
-      : walking
-        ? SIDE_WALK[dir][frame % SIDE_WALK[dir].length]
-        : DIR_COL[dir]
-    const bob = walking && !frontWalk ? (frame % 2 === 1 ? -2 : 0) : 0
+    // 정지 = row0 회전 컬럼. 걷기 = 방향별 걷기 행(row1/2/3) 8프레임 순환.
+    // west(좌) 걷기는 east 행(row2)을 좌우 반전.
+    const row = walking ? WALK_ROW[dir] : 0
+    const col = walking ? frame : DIR_COL[dir]
+    const flipX = walking && dir === 'left'
     return (
       <div
         className={className}
         style={{
           width: px,
           height: px,
-          transform: bob ? `translateY(${bob}px)` : undefined,
+          transform: flipX ? 'scaleX(-1)' : undefined,
           backgroundImage: `url(${sheetSrc(element, gender)})`,
           backgroundSize: `${px * SHEET_COLS}px ${px * SHEET_ROWS}px`,
           backgroundPosition: `-${col * px}px -${row * px}px`,

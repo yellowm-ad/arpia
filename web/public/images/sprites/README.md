@@ -15,24 +15,29 @@ hero-earth-male.png    hero-earth-female.png
 
 ## 레이아웃 (통일)
 
-- **88px 셀 · 8열 × 2행** (704 × 176)
+- **88px 셀 · 8열 × 4행** (704 × 352)
 - **row 0** = 8방향 회전: `south, south-east, east, north-east, north, north-west, west, south-west`
 - **row 1** = `south`(정면) 걷기 8프레임
+- **row 2** = `east`(우) 걷기 8프레임 — `west`(좌)는 `HeroSprite`가 이 행을 좌우 반전
+- **row 3** = `north`(후면) 걷기 8프레임
 
-`HeroSprite`의 4방향 매핑: `down→col0`, `right→col2`, `up→col4`, `left→col6` (row 0).
-정면 이동 시 row 1 8프레임 사이클, 그 외 방향 이동 시 회전 프레임 + 상하 바운스.
+`HeroSprite` 매핑: 정지 시 `down→col0 / right→col2 / up→col4 / left→col6` (row 0).
+이동 시 `down→row1 / right→row2 / left→row2+scaleX(-1) / up→row3`, 각 8프레임 순환.
 
-## 현재 상태 (2026-09-01)
+## 현재 상태 (2026-09-02)
 
-- **6종 전부** PixelLab에서 실제 정면(south) 걷기 애니메이션 생성 완료 — row 1 = 진짜 8프레임 걷기.
-- 좌/우/뒤 방향 걷기는 PixelLab이 자동 생성하지 않으므로, 회전 프레임 + 상하 바운스로 표현.
-  필요하면 PixelLab 각 캐릭터 애니메이션에서 방향별로 개별 생성 후 재빌드.
+- **6종 전부** PixelLab v3에서 `south`·`east`·`north` 걷기 8프레임 생성 완료 → 4방향 실제 걷기.
+- `west`(좌) 걷기는 `east` 행을 CSS `scaleX(-1)`로 반전해 사용(별도 생성 안 함).
+- 대각 이동은 가장 가까운 카디널 걷기로 표시(게임 입력이 4방향).
 
 ## 재빌드
 
-PixelLab에서 각 캐릭터 Export → "Spritesheet (PNG + JSON)" → zip 해제 →
-`scripts/_pixellab/<hero-name>/` 에 배치 후:
+각 캐릭터에 `Walking` 애니메이션(south/east/north) 이 있는 상태에서:
 
 ```
-node scripts/build-hero-sheets.mjs
+bash scripts/_pixellab/fetch-hero-spritesheets.sh   # PixelLab에서 6종 시트 zip 내려받아 _pixellab/ 에 해제
+node scripts/build-hero-sheets.mjs                  # public/images/sprites/hero-*.png 생성
 ```
+
+수동 경로: PixelLab에서 각 캐릭터 Export → "Spritesheet (PNG + JSON)" → zip 해제 →
+`scripts/_pixellab/<hero-name>/` 에 배치 후 `node scripts/build-hero-sheets.mjs`.
