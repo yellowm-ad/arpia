@@ -266,6 +266,9 @@ export type ZoneKind =
   | 'graveyard'
   | 'volcano'
   | 'demon'
+  | 'snow'
+  | 'aurora'
+  | 'sky'
 
 export interface ZoneDef {
   id: string
@@ -291,9 +294,13 @@ export type MapId =
   | 'sea'
   | 'deepsea'
   | 'atlantis'
+  | 'stormhaven'
+  | 'sky-temple'
   | 'ruins'
   | 'graveyard'
   | 'temple-ruin'
+  | 'snowfield'
+  | 'aurora-village'
   | 'volcano'
   | 'demon-village'
   | 'demon-castle'

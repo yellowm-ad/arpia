@@ -288,10 +288,21 @@ export function HeroSprite({
   }, [walking])
 
   if (sheetOk) {
-    // 정면 걷기 = row 1 프레임 사이클. 그 외 방향 걷기 = 회전 프레임 + 상하 바운스.
+    // 정면 걷기 = row1 8프레임. 좌·우·위 걷기 = 회전 프레임을 카디널 ↔ 인접 대각으로
+    // 흔들어(다리 스텝) + 상하 바운스. row0 방향순서: s0 se1 e2 ne3 n4 nw5 w6 sw7
+    const SIDE_WALK: Record<Facing, number[]> = {
+      down: [0],
+      right: [2, 1, 2, 3],
+      left: [6, 7, 6, 5],
+      up: [4, 5, 4, 3],
+    }
     const frontWalk = walking && dir === 'down'
     const row = frontWalk ? 1 : 0
-    const col = frontWalk ? frame : DIR_COL[dir]
+    const col = frontWalk
+      ? frame
+      : walking
+        ? SIDE_WALK[dir][frame % SIDE_WALK[dir].length]
+        : DIR_COL[dir]
     const bob = walking && !frontWalk ? (frame % 2 === 1 ? -2 : 0) : 0
     return (
       <div

@@ -19,11 +19,13 @@ function buildBlockers(props: PropDef[], extra: Blocker[] = []): Blocker[] {
 // 멀티맵 정의 — 메인 마을(안전) + 야생 스테이지(포탈 이동)
 // 셀 = 200m. 맵마다 grid 크기가 다르며 정사각형이 아니어도 된다.
 // 스테이지 트리:
-//   village ──군 통문──▶ forest / sea / ruins / volcano
-//   forest ─▶ cave ─▶ mine,   forest ─▶ swamp
-//   sea    ─▶ deepsea,        sea    ─▶ atlantis(안전)
-//   ruins  ─▶ graveyard,      ruins  ─▶ temple-ruin(고대 신전)
-//   volcano─▶ demon-village,  volcano─▶ demon-castle
+//   village ──군 통문──▶ forest / sea / stormhaven / ruins / snowfield / volcano
+//   forest    ─▶ cave ─▶ mine,   forest ─▶ swamp
+//   sea       ─▶ deepsea,        sea    ─▶ atlantis(안전)
+//   stormhaven─▶ sky-temple(천공 신전, 안전)
+//   ruins     ─▶ graveyard,      ruins  ─▶ temple-ruin(버려진 신전, 안전)
+//   snowfield ─▶ aurora-village(오로라 마을, 안전)
+//   volcano   ─▶ demon-village(마물 마을, 안전),  volcano ─▶ demon-castle
 // ============================================================================
 
 function z(
@@ -98,16 +100,16 @@ function villageTileAt(x: number, y: number): TileKind {
   if (x > AV_R.a && x < VW - 2.5 && Math.abs(y - 20.5) < 1.5) return 'path'
   // 대성당 진입로 (외곽 순환로 → 앞광장)
   if (Math.abs(x - TEMPLE_YARD.x) < 1.5 && y > ST_S.a) return 'path'
-  // 마로니에 공원 잔디(짙게) — 투기장 남측, 농가 위까지 넉넉히
+  // 마로니에 공원 잔디 — 투기장 남측, 농가 위까지 넉넉히 (밝은 잔디)
   if (
     x > 19.8 && x < 33 && y > ST_S.b && y < 32.6 &&
     Math.hypot(x - COLOSSEUM.x, y - COLOSSEUM.y) >= 5.6
   )
-    return 'grass-dark'
+    return 'grass'
   // 공원 산책로 (동서, 공원 한가운데)
   if (x > 19.8 && x < 33 && Math.abs(y - 29.9) < 0.7) return 'path'
-  // 나머지 잔디 — 드문 얼룩만
-  return (Math.floor(x) * 7 + Math.floor(y) * 13) % 5 === 0 ? 'grass-dark' : 'grass'
+  // 나머지 잔디 — 얼룩은 아주 드물게(풀 비율↑)
+  return (Math.floor(x) * 7 + Math.floor(y) * 13) % 9 === 0 ? 'grass-dark' : 'grass'
 }
 
 // 충돌·정렬을 그림에서 그대로 뽑는 구조물 종류
@@ -367,14 +369,13 @@ function villageProps(): PropDef[] {
   TEMPLE_GARDEN.forEach(([x, y], i) => {
     if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `tg-bush${i}`, kind: 'bush', cell: { x, y } })
   })
-  // 앞광장 — 성녀 상을 둘러싼 벤치 링 (좌·우 대칭)
+  // 앞광장 — 성녀 상 앞, 마주보는 벤치 두 쌍(관상 공간)
   const yardBench: [number, number, 'l' | 'r'][] = [
-    [TEMPLE_YARD.x - 3.0, TEMPLE_YARD.y - 1.4, 'l'], [TEMPLE_YARD.x + 3.0, TEMPLE_YARD.y - 1.4, 'r'],
-    [TEMPLE_YARD.x - 3.0, TEMPLE_YARD.y + 1.4, 'r'], [TEMPLE_YARD.x + 3.0, TEMPLE_YARD.y + 1.4, 'l'],
-    [TEMPLE_YARD.x - 1.6, TEMPLE_YARD.y - 3.0, 'l'], [TEMPLE_YARD.x + 1.6, TEMPLE_YARD.y - 3.0, 'r'],
+    [TEMPLE_YARD.x - 2.6, TEMPLE_YARD.y - 0.2, 'l'], [TEMPLE_YARD.x + 2.6, TEMPLE_YARD.y - 0.2, 'r'],
+    [TEMPLE_YARD.x - 2.6, TEMPLE_YARD.y + 2.1, 'r'], [TEMPLE_YARD.x + 2.6, TEMPLE_YARD.y + 2.1, 'l'],
   ]
   yardBench.forEach(([x, y, v], i) => {
-    if (!blocked(x, y)) P.push({ id: `be-tp${i}`, kind: 'bench', cell: { x, y }, variant: v })
+    if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be-tp${i}`, kind: 'bench', cell: { x, y }, variant: v })
   })
 
   // ── 가로등 — 대로 양편(4셀 간격) + 광장·투기장·앞광장·의전대로 둘레 ──
@@ -415,14 +416,12 @@ function villageProps(): PropDef[] {
     if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be${i}`, kind: 'bench', cell: { x, y }, variant: v })
   })
 
-  // ── 마로니에 공원 벤치 — 뤽상부르/튈르리식: 산책로 양편 화단 등지고 촘촘히 (약 2.3셀 간격) ──
+  // ── 마로니에 공원 벤치 — 산책로 양편에 마주보게, 가운데 정자 축은 비워 자연스럽게 ──
   const parkBench: { x: number; y: number; v: 'l' | 'r' }[] = []
-  for (let x = 20.8; x <= 32.4; x += 2.3) {
-    parkBench.push({ x, y: 28.7, v: 'l' }) // 북측: 화단 등지고 남향(산책로)
-    parkBench.push({ x: x + 1.15, y: 31.1, v: 'r' }) // 남측: 반 칸 엇갈려 북향
+  for (const bx of [21.2, 23.8, 29.6, 32.2]) {
+    parkBench.push({ x: bx, y: 28.7, v: 'l' }) // 북측: 산책로 남향
+    parkBench.push({ x: bx + 0.5, y: 31.0, v: 'r' }) // 남측: 살짝 엇갈려 북향
   }
-  // 중앙 연주대(정자) 둘레 벤치 4
-  parkBench.push({ x: 24.4, y: 31.4, v: 'r' }, { x: 28.8, y: 31.4, v: 'l' }, { x: 24.4, y: 32.0, v: 'l' }, { x: 28.8, y: 32.0, v: 'r' })
   parkBench.forEach(({ x, y, v }, i) => {
     if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be-pk${i}`, kind: 'bench', cell: { x, y }, variant: v })
   })
@@ -524,8 +523,10 @@ export const MAPS: Record<MapId, GameMap> = {
     respawn: { x: 9.5, y: 30.0 },
     portals: [
       { id: 'gate-forest', cell: { x: 43.5, y: 36.6 }, to: 'forest', label: '에르디아 숲', kind: 'gate' },
-      { id: 'gate-sea', cell: { x: 43.5, y: 36.6 }, to: 'sea', label: '스톰헤이븐', kind: 'gate', requiredLevel: 3 },
-      { id: 'gate-ruins', cell: { x: 43.5, y: 36.6 }, to: 'ruins', label: '하늘 유적', kind: 'gate', requiredLevel: 10 },
+      { id: 'gate-sea', cell: { x: 43.5, y: 36.6 }, to: 'sea', label: '바다', kind: 'gate', requiredLevel: 3 },
+      { id: 'gate-stormhaven', cell: { x: 43.5, y: 36.6 }, to: 'stormhaven', label: '스톰헤이븐', kind: 'gate', requiredLevel: 7 },
+      { id: 'gate-ruins', cell: { x: 43.5, y: 36.6 }, to: 'ruins', label: '버려진 폐허', kind: 'gate', requiredLevel: 10 },
+      { id: 'gate-snowfield', cell: { x: 43.5, y: 36.6 }, to: 'snowfield', label: '루미나 설원', kind: 'gate', requiredLevel: 15 },
       { id: 'gate-volcano', cell: { x: 43.5, y: 36.6 }, to: 'volcano', label: '화산지대', kind: 'gate', requiredLevel: 20 },
     ],
   },
@@ -591,10 +592,10 @@ export const MAPS: Record<MapId, GameMap> = {
     ],
   },
 
-  // ── 바다 계열 ─────────────────────────────────────────────────────────────
+  // ── 바다 계열 (바다 해안 ─▶ 심해 / 아틀란티스 마을[안전]) ──────────────────
   sea: {
     id: 'sea',
-    name: '스톰헤이븐 해안',
+    name: '바다 해안',
     kind: 'field',
     grid: { w: 12, h: 10 },
     bg: 'sea',
@@ -610,7 +611,7 @@ export const MAPS: Record<MapId, GameMap> = {
   },
   deepsea: {
     id: 'deepsea',
-    name: '스톰헤이븐 심연',
+    name: '심해',
     kind: 'field',
     grid: { w: 10, h: 8 },
     bg: 'deepsea',
@@ -629,7 +630,7 @@ export const MAPS: Record<MapId, GameMap> = {
     grid: { w: 10, h: 8 },
     bg: 'atlantis',
     zones: [
-      z('z-atlantis', 'atlantis', '아틀란티스 마을', 0, 0, 10, 8, '#2f86c0', '심해 아래 잠든 수중 도시. 주민 NPC는 준비 중.'),
+      z('z-atlantis', 'atlantis', '아틀란티스 마을', 0, 0, 10, 8, '#2f86c0', '심해 아래 잠든 수중 도시. 해류로 지은 유리 돔 아래 인어족이 살아간다.'),
     ],
     spawn: { x: 5, y: 6.6 },
     portals: [
@@ -637,10 +638,41 @@ export const MAPS: Record<MapId, GameMap> = {
     ],
   },
 
-  // ── 폐허 계열 ─────────────────────────────────────────────────────────────
+  // ── 스톰헤이븐 계열 (스톰헤이븐 ─▶ 천공 신전[안전]) ────────────────────────
+  stormhaven: {
+    id: 'stormhaven',
+    name: '스톰헤이븐',
+    kind: 'field',
+    grid: { w: 12, h: 10 },
+    bg: 'sky',
+    zones: NO_ZONES,
+    monsterZoneKind: 'sea',
+    recommendedLevel: 7,
+    spawn: { x: 6, y: 8.6 },
+    portals: [
+      { id: 'stormhaven-exit', cell: { x: 6, y: 9.4 }, to: 'village', toSpawn: { x: 43.5, y: 35.4 }, label: '마을로 돌아가기', kind: 'exit' },
+      { id: 'stormhaven-sky-temple', cell: { x: 6, y: 1.6 }, to: 'sky-temple', label: '천공 신전', kind: 'portal', requiredLevel: 9 },
+    ],
+  },
+  'sky-temple': {
+    id: 'sky-temple',
+    name: '천공 신전',
+    kind: 'town',
+    grid: { w: 10, h: 8 },
+    bg: 'temple',
+    zones: [
+      z('z-sky-temple', 'temple', '천공 신전', 0, 0, 10, 8, '#d8c98a', '폭풍 위에 떠 있는 하얀 신전. 바람을 읽는 사제들이 순례자를 맞는다.'),
+    ],
+    spawn: { x: 5, y: 6.6 },
+    portals: [
+      { id: 'sky-temple-exit', cell: { x: 5, y: 7.4 }, to: 'stormhaven', toSpawn: { x: 6, y: 2.6 }, label: '스톰헤이븐으로', kind: 'exit' },
+    ],
+  },
+
+  // ── 버려진 폐허 계열 (버려진 폐허 ─▶ 버려진 묘지 / 버려진 신전[안전]) ─────
   ruins: {
     id: 'ruins',
-    name: '하늘 유적',
+    name: '버려진 폐허',
     kind: 'field',
     grid: { w: 12, h: 10 },
     bg: 'ruins',
@@ -651,7 +683,7 @@ export const MAPS: Record<MapId, GameMap> = {
     portals: [
       { id: 'ruins-exit', cell: { x: 6, y: 9.4 }, to: 'village', toSpawn: { x: 43.5, y: 35.4 }, label: '마을로 돌아가기', kind: 'exit' },
       { id: 'ruins-graveyard', cell: { x: 2, y: 1.6 }, to: 'graveyard', label: '버려진 묘지', kind: 'portal', requiredLevel: 13 },
-      { id: 'ruins-temple', cell: { x: 10, y: 1.6 }, to: 'temple-ruin', label: '천공 신전', kind: 'portal', requiredLevel: 18 },
+      { id: 'ruins-temple', cell: { x: 10, y: 1.6 }, to: 'temple-ruin', label: '버려진 신전', kind: 'portal', requiredLevel: 18 },
     ],
   },
   graveyard: {
@@ -670,16 +702,47 @@ export const MAPS: Record<MapId, GameMap> = {
   },
   'temple-ruin': {
     id: 'temple-ruin',
-    name: '천공 신전',
-    kind: 'field',
+    name: '버려진 신전',
+    kind: 'town',
     grid: { w: 10, h: 8 },
     bg: 'temple',
-    zones: NO_ZONES,
-    monsterZoneKind: 'ruins',
-    recommendedLevel: 18,
+    zones: [
+      z('z-abandoned-temple', 'temple', '버려진 신전', 0, 0, 10, 8, '#9a8a54', '폐허 깊숙이 남은 옛 신전. 은둔한 수도자들이 유물을 지키며 순례자를 맞는다.'),
+    ],
     spawn: { x: 5, y: 6.6 },
     portals: [
       { id: 'temple-ruin-exit', cell: { x: 5, y: 7.4 }, to: 'ruins', toSpawn: { x: 10, y: 2.6 }, label: '폐허로', kind: 'exit' },
+    ],
+  },
+
+  // ── 루미나 설원 계열 (루미나 설원 ─▶ 오로라 마을[안전]) ────────────────────
+  snowfield: {
+    id: 'snowfield',
+    name: '루미나 설원',
+    kind: 'field',
+    grid: { w: 12, h: 10 },
+    bg: 'snow',
+    zones: NO_ZONES,
+    monsterZoneKind: 'ruins',
+    recommendedLevel: 15,
+    spawn: { x: 6, y: 8.6 },
+    portals: [
+      { id: 'snowfield-exit', cell: { x: 6, y: 9.4 }, to: 'village', toSpawn: { x: 43.5, y: 35.4 }, label: '마을로 돌아가기', kind: 'exit' },
+      { id: 'snowfield-aurora', cell: { x: 6, y: 1.6 }, to: 'aurora-village', label: '오로라 마을', kind: 'portal', requiredLevel: 16 },
+    ],
+  },
+  'aurora-village': {
+    id: 'aurora-village',
+    name: '오로라 마을',
+    kind: 'town',
+    grid: { w: 10, h: 8 },
+    bg: 'aurora',
+    zones: [
+      z('z-aurora', 'aurora', '오로라 마을', 0, 0, 10, 8, '#7fb0d8', '설원 한가운데, 밤이면 하늘에 오로라가 흐르는 얼음집 마을. 설인족과 상인들이 산다.'),
+    ],
+    spawn: { x: 5, y: 6.6 },
+    portals: [
+      { id: 'aurora-exit', cell: { x: 5, y: 7.4 }, to: 'snowfield', toSpawn: { x: 6, y: 2.6 }, label: '설원으로', kind: 'exit' },
     ],
   },
 
@@ -703,12 +766,12 @@ export const MAPS: Record<MapId, GameMap> = {
   'demon-village': {
     id: 'demon-village',
     name: '마물 마을',
-    kind: 'field',
+    kind: 'town',
     grid: { w: 10, h: 8 },
     bg: 'demon',
-    zones: NO_ZONES,
-    monsterZoneKind: 'ruins',
-    recommendedLevel: 25,
+    zones: [
+      z('z-demon-village', 'demon', '마물 마을', 0, 0, 10, 8, '#3a1230', '화산 기슭에 자리한 마물들의 정착지. 모르스를 따르지 않는 온건파 마물이 교역한다.'),
+    ],
     spawn: { x: 5, y: 6.6 },
     portals: [
       { id: 'demon-village-exit', cell: { x: 5, y: 7.4 }, to: 'volcano', toSpawn: { x: 2, y: 2.6 }, label: '화산지대로', kind: 'exit' },

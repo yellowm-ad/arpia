@@ -336,11 +336,13 @@ function CombatantSprite({
   heroElement?: 'fire' | 'ice' | 'earth'
   heroAnim?: 'idle' | 'lunge' | 'hit'
 }) {
-  // 필드 배치: 적은 위쪽(작게, 원경), 아군은 아래쪽(크게, 근경)
+  // 필드 배치: 중앙에서 대치 — 아군은 좌중앙(근경, 크게), 적은 우중앙(원경, 약간 작게)
   const spread = count > 1 ? index / (count - 1) - 0.5 : 0
-  const left = side === 'enemy' ? 60 + spread * 30 : 22 + spread * 30
-  const top = side === 'enemy' ? 24 + Math.abs(spread) * 10 + (index % 2) * 8 : 58 + (index % 2) * 9
-  const scale = side === 'enemy' ? 0.92 : 1.15
+  const left = side === 'enemy' ? 68 + spread * 22 : 32 + spread * 24
+  const top = side === 'enemy'
+    ? 42 + Math.abs(spread) * 12 + (index % 2) * 7
+    : 58 + Math.abs(spread) * 8 + (index % 2) * 8
+  const scale = side === 'enemy' ? 0.95 : 1.12
 
   const statuses = c.effects.filter((e) => e.kind === 'status')
   const buffs = c.effects.filter((e) => e.kind === 'buff')

@@ -277,9 +277,27 @@ export function IsoWorld({
   const playerSortY = state.position.x + state.position.y
   // PixelLab 4등신 스프라이트 시트: 88px 셀, 8열 × 2행 (row0 = 8방향 회전, row1 = 정면 걷기 8프레임)
   const DIR_COL: Record<string, number> = { down: 0, right: 2, up: 4, left: 6 }
-  const frontWalk = moving && state.facing === 'down'
-  const heroCol = frontWalk ? heroFrame : DIR_COL[state.facing] ?? 0
-  const heroRow = frontWalk ? 1 : 0
+  // row0 방향순서: s0 se1 e2 ne3 n4 nw5 w6 sw7
+  // 정면(아래) 이동 = 전용 걷기 행(row1) 8프레임.
+  // 좌·우·위 이동 = 회전 프레임을 카디널 ↔ 인접 대각으로 흔들어 다리 스텝처럼 + 상하 바운스.
+  const SIDE_WALK: Record<string, number[]> = {
+    right: [2, 1, 2, 3],
+    left: [6, 7, 6, 5],
+    up: [4, 5, 4, 3],
+  }
+  const facing = state.facing
+  const frontWalk = moving && facing === 'down'
+  let heroCol: number
+  let heroRow = 0
+  if (frontWalk) {
+    heroCol = heroFrame % 8
+    heroRow = 1
+  } else if (moving && SIDE_WALK[facing]) {
+    const cyc = SIDE_WALK[facing]
+    heroCol = cyc[heroFrame % cyc.length]
+  } else {
+    heroCol = DIR_COL[facing] ?? 0
+  }
   const HD = 88
   const heroBob = moving && !frontWalk && heroFrame % 2 === 1 ? -2 : 0
   const playerNode = (

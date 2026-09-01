@@ -59,8 +59,14 @@ function zoneBg(kind: string): string {
       return 'linear-gradient(90deg, transparent 44%, rgba(200,170,120,0.35) 45% 55%, transparent 56%), radial-gradient(circle at 30% 40%, rgba(120,190,110,0.25) 0 12px, transparent 14px), linear-gradient(180deg, #6fae5d, #3f7a38)'
     case 'military': // 연구동 — 강철 격자
       return 'repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 16px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 16px), linear-gradient(160deg, #8a8f9c, #4a4f5c)'
-    case 'ruins': // 하늘 유적 — 균열
+    case 'ruins': // 버려진 폐허 — 균열
       return 'repeating-linear-gradient(70deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 22px), repeating-linear-gradient(200deg, rgba(0,0,0,0.2) 0 1px, transparent 1px 30px), linear-gradient(160deg, #4a3a5c, #221a30)'
+    case 'sky': // 스톰헤이븐 — 폭풍 위 하늘길
+      return 'radial-gradient(circle at 50% 15%, rgba(255,255,255,0.16), transparent 55%), repeating-linear-gradient(105deg, rgba(255,255,255,0.08) 0 2px, transparent 2px 22px), linear-gradient(180deg, #6f8fc4, #35507e)'
+    case 'snow': // 루미나 설원 — 눈밭 + 서리 결정
+      return 'radial-gradient(circle at 25% 30%, rgba(255,255,255,0.30) 0 10px, transparent 12px), radial-gradient(circle at 72% 62%, rgba(220,235,255,0.22) 0 14px, transparent 16px), linear-gradient(180deg, #dfeaf5, #a9c2dc)'
+    case 'aurora': // 오로라 마을 — 얼음집 + 밤하늘 오로라
+      return 'linear-gradient(115deg, rgba(120,255,200,0.14) 0 30%, transparent 55%), linear-gradient(250deg, rgba(150,120,255,0.16) 0 35%, transparent 60%), repeating-linear-gradient(90deg, rgba(200,235,255,0.10) 0 2px, transparent 2px 26px), linear-gradient(180deg, #1f3350, #10203a)'
     case 'plaza': // 중앙 광장 — 포석 + 분수 원형
       return 'radial-gradient(circle at 50% 42%, rgba(180,200,255,0.16) 0 26px, transparent 28px), repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 28px), linear-gradient(160deg, #6b7290, #3f4560)'
     case 'park': // 공원 — 잔디 + 나무 점
@@ -661,7 +667,7 @@ function HeroSprite({
   x: number
   y: number
   eff: number
-  element: string
+  element: 'fire' | 'ice' | 'earth'
   gender: 'male' | 'female'
   facing: 'up' | 'down' | 'left' | 'right'
   moving: boolean
