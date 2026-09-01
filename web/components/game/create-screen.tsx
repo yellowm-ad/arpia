@@ -79,7 +79,7 @@ export function CreateScreen() {
         <div className="mb-4 rounded-lg border border-border/60 bg-black/20 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
           {ELEMENT_META[element].blurb}
         </div>
-        <p className="mb-4 text-center text-[10px] text-muted-foreground/70">상성 순환: 불꽃 → 얼음 → 대지 → 불꽃</p>
+        <p className="mb-4 text-center text-[10px] text-muted-foreground/70">삼원 상성: 화염계 → 빙결계 → 대지계 → 화염계</p>
 
         <div className="flex justify-between gap-2">
           <Button variant="ghost" onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'title' })}>

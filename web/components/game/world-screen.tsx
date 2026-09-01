@@ -59,7 +59,7 @@ function zoneBg(kind: string): string {
       return 'linear-gradient(90deg, transparent 44%, rgba(200,170,120,0.35) 45% 55%, transparent 56%), radial-gradient(circle at 30% 40%, rgba(120,190,110,0.25) 0 12px, transparent 14px), linear-gradient(180deg, #6fae5d, #3f7a38)'
     case 'military': // 연구동 — 강철 격자
       return 'repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 16px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 16px), linear-gradient(160deg, #8a8f9c, #4a4f5c)'
-    case 'ruins': // 아즈카의 폐허 — 균열
+    case 'ruins': // 하늘 유적 — 균열
       return 'repeating-linear-gradient(70deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 22px), repeating-linear-gradient(200deg, rgba(0,0,0,0.2) 0 1px, transparent 1px 30px), linear-gradient(160deg, #4a3a5c, #221a30)'
     case 'plaza': // 중앙 광장 — 포석 + 분수 원형
       return 'radial-gradient(circle at 50% 42%, rgba(180,200,255,0.16) 0 26px, transparent 28px), repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 28px), linear-gradient(160deg, #6b7290, #3f4560)'
@@ -83,7 +83,7 @@ function zoneBg(kind: string): string {
       return 'repeating-linear-gradient(90deg, rgba(0,0,0,0.28) 0 6px, transparent 6px 40px), radial-gradient(circle at 50% 80%, rgba(120,140,160,0.12), transparent 60%), linear-gradient(180deg, #3a3f47, #1c1f24)'
     case 'volcano': // 화산지대 — 용암 균열
       return 'repeating-linear-gradient(50deg, rgba(255,90,20,0.22) 0 1px, transparent 1px 24px), repeating-linear-gradient(300deg, rgba(255,120,30,0.18) 0 1px, transparent 1px 32px), linear-gradient(160deg, #5a2418, #241009)'
-    case 'demon': // 마족 영역 — 검붉은 안개
+    case 'demon': // 마물 영역 — 검붉은 안개
       return 'radial-gradient(circle at 50% 30%, rgba(200,40,60,0.20), transparent 60%), repeating-linear-gradient(45deg, rgba(0,0,0,0.35) 0 2px, transparent 2px 20px), linear-gradient(160deg, #3a1230, #170512)'
     default:
       return 'linear-gradient(180deg, #1a1f45, #12163a)'

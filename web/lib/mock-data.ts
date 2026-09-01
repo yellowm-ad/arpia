@@ -8,12 +8,12 @@ const NEUT = '/images/elements/neutral.svg'
 
 // ============================================================================
 // 스킬 — 설계: Documents/울토르 시스템 DB.md §7
-//  · 속성 스킬 (불꽃/얼음/대지 × 5전직)
+//  · 계통 스킬 (화염계/빙결계/대지계 × 5전직)
 //  · 무속성 공용 스킬
 //  · 펫 스킬 (고유 + 훈련)
 // ============================================================================
 export const SKILLS: Skill[] = [
-  // ── 불꽃 ────────────────────────────────────────────────────────────────
+  // ── 화염계 ────────────────────────────────────────────────────────────────
   { id: 'fire-t1-1', name: '불씨 던지기', element: 'fire', jobTier: 'apprentice', levelRequired: 1, mpCost: 4, power: 1.0, kind: 'attack', targeting: 'singleEnemy', status: { id: 'burn', chance: 0.2 }, icon: FIRE, description: '작은 불씨를 던져 화염 피해를 입히고 낮은 확률로 화상.' },
   { id: 'fire-t1-2', name: '온기', element: 'fire', jobTier: 'apprentice', levelRequired: 1, mpCost: 5, power: 0.8, kind: 'heal', targeting: 'self', icon: FIRE, description: '따뜻한 불기운으로 자신의 HP를 회복한다.' },
   { id: 'fire-t2-1', name: '화염 강타', element: 'fire', jobTier: 'novice', levelRequired: 10, mpCost: 8, power: 1.5, kind: 'attack', targeting: 'singleEnemy', status: { id: 'burn', chance: 0.35 }, icon: FIRE, description: '압축한 화염으로 적 하나를 강타한다.' },
@@ -130,7 +130,7 @@ const ROBE_BONUS: Record<Tier, Partial<Stats>> = {
   4: { def: 16, mdef: 16, maxHp: 32 },
   5: { def: 26, mdef: 26, maxHp: 50 },
 }
-const ELEM_KO = { fire: '불꽃', ice: '얼음', earth: '대지' } as const
+const ELEM_KO = { fire: '화염', ice: '빙결', earth: '대지' } as const
 const WAND_ICON: Record<Tier, string> = {
   1: '/images/items/wand.svg',
   2: '/images/items/wand.svg',
@@ -206,9 +206,9 @@ const tools: ItemDef[] = [
 ]
 
 const feeds: ItemDef[] = [
-  { id: 'feed-fire', name: '매콤한 먹이', type: 'feed', icon: '/images/items/vial-green.svg', description: '불꽃 계열 펫이 좋아한다. 호감도 +12.', price: 80, sellPrice: 24, feedElement: 'fire', useEffect: { petAffection: 12 }, stackable: true, maxStack: 30 },
-  { id: 'feed-ice', name: '시원한 먹이', type: 'feed', icon: '/images/items/vial-green.svg', description: '얼음 계열 펫이 좋아한다. 호감도 +12.', price: 80, sellPrice: 24, feedElement: 'ice', useEffect: { petAffection: 12 }, stackable: true, maxStack: 30 },
-  { id: 'feed-earth', name: '든든한 먹이', type: 'feed', icon: '/images/items/vial-green.svg', description: '대지 계열 펫이 좋아한다. 호감도 +12.', price: 80, sellPrice: 24, feedElement: 'earth', useEffect: { petAffection: 12 }, stackable: true, maxStack: 30 },
+  { id: 'feed-fire', name: '매콤한 먹이', type: 'feed', icon: '/images/items/vial-green.svg', description: '화염계 펫이 좋아한다. 호감도 +12.', price: 80, sellPrice: 24, feedElement: 'fire', useEffect: { petAffection: 12 }, stackable: true, maxStack: 30 },
+  { id: 'feed-ice', name: '시원한 먹이', type: 'feed', icon: '/images/items/vial-green.svg', description: '빙결계 펫이 좋아한다. 호감도 +12.', price: 80, sellPrice: 24, feedElement: 'ice', useEffect: { petAffection: 12 }, stackable: true, maxStack: 30 },
+  { id: 'feed-earth', name: '든든한 먹이', type: 'feed', icon: '/images/items/vial-green.svg', description: '대지계 펫이 좋아한다. 호감도 +12.', price: 80, sellPrice: 24, feedElement: 'earth', useEffect: { petAffection: 12 }, stackable: true, maxStack: 30 },
   { id: 'feed-any', name: '평범한 먹이', type: 'feed', icon: '/images/items/vial-green.svg', description: '어떤 펫이든 조금 좋아한다. 호감도 +6.', price: 40, sellPrice: 12, feedElement: 'neutral', useEffect: { petAffection: 6 }, stackable: true, maxStack: 30 },
 ]
 
