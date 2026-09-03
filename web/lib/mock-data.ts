@@ -303,27 +303,27 @@ export const NPCS: NpcDef[] = [
   { id: 'npc-farmer', name: '농부 하름', role: 'farmer', icon: '/images/npc/npc-farmer.png', zoneId: 'z-farm', cell: { x: 26, y: 29.2 }, greeting: ['어이, 견습생! 여기가 햇살 농가일세.', '밭농사에 펫 농장까지 해볼 생각인데, 아직은 삽질만 하고 있다네. 곧 열 테니 기대하게.'] },
 
   // ── 아틀란티스 마을 (안전지대) ──
-  { id: 'npc-atlantis-elder', name: '해류사제 넬리아', role: 'flavor', icon: '/images/npc/npc-atlantis-elder.png', zoneId: 'z-atlantis', cell: { x: 7.4, y: 5.0 }, greeting: ['숨은 걱정 말게 — 이 돔 안은 뭍과 같으니.', '아틀란티스는 심해가 삼키기 전, 삼원을 가장 먼저 연구한 도시였네.'] },
-  { id: 'npc-atlantis-merchant', name: '진주상인 카로', role: 'potionMerchant', icon: '/images/npc/npc-atlantis-merchant.png', zoneId: 'z-atlantis', cell: { x: 11.4, y: 4.4 }, greeting: ['해저에서 건진 물약이라네. 뭍 것보다 훨씬 잘 들어.'], shopItemIds: potions.map((p) => p.id) },
-  { id: 'npc-atlantis-child', name: '인어 아이 피오', role: 'flavor', icon: '/images/npc/npc-atlantis-child.png', zoneId: 'z-atlantis', cell: { x: 9.2, y: 8.0 }, greeting: ['위쪽 세계 사람이다! 다리로 걷는 거 신기해요.'] },
+  { id: 'npc-atlantis-elder', name: '해류사제 넬리아', role: 'flavor', icon: '/images/npc/npc-atlantis-elder.png', zoneId: 'z-atlantis', cell: { x: 5.6, y: 8.7 }, greeting: ['숨은 걱정 말게 — 이 돔 안은 뭍과 같으니.', '아틀란티스는 심해가 삼키기 전, 삼원을 가장 먼저 연구한 도시였네.'] },
+  { id: 'npc-atlantis-merchant', name: '진주상인 카로', role: 'potionMerchant', icon: '/images/npc/npc-atlantis-merchant.png', zoneId: 'z-atlantis', cell: { x: 22.0, y: 15.2 }, greeting: ['해저에서 건진 물약이라네. 뭍 것보다 훨씬 잘 들어.'], shopItemIds: potions.map((p) => p.id) },
+  { id: 'npc-atlantis-child', name: '인어 아이 피오', role: 'flavor', icon: '/images/npc/npc-atlantis-child.png', zoneId: 'z-atlantis', cell: { x: 16.0, y: 20.6 }, greeting: ['위쪽 세계 사람이다! 다리로 걷는 거 신기해요.'] },
 
   // ── 천공 신전 (안전지대) ──
-  { id: 'npc-sky-priest', name: '바람사제 이엘', role: 'templePriest', icon: '/images/npc/npc-sky-priest.png', zoneId: 'z-sky-temple', cell: { x: 3.4, y: 3.0 }, greeting: ['폭풍 위에 온 걸 환영하네, 순례자여.', '바람의 결을 읽으면 삼원의 다음 장이 보인다 — 그렇게들 믿지.'] },
-  { id: 'npc-sky-keeper', name: '종지기 하나', role: 'flavor', icon: '/images/npc/npc-sky-keeper.png', zoneId: 'z-sky-temple', cell: { x: 6.4, y: 3.6 }, greeting: ['신전 종은 폭풍이 방향을 바꿀 때만 울려요.', '아래를 내려다보면 스톰헤이븐 전체가 보인답니다.'] },
+  { id: 'npc-sky-priest', name: '바람사제 이엘', role: 'templePriest', icon: '/images/npc/npc-sky-priest.png', zoneId: 'z-sky-temple', cell: { x: 16.0, y: 7.6 }, greeting: ['폭풍 위에 온 걸 환영하네, 순례자여.', '바람의 결을 읽으면 삼원의 다음 장이 보인다 — 그렇게들 믿지.'] },
+  { id: 'npc-sky-keeper', name: '종지기 하나', role: 'flavor', icon: '/images/npc/npc-sky-keeper.png', zoneId: 'z-sky-temple', cell: { x: 16.0, y: 13.6 }, greeting: ['신전 종은 폭풍이 방향을 바꿀 때만 울려요.', '아래를 내려다보면 스톰헤이븐 전체가 보인답니다.'] },
 
   // ── 버려진 신전 (안전지대) ──
-  { id: 'npc-abandoned-monk', name: '은둔수도자 그림', role: 'templePriest', icon: '/images/npc/npc-abandoned-monk.png', zoneId: 'z-abandoned-temple', cell: { x: 3.6, y: 3.2 }, greeting: ['폐허라 부르지만, 우리에겐 아직 집이라네.', '유물을 노리는 자는 많아도, 지키는 손은 우리뿐이지.'] },
-  { id: 'npc-abandoned-scholar', name: '유물학자 세라', role: 'flavor', icon: '/images/npc/npc-abandoned-scholar.png', zoneId: 'z-abandoned-temple', cell: { x: 6.2, y: 3.8 }, greeting: ['이 벽화, 인마대전 이전 것이에요. 삼원의 원형이 그려져 있죠.'] },
+  { id: 'npc-abandoned-monk', name: '은둔수도자 그림', role: 'templePriest', icon: '/images/npc/npc-abandoned-monk.png', zoneId: 'z-abandoned-temple', cell: { x: 16.0, y: 7.6 }, greeting: ['폐허라 부르지만, 우리에겐 아직 집이라네.', '유물을 노리는 자는 많아도, 지키는 손은 우리뿐이지.'] },
+  { id: 'npc-abandoned-scholar', name: '유물학자 세라', role: 'flavor', icon: '/images/npc/npc-abandoned-scholar.png', zoneId: 'z-abandoned-temple', cell: { x: 16.0, y: 13.6 }, greeting: ['이 벽화, 인마대전 이전 것이에요. 삼원의 원형이 그려져 있죠.'] },
 
   // ── 오로라 마을 (안전지대) ──
-  { id: 'npc-aurora-chief', name: '설인족장 보르', role: 'housing', icon: '/images/npc/npc-aurora-chief.png', zoneId: 'z-aurora', cell: { x: 3.4, y: 3.0 }, greeting: ['얼음집 안은 따뜻하다. 불 쬐고 가라, 여행자.', '밤이 오면 하늘을 봐라 — 오로라가 설원의 길을 밝혀 준다.'] },
-  { id: 'npc-aurora-trader', name: '설원상인 미카', role: 'toolMerchant', icon: '/images/npc/npc-aurora-trader.png', zoneId: 'z-aurora', cell: { x: 6.6, y: 3.6 }, greeting: ['설원에서 얼어 죽지 않으려면 장비가 생명이야. 좋은 거 있어.'], shopItemIds: tools.map((t) => t.id) },
-  { id: 'npc-aurora-hunter', name: '서리사냥꾼 룬', role: 'flavor', icon: '/images/npc/npc-aurora-hunter.png', zoneId: 'z-aurora', cell: { x: 4.8, y: 5.0 }, greeting: ['설원 바깥은 서리 짐승 천지야. 마을 안에선 안심해도 돼.'] },
+  { id: 'npc-aurora-chief', name: '설인족장 보르', role: 'housing', icon: '/images/npc/npc-aurora-chief.png', zoneId: 'z-aurora', cell: { x: 16.0, y: 8.0 }, greeting: ['얼음집 안은 따뜻하다. 불 쬐고 가라, 여행자.', '밤이 오면 하늘을 봐라 — 오로라가 설원의 길을 밝혀 준다.'] },
+  { id: 'npc-aurora-trader', name: '설원상인 미카', role: 'toolMerchant', icon: '/images/npc/npc-aurora-trader.png', zoneId: 'z-aurora', cell: { x: 21.0, y: 6.4 }, greeting: ['설원에서 얼어 죽지 않으려면 장비가 생명이야. 좋은 거 있어.'], shopItemIds: tools.map((t) => t.id) },
+  { id: 'npc-aurora-hunter', name: '서리사냥꾼 룬', role: 'flavor', icon: '/images/npc/npc-aurora-hunter.png', zoneId: 'z-aurora', cell: { x: 16.0, y: 13.6 }, greeting: ['설원 바깥은 서리 짐승 천지야. 마을 안에선 안심해도 돼.'] },
 
   // ── 마물 마을 (안전지대) ──
-  { id: 'npc-demon-elder', name: '온건파 장로 카즈', role: 'flavor', icon: '/images/npc/npc-demon-elder.png', zoneId: 'z-demon-village', cell: { x: 3.4, y: 3.0 }, greeting: ['놀랐나? 우리 모두가 모르스를 따르는 건 아니야.', '여기선 칼을 거둬라. 교역하러 온 거라면 환영이다.'] },
-  { id: 'npc-demon-smith', name: '용암대장장이 그롯', role: 'weaponMerchant', icon: '/images/npc/npc-demon-smith.png', zoneId: 'z-demon-village', cell: { x: 6.6, y: 3.4 }, greeting: ['화산 불로 벼린 물건이다. 뭍 대장간 것과는 격이 달라.'], shopItemIds: [...wands.map((w) => w.id)] },
-  { id: 'npc-demon-child', name: '꼬마 마물 삐약', role: 'flavor', icon: '/images/npc/npc-demon-child.png', zoneId: 'z-demon-village', cell: { x: 4.8, y: 5.0 }, greeting: ['인간이다! 뿔 없는 거 진짜였네…'] },
+  { id: 'npc-demon-elder', name: '온건파 장로 카즈', role: 'flavor', icon: '/images/npc/npc-demon-elder.png', zoneId: 'z-demon-village', cell: { x: 16.0, y: 8.0 }, greeting: ['놀랐나? 우리 모두가 모르스를 따르는 건 아니야.', '여기선 칼을 거둬라. 교역하러 온 거라면 환영이다.'] },
+  { id: 'npc-demon-smith', name: '용암대장장이 그롯', role: 'weaponMerchant', icon: '/images/npc/npc-demon-smith.png', zoneId: 'z-demon-village', cell: { x: 21.0, y: 6.4 }, greeting: ['화산 불로 벼린 물건이다. 뭍 대장간 것과는 격이 달라.'], shopItemIds: [...wands.map((w) => w.id)] },
+  { id: 'npc-demon-child', name: '꼬마 마물 삐약', role: 'flavor', icon: '/images/npc/npc-demon-child.png', zoneId: 'z-demon-village', cell: { x: 16.0, y: 13.6 }, greeting: ['인간이다! 뿔 없는 거 진짜였네…'] },
 ]
 const NPC_MAP = new Map(NPCS.map((n) => [n.id, n]))
 export function npcById(id: string): NpcDef | undefined {

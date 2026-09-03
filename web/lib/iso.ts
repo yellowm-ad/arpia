@@ -36,6 +36,10 @@ export type TileKind =
   | 'field'
   | 'water'
   | 'dirt'
+  | 'cloud' // 천공 신전 — 흰 구름 바닥
+  | 'ash' // 버려진 신전 — 어두운 폐허 바닥
+  | 'ice' // 오로라 마을 — 밝은 남색 얼음 바닥
+  | 'obsidian' // 마물 마을 — 붉은 화산암 바닥
 
 /**
  * 라스터 모드에서 지면 타일 PNG 경로 (다이메트릭 2:1, 폭 = ISO_TILE_W 배수).
@@ -62,6 +66,10 @@ export const TILE_COLORS: Record<TileKind, { top: string; edge: string }> = {
   field: { top: '#b0864a', edge: '#8c6633' },
   water: { top: '#6fc3dc', edge: '#4aa3c0' },
   dirt: { top: '#a48963', edge: '#836a47' },
+  cloud: { top: '#f2eee0', edge: '#ddd6c0' },
+  ash: { top: '#4a4550', edge: '#332f38' },
+  ice: { top: '#5f86c4', edge: '#42639e' },
+  obsidian: { top: '#6b2a22', edge: '#4a1a15' },
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
