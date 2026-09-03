@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Element, Gender } from '@/lib/types'
 
 // ============================================================================
@@ -78,8 +78,39 @@ function PropShape({ prop, accent }: { prop: Prop; accent: string }) {
   }
 }
 
-/** NPC 초상화 */
+/**
+ * NPC 초상화. `public/images/npc/<id>.png`(도트 전신 스프라이트)가 있으면 상반신을 크롭해 보여주고,
+ * 없으면 아래 절차적 SVG(SPECS/FALLBACK)를 쓴다.
+ */
 export function Portrait({ id, className }: { id: string; className?: string }) {
+  const [ready, setReady] = useState(false)
+  const src = `/images/npc/${id}.png`
+  useEffect(() => setReady(false), [id])
+  return (
+    <span className={className} style={{ display: 'inline-block', position: 'relative', overflow: 'hidden' }}>
+      <NpcPortraitSvg id={id} className={`h-full w-full ${ready ? 'invisible' : ''}`} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        onLoad={(e) => setReady((e.target as HTMLImageElement).naturalWidth > 0)}
+        onError={() => setReady(false)}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          objectPosition: '50% 6%',
+          imageRendering: 'pixelated',
+          display: ready ? 'block' : 'none',
+        }}
+      />
+    </span>
+  )
+}
+
+function NpcPortraitSvg({ id, className }: { id: string; className?: string }) {
   const s = SPECS[id] ?? FALLBACK
   const gid = `pg-${id.replace(/[^a-z0-9]/gi, '')}`
   return (

@@ -8,7 +8,7 @@ import { ELEMENT_META } from '@/lib/constants'
 import { NPCS } from '@/lib/mock-data'
 import { ISO_TILE_W, ISO_TILE_H, isoToScreen, isoBounds, TILE_COLORS, TILE_SPRITES } from '@/lib/iso'
 import type { TileKind, PropDef } from '@/lib/iso'
-import { renderProp, IsoChara } from '@/components/game/iso-sprites'
+import { renderProp } from '@/components/game/iso-sprites'
 
 const SCALE = 1.15 // 맵 4배 확장(52×40)에 맞춰 축소 (기존 1.4)
 const PAD_TOP = 240 // 키 큰 건물이 앵커 위로 솟는 여유
@@ -42,20 +42,6 @@ function RasterProp({ p }: { p: PropDef }) {
   )
 }
 
-const NPC_ROLE_COLOR: Record<string, { robe: string; shade: string; hair: string }> = {
-  jobTrainer: { robe: '#6b53c0', shade: '#48376f', hair: '#d8d2e8' },
-  weaponMerchant: { robe: '#a85a2c', shade: '#6f3a1c', hair: '#3a2a1c' },
-  potionMerchant: { robe: '#3f9f7a', shade: '#2b6a52', hair: '#5a3a2a' },
-  toolMerchant: { robe: '#c9922f', shade: '#8a6320', hair: '#3a2f1c' },
-  petTamer: { robe: '#7fae4d', shade: '#557634', hair: '#2f2a1a' },
-  housing: { robe: '#8a8f9c', shade: '#5c606b', hair: '#d8d8e0' },
-  arenaMaster: { robe: '#b64430', shade: '#7c2c1f', hair: '#2a1a12' },
-  guard: { robe: '#5b6bd6', shade: '#3c489a', hair: '#2a2a30' },
-  templePriest: { robe: '#e6dcc0', shade: '#b7a980', hair: '#dcd6c4' },
-  saint: { robe: '#f2ede0', shade: '#cfc7b2', hair: '#e8d9b8' },
-  farmer: { robe: '#8a6a3a', shade: '#5e4726', hair: '#3a2a18' },
-  flavor: { robe: '#7a7f8c', shade: '#53585f', hair: '#3a3a44' },
-}
 const ELEM_SPRITE: Record<string, { robe: string; shade: string; hair: string; accent: string }> = {
   fire: { robe: '#b5462f', shade: '#7f2e20', hair: '#efe4d2', accent: '#e8641f' },
   ice: { robe: '#3f7fa6', shade: '#2b566f', hair: '#dfeef6', accent: '#6fc3e6' },
@@ -181,9 +167,9 @@ export function IsoWorld({
     }
 
     const npcs = NPCS.filter((n) => map.zones.some((z) => z.id === n.zoneId))
+    const ND = 74 // NPC 도트 스프라이트 표시 크기
     for (const npc of npcs) {
       const s = isoToScreen(npc.cell.x, npc.cell.y)
-      const c = NPC_ROLE_COLOR[npc.role] ?? NPC_ROLE_COLOR.flavor
       list.push({
         sortY: npc.cell.x + npc.cell.y + 0.2,
         node: (
@@ -193,9 +179,15 @@ export function IsoWorld({
             style={{ cursor: 'pointer' }}
             onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}
           >
-            <g transform="scale(0.92)">
-              <IsoChara robe={c.robe} shade={c.shade} hair={c.hair} />
-            </g>
+            <ellipse cx={0} cy={1} rx={13} ry={4.5} fill="rgba(0,0,0,0.32)" />
+            <image
+              href={npc.icon}
+              x={-ND / 2}
+              y={-ND + 7}
+              width={ND}
+              height={ND}
+              style={{ imageRendering: 'pixelated' }}
+            />
             <g transform="translate(0,-58)">
               <rect x={-npc.name.length * 5 - 5} y={-9} width={npc.name.length * 10 + 10} height={14} rx={3} fill={interactId === npc.id ? '#e0b050' : 'rgba(10,8,16,0.68)'} />
               <text x={0} y={2} textAnchor="middle" fontSize={10} fontWeight={700} fill={interactId === npc.id ? '#000' : '#e8dcc0'}>

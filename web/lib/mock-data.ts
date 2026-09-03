@@ -283,47 +283,47 @@ export function monstersForZoneKind(kind: string): MonsterDef[] {
 // ============================================================================
 export const NPCS: NpcDef[] = [
   // ── 학교 지구 (마법동) ──
-  { id: 'npc-job-trainer', name: '미르엘 교수', role: 'jobTrainer', icon: '/images/npc/professor.svg', zoneId: 'z-magic-hall', cell: { x: 7, y: 7.5 }, greeting: ['어서 오렴, 견습생. 나는 전직을 담당하는 미르엘이란다.', '레벨이 충분히 오르면 언제든 찾아오렴 — 다음 단계로 이끌어주마.'] },
-  { id: 'npc-librarian', name: '사서 오웬', role: 'flavor', icon: '/images/npc/librarian.svg', zoneId: 'z-magic-hall', cell: { x: 9, y: 9.6 }, greeting: ['마법동 도서관에는 아직 정리 중인 마법서가 많단다. 조용히 둘러보렴.', '연금술동과 마도구동도 둘러보면 좋을 게야.'] },
+  { id: 'npc-job-trainer', name: '미르엘 교수', role: 'jobTrainer', icon: '/images/npc/npc-job-trainer.png', zoneId: 'z-magic-hall', cell: { x: 7, y: 7.5 }, greeting: ['어서 오렴, 견습생. 나는 전직을 담당하는 미르엘이란다.', '레벨이 충분히 오르면 언제든 찾아오렴 — 다음 단계로 이끌어주마.'] },
+  { id: 'npc-librarian', name: '사서 오웬', role: 'flavor', icon: '/images/npc/npc-librarian.png', zoneId: 'z-magic-hall', cell: { x: 9, y: 9.6 }, greeting: ['마법동 도서관에는 아직 정리 중인 마법서가 많단다. 조용히 둘러보렴.', '연금술동과 마도구동도 둘러보면 좋을 게야.'] },
   // ── 별빛 상점가 ──
-  { id: 'npc-weapon', name: '대장장이 반', role: 'weaponMerchant', icon: '/images/npc/blacksmith.svg', zoneId: 'z-shops', cell: { x: 39, y: 20 }, greeting: ['속성별 완드, 다 갖춰놨다네. 전직 단계에 맞는 걸로 골라 가시게.'], shopItemIds: [...wands.map((w) => w.id), ...robes.map((r) => r.id), ...hats.map((h) => h.id), ...accessories.map((a) => a.id)] },
-  { id: 'npc-potion', name: '약사 셀린', role: 'potionMerchant', icon: '/images/npc/alchemist.svg', zoneId: 'z-shops', cell: { x: 43.2, y: 19.8 }, greeting: ['신선한 물약이 방금 들어왔어요. 통문 밖으로 나가기 전엔 꼭 챙기세요!'], shopItemIds: potions.map((p) => p.id) },
-  { id: 'npc-tool', name: '만물상 토비', role: 'toolMerchant', icon: '/images/npc/tinker.svg', zoneId: 'z-shops', cell: { x: 46, y: 20.2 }, greeting: ['도구는 다 여기 있습니다. 가속의 모래, 이거 전투에서 꽤 쓸만해요.'], shopItemIds: tools.map((t) => t.id) },
-  { id: 'npc-tamer', name: '조련사 리코', role: 'petTamer', icon: '/images/npc/librarian.svg', zoneId: 'z-shops', cell: { x: 48.2, y: 22.6 }, greeting: ['펫한테 새 재주를 가르쳐 볼까? 먹이도 팔고 있어.', '햇살 농가에서 펫 농장도 준비 중이라던데.'], shopItemIds: feeds.map((f) => f.id) },
+  { id: 'npc-weapon', name: '대장장이 반', role: 'weaponMerchant', icon: '/images/npc/npc-weapon.png', zoneId: 'z-shops', cell: { x: 39, y: 20 }, greeting: ['속성별 완드, 다 갖춰놨다네. 전직 단계에 맞는 걸로 골라 가시게.'], shopItemIds: [...wands.map((w) => w.id), ...robes.map((r) => r.id), ...hats.map((h) => h.id), ...accessories.map((a) => a.id)] },
+  { id: 'npc-potion', name: '약사 셀린', role: 'potionMerchant', icon: '/images/npc/npc-potion.png', zoneId: 'z-shops', cell: { x: 43.2, y: 19.8 }, greeting: ['신선한 물약이 방금 들어왔어요. 통문 밖으로 나가기 전엔 꼭 챙기세요!'], shopItemIds: potions.map((p) => p.id) },
+  { id: 'npc-tool', name: '만물상 토비', role: 'toolMerchant', icon: '/images/npc/npc-tool.png', zoneId: 'z-shops', cell: { x: 46, y: 20.2 }, greeting: ['도구는 다 여기 있습니다. 가속의 모래, 이거 전투에서 꽤 쓸만해요.'], shopItemIds: tools.map((t) => t.id) },
+  { id: 'npc-tamer', name: '조련사 리코', role: 'petTamer', icon: '/images/npc/npc-tamer.png', zoneId: 'z-shops', cell: { x: 48.2, y: 22.6 }, greeting: ['펫한테 새 재주를 가르쳐 볼까? 먹이도 팔고 있어.', '햇살 농가에서 펫 농장도 준비 중이라던데.'], shopItemIds: feeds.map((f) => f.id) },
   // ── 하우징 마을 ──
-  { id: 'npc-elder', name: '촌장 헬가', role: 'housing', icon: '/images/npc/elder.svg', zoneId: 'z-housing', cell: { x: 42, y: 6.2 }, greeting: ['하우징 마을에 온 걸 환영하네. 집을 짓는 기능은 다음 업데이트에서 만나볼 걸세.', '지친 견습생은 여기서 쉬어 가도 좋네.'] },
+  { id: 'npc-elder', name: '촌장 헬가', role: 'housing', icon: '/images/npc/npc-elder.png', zoneId: 'z-housing', cell: { x: 42, y: 6.2 }, greeting: ['하우징 마을에 온 걸 환영하네. 집을 짓는 기능은 다음 업데이트에서 만나볼 걸세.', '지친 견습생은 여기서 쉬어 가도 좋네.'] },
   // ── 수련의 광장 ──
-  { id: 'npc-arena', name: '투기장장 그로먼', role: 'arenaMaster', icon: '/images/npc/arena-master.svg', zoneId: 'z-plaza', cell: { x: 26.5, y: 20.5 }, greeting: ['콜로세움 대전은 준비 중이다! 조금만 기다려다오.'] },
+  { id: 'npc-arena', name: '투기장장 그로먼', role: 'arenaMaster', icon: '/images/npc/npc-arena.png', zoneId: 'z-plaza', cell: { x: 26.5, y: 20.5 }, greeting: ['콜로세움 대전은 준비 중이다! 조금만 기다려다오.'] },
   // ── 통문 주둔지 ──
-  { id: 'npc-guard', name: '경비대장 로한', role: 'guard', icon: '/images/npc/guard.svg', zoneId: 'z-barracks', cell: { x: 43.5, y: 34 }, greeting: ['야생으로 나가려면 저 군 통문을 통해야 한다.', '숲은 견습생도 견딜 만하지만, 폐허와 화산지대는 준비가 단단히 되어 있어야 살아 돌아온다.'] },
+  { id: 'npc-guard', name: '경비대장 로한', role: 'guard', icon: '/images/npc/npc-guard.png', zoneId: 'z-barracks', cell: { x: 43.5, y: 34 }, greeting: ['야생으로 나가려면 저 군 통문을 통해야 한다.', '숲은 견습생도 견딜 만하지만, 폐허와 화산지대는 준비가 단단히 되어 있어야 살아 돌아온다.'] },
   // ── 성역 신전 ──
-  { id: 'npc-priest', name: '신관 세드릭', role: 'templePriest', icon: '/images/npc/elder.svg', zoneId: 'z-temple', cell: { x: 8.5, y: 30.2 }, greeting: ['성역에 온 것을 환영하네, 젊은 마법사여.', '이곳은 지친 영혼이 쉬어 가는 곳. 통문 밖에서 쓰러지면 이 신전에서 눈을 뜨게 될 걸세.'] },
-  { id: 'npc-saint', name: '성녀 리아나', role: 'saint', icon: '/images/npc/librarian.svg', zoneId: 'z-temple', cell: { x: 11.5, y: 32.6 }, greeting: ['빛이 그대와 함께하기를.', '언젠가 이 손으로 그대에게 축복을 내릴 날이 오겠지요. 지금은 준비 중이랍니다.'] },
+  { id: 'npc-priest', name: '신관 세드릭', role: 'templePriest', icon: '/images/npc/npc-priest.png', zoneId: 'z-temple', cell: { x: 8.5, y: 30.2 }, greeting: ['성역에 온 것을 환영하네, 젊은 마법사여.', '이곳은 지친 영혼이 쉬어 가는 곳. 통문 밖에서 쓰러지면 이 신전에서 눈을 뜨게 될 걸세.'] },
+  { id: 'npc-saint', name: '성녀 리아나', role: 'saint', icon: '/images/npc/npc-saint.png', zoneId: 'z-temple', cell: { x: 11.5, y: 32.6 }, greeting: ['빛이 그대와 함께하기를.', '언젠가 이 손으로 그대에게 축복을 내릴 날이 오겠지요. 지금은 준비 중이랍니다.'] },
   // ── 햇살 농가 ──
-  { id: 'npc-farmer', name: '농부 하름', role: 'farmer', icon: '/images/npc/tinker.svg', zoneId: 'z-farm', cell: { x: 26, y: 29.2 }, greeting: ['어이, 견습생! 여기가 햇살 농가일세.', '밭농사에 펫 농장까지 해볼 생각인데, 아직은 삽질만 하고 있다네. 곧 열 테니 기대하게.'] },
+  { id: 'npc-farmer', name: '농부 하름', role: 'farmer', icon: '/images/npc/npc-farmer.png', zoneId: 'z-farm', cell: { x: 26, y: 29.2 }, greeting: ['어이, 견습생! 여기가 햇살 농가일세.', '밭농사에 펫 농장까지 해볼 생각인데, 아직은 삽질만 하고 있다네. 곧 열 테니 기대하게.'] },
 
   // ── 아틀란티스 마을 (안전지대) ──
-  { id: 'npc-atlantis-elder', name: '해류사제 넬리아', role: 'flavor', icon: '/images/npc/elder.svg', zoneId: 'z-atlantis', cell: { x: 3.2, y: 3.0 }, greeting: ['숨은 걱정 말게 — 이 돔 안은 뭍과 같으니.', '아틀란티스는 심해가 삼키기 전, 삼원을 가장 먼저 연구한 도시였네.'] },
-  { id: 'npc-atlantis-merchant', name: '진주상인 카로', role: 'potionMerchant', icon: '/images/npc/alchemist.svg', zoneId: 'z-atlantis', cell: { x: 6.6, y: 3.4 }, greeting: ['해저에서 건진 물약이라네. 뭍 것보다 훨씬 잘 들어.'], shopItemIds: potions.map((p) => p.id) },
-  { id: 'npc-atlantis-child', name: '인어 아이 피오', role: 'flavor', icon: '/images/npc/librarian.svg', zoneId: 'z-atlantis', cell: { x: 4.8, y: 5.0 }, greeting: ['위쪽 세계 사람이다! 다리로 걷는 거 신기해요.'] },
+  { id: 'npc-atlantis-elder', name: '해류사제 넬리아', role: 'flavor', icon: '/images/npc/npc-atlantis-elder.png', zoneId: 'z-atlantis', cell: { x: 3.2, y: 3.0 }, greeting: ['숨은 걱정 말게 — 이 돔 안은 뭍과 같으니.', '아틀란티스는 심해가 삼키기 전, 삼원을 가장 먼저 연구한 도시였네.'] },
+  { id: 'npc-atlantis-merchant', name: '진주상인 카로', role: 'potionMerchant', icon: '/images/npc/npc-atlantis-merchant.png', zoneId: 'z-atlantis', cell: { x: 6.6, y: 3.4 }, greeting: ['해저에서 건진 물약이라네. 뭍 것보다 훨씬 잘 들어.'], shopItemIds: potions.map((p) => p.id) },
+  { id: 'npc-atlantis-child', name: '인어 아이 피오', role: 'flavor', icon: '/images/npc/npc-atlantis-child.png', zoneId: 'z-atlantis', cell: { x: 4.8, y: 5.0 }, greeting: ['위쪽 세계 사람이다! 다리로 걷는 거 신기해요.'] },
 
   // ── 천공 신전 (안전지대) ──
-  { id: 'npc-sky-priest', name: '바람사제 이엘', role: 'templePriest', icon: '/images/npc/elder.svg', zoneId: 'z-sky-temple', cell: { x: 3.4, y: 3.0 }, greeting: ['폭풍 위에 온 걸 환영하네, 순례자여.', '바람의 결을 읽으면 삼원의 다음 장이 보인다 — 그렇게들 믿지.'] },
-  { id: 'npc-sky-keeper', name: '종지기 하나', role: 'flavor', icon: '/images/npc/librarian.svg', zoneId: 'z-sky-temple', cell: { x: 6.4, y: 3.6 }, greeting: ['신전 종은 폭풍이 방향을 바꿀 때만 울려요.', '아래를 내려다보면 스톰헤이븐 전체가 보인답니다.'] },
+  { id: 'npc-sky-priest', name: '바람사제 이엘', role: 'templePriest', icon: '/images/npc/npc-sky-priest.png', zoneId: 'z-sky-temple', cell: { x: 3.4, y: 3.0 }, greeting: ['폭풍 위에 온 걸 환영하네, 순례자여.', '바람의 결을 읽으면 삼원의 다음 장이 보인다 — 그렇게들 믿지.'] },
+  { id: 'npc-sky-keeper', name: '종지기 하나', role: 'flavor', icon: '/images/npc/npc-sky-keeper.png', zoneId: 'z-sky-temple', cell: { x: 6.4, y: 3.6 }, greeting: ['신전 종은 폭풍이 방향을 바꿀 때만 울려요.', '아래를 내려다보면 스톰헤이븐 전체가 보인답니다.'] },
 
   // ── 버려진 신전 (안전지대) ──
-  { id: 'npc-abandoned-monk', name: '은둔수도자 그림', role: 'templePriest', icon: '/images/npc/elder.svg', zoneId: 'z-abandoned-temple', cell: { x: 3.6, y: 3.2 }, greeting: ['폐허라 부르지만, 우리에겐 아직 집이라네.', '유물을 노리는 자는 많아도, 지키는 손은 우리뿐이지.'] },
-  { id: 'npc-abandoned-scholar', name: '유물학자 세라', role: 'flavor', icon: '/images/npc/librarian.svg', zoneId: 'z-abandoned-temple', cell: { x: 6.2, y: 3.8 }, greeting: ['이 벽화, 인마대전 이전 것이에요. 삼원의 원형이 그려져 있죠.'] },
+  { id: 'npc-abandoned-monk', name: '은둔수도자 그림', role: 'templePriest', icon: '/images/npc/npc-abandoned-monk.png', zoneId: 'z-abandoned-temple', cell: { x: 3.6, y: 3.2 }, greeting: ['폐허라 부르지만, 우리에겐 아직 집이라네.', '유물을 노리는 자는 많아도, 지키는 손은 우리뿐이지.'] },
+  { id: 'npc-abandoned-scholar', name: '유물학자 세라', role: 'flavor', icon: '/images/npc/npc-abandoned-scholar.png', zoneId: 'z-abandoned-temple', cell: { x: 6.2, y: 3.8 }, greeting: ['이 벽화, 인마대전 이전 것이에요. 삼원의 원형이 그려져 있죠.'] },
 
   // ── 오로라 마을 (안전지대) ──
-  { id: 'npc-aurora-chief', name: '설인족장 보르', role: 'housing', icon: '/images/npc/elder.svg', zoneId: 'z-aurora', cell: { x: 3.4, y: 3.0 }, greeting: ['얼음집 안은 따뜻하다. 불 쬐고 가라, 여행자.', '밤이 오면 하늘을 봐라 — 오로라가 설원의 길을 밝혀 준다.'] },
-  { id: 'npc-aurora-trader', name: '설원상인 미카', role: 'toolMerchant', icon: '/images/npc/tinker.svg', zoneId: 'z-aurora', cell: { x: 6.6, y: 3.6 }, greeting: ['설원에서 얼어 죽지 않으려면 장비가 생명이야. 좋은 거 있어.'], shopItemIds: tools.map((t) => t.id) },
-  { id: 'npc-aurora-hunter', name: '서리사냥꾼 룬', role: 'flavor', icon: '/images/npc/guard.svg', zoneId: 'z-aurora', cell: { x: 4.8, y: 5.0 }, greeting: ['설원 바깥은 서리 짐승 천지야. 마을 안에선 안심해도 돼.'] },
+  { id: 'npc-aurora-chief', name: '설인족장 보르', role: 'housing', icon: '/images/npc/npc-aurora-chief.png', zoneId: 'z-aurora', cell: { x: 3.4, y: 3.0 }, greeting: ['얼음집 안은 따뜻하다. 불 쬐고 가라, 여행자.', '밤이 오면 하늘을 봐라 — 오로라가 설원의 길을 밝혀 준다.'] },
+  { id: 'npc-aurora-trader', name: '설원상인 미카', role: 'toolMerchant', icon: '/images/npc/npc-aurora-trader.png', zoneId: 'z-aurora', cell: { x: 6.6, y: 3.6 }, greeting: ['설원에서 얼어 죽지 않으려면 장비가 생명이야. 좋은 거 있어.'], shopItemIds: tools.map((t) => t.id) },
+  { id: 'npc-aurora-hunter', name: '서리사냥꾼 룬', role: 'flavor', icon: '/images/npc/npc-aurora-hunter.png', zoneId: 'z-aurora', cell: { x: 4.8, y: 5.0 }, greeting: ['설원 바깥은 서리 짐승 천지야. 마을 안에선 안심해도 돼.'] },
 
   // ── 마물 마을 (안전지대) ──
-  { id: 'npc-demon-elder', name: '온건파 장로 카즈', role: 'flavor', icon: '/images/npc/elder.svg', zoneId: 'z-demon-village', cell: { x: 3.4, y: 3.0 }, greeting: ['놀랐나? 우리 모두가 모르스를 따르는 건 아니야.', '여기선 칼을 거둬라. 교역하러 온 거라면 환영이다.'] },
-  { id: 'npc-demon-smith', name: '용암대장장이 그롯', role: 'weaponMerchant', icon: '/images/npc/blacksmith.svg', zoneId: 'z-demon-village', cell: { x: 6.6, y: 3.4 }, greeting: ['화산 불로 벼린 물건이다. 뭍 대장간 것과는 격이 달라.'], shopItemIds: [...wands.map((w) => w.id)] },
-  { id: 'npc-demon-child', name: '꼬마 마물 삐약', role: 'flavor', icon: '/images/npc/librarian.svg', zoneId: 'z-demon-village', cell: { x: 4.8, y: 5.0 }, greeting: ['인간이다! 뿔 없는 거 진짜였네…'] },
+  { id: 'npc-demon-elder', name: '온건파 장로 카즈', role: 'flavor', icon: '/images/npc/npc-demon-elder.png', zoneId: 'z-demon-village', cell: { x: 3.4, y: 3.0 }, greeting: ['놀랐나? 우리 모두가 모르스를 따르는 건 아니야.', '여기선 칼을 거둬라. 교역하러 온 거라면 환영이다.'] },
+  { id: 'npc-demon-smith', name: '용암대장장이 그롯', role: 'weaponMerchant', icon: '/images/npc/npc-demon-smith.png', zoneId: 'z-demon-village', cell: { x: 6.6, y: 3.4 }, greeting: ['화산 불로 벼린 물건이다. 뭍 대장간 것과는 격이 달라.'], shopItemIds: [...wands.map((w) => w.id)] },
+  { id: 'npc-demon-child', name: '꼬마 마물 삐약', role: 'flavor', icon: '/images/npc/npc-demon-child.png', zoneId: 'z-demon-village', cell: { x: 4.8, y: 5.0 }, greeting: ['인간이다! 뿔 없는 거 진짜였네…'] },
 ]
 const NPC_MAP = new Map(NPCS.map((n) => [n.id, n]))
 export function npcById(id: string): NpcDef | undefined {

@@ -26,3 +26,6 @@ next-env.d.ts
 .vercel
 .env*
 .assets-master/
+
+# pixellab export 캐시 (재생성 가능)
+/scripts/_pixellab/sheets/

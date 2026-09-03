@@ -1,0 +1,42 @@
+{
+  "_note": "펫/몹 PixelLab 파이프라인 매니페스트. charId/walkGroup 는 생성 후 채워짐.",
+  "style": "chibi JRPG creature, low top-down 3/4 view, crisp pixel art, bold dark outline, flat cel shading",
+  "refBaseUrl": "https://arpia-web.vercel.app/images/creatures/_ref",
+  "creatures": [
+    { "id": "emberling", "kind": "pet", "desc": "small red fire-lizard hatchling with a flame-tipped tail, big eyes, stubby legs", "charId": null, "walkGroup": null },
+    { "id": "magma-pup", "kind": "pet", "desc": "chunky quadruped lava puppy, dark cracked-rock hide glowing orange, molten mane", "charId": null, "walkGroup": null },
+    { "id": "frostkit", "kind": "pet", "desc": "white snow-fox kit with pale blue markings and a big fluffy tail", "charId": null, "walkGroup": null },
+    { "id": "glacier-owl", "kind": "pet", "desc": "round pale-blue glacier owl with icy feather tufts and an amber beak", "charId": null, "walkGroup": null },
+    { "id": "pebblemole", "kind": "pet", "desc": "brown stone mole with a pink nose, rocky pebbles on its back, digging claws", "charId": null, "walkGroup": null },
+    { "id": "golem-cub", "kind": "pet", "desc": "small chunky earth golem cub made of stacked brown rocks with glowing eyes", "charId": null, "walkGroup": null },
+    { "id": "wisp", "kind": "pet", "desc": "floating white flame light-spirit with a simple cute face and wispy trailing tendrils", "charId": null, "walkGroup": null },
+    { "id": "shade", "kind": "pet", "desc": "sleek black shadow cat with glowing violet eyes and a curling tail", "charId": null, "walkGroup": null },
+
+    { "id": "mon-forest-raccoon", "kind": "mob", "desc": "grey-brown forest raccoon standing low on four paws, ringed tail, bandit mask", "charId": null, "walkGroup": null },
+    { "id": "mon-thorn-vine", "kind": "mob", "desc": "animated ring of green thorny vines with small red barbs, floating", "charId": null, "walkGroup": null },
+    { "id": "mon-sprite-green", "kind": "mob", "desc": "tiny green forest fairy with leaf wings and a mischievous grin", "charId": null, "walkGroup": null },
+    { "id": "mon-grey-wolf", "kind": "mob", "desc": "lean grey wolf on four legs, bristling fur, yellow eyes", "charId": null, "walkGroup": null },
+    { "id": "mon-mush-cap", "kind": "mob", "desc": "walking purple toadstool mushroom with a spotted cap and stubby feet", "charId": null, "walkGroup": null },
+    { "id": "mon-bark-golem", "kind": "mob", "desc": "hulking treant bark golem with mossy shoulders and root feet", "charId": null, "walkGroup": null },
+
+    { "id": "mon-bubble-spirit", "kind": "mob", "desc": "small round translucent white water bubble spirit with a cute face", "charId": null, "walkGroup": null },
+    { "id": "mon-crab-soldier", "kind": "mob", "desc": "armored orange-red crab soldier with raised claws and a hard shell", "charId": null, "walkGroup": null },
+    { "id": "mon-shallows-eel", "kind": "mob", "desc": "long dark slate-blue eel with a finned back, coiling body", "charId": null, "walkGroup": null },
+    { "id": "mon-siren-larva", "kind": "mob", "desc": "small teal-haired siren larva child with a pink fish tail", "charId": null, "walkGroup": null },
+    { "id": "mon-reef-turtle", "kind": "mob", "desc": "sturdy reef turtle with a barnacled dark shell and stubby flippers", "charId": null, "walkGroup": null },
+    { "id": "mon-tide-elemental", "kind": "mob", "desc": "chubby blue whale-like tide elemental made of flowing water", "charId": null, "walkGroup": null },
+
+    { "id": "mon-ember-imp", "kind": "mob", "desc": "small red horned imp with a barbed tail and clawed hands", "charId": null, "walkGroup": null },
+    { "id": "mon-ash-hound", "kind": "mob", "desc": "shaggy charcoal-grey hound on four legs with ember-lit eyes", "charId": null, "walkGroup": null },
+    { "id": "mon-bone-archer", "kind": "mob", "desc": "skeleton archer holding a wooden short bow, tattered rags", "charId": null, "walkGroup": null },
+    { "id": "mon-cursed-armor", "kind": "mob", "desc": "empty animated grey plate armor with a horned helm and a shield", "charId": null, "walkGroup": null },
+    { "id": "mon-wraith", "kind": "mob", "desc": "dark hooded wraith with a torn purple cloak and glowing eyes, legless floating", "charId": null, "walkGroup": null },
+    { "id": "mon-dark-acolyte", "kind": "mob", "desc": "small dark-robed acolyte with a hood and glowing eyes", "charId": null, "walkGroup": null },
+
+    { "id": "mon-flame-warden", "kind": "mob", "desc": "tall armored flame warden construct with orange glowing cracks, heavy build", "charId": null, "walkGroup": null },
+    { "id": "mon-frost-revenant", "kind": "mob", "desc": "pale-blue icy revenant spirit with jagged frost spikes and hollow eyes", "charId": null, "walkGroup": null },
+    { "id": "mon-dark-mage", "kind": "mob", "desc": "sinister dark mage in a deep-purple hood and robe with wide sleeves", "charId": null, "walkGroup": null },
+    { "id": "mon-stone-titan", "kind": "mob", "desc": "massive grey stone titan with boulder fists and a craggy body", "charId": null, "walkGroup": null },
+    { "id": "mon-azka-herald", "kind": "mob", "desc": "dark armored demonic herald with a horned helm, black cape, holding a bladed staff", "charId": null, "walkGroup": null }
+  ]
+}

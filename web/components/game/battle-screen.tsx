@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { currentActor } from '@/lib/battle-engine'
 import { SKILLS, itemById } from '@/lib/mock-data'
 import { HeroSprite } from '@/components/game/pixel-hero'
+import { CreatureSprite, spriteIdFromRefId } from '@/components/game/creature-sprite'
 import type { BattleAction, Combatant, Skill } from '@/lib/types'
 
 // ============================================================================
@@ -395,12 +396,15 @@ function CombatantSprite({
               className="drop-shadow-[0_3px_4px_rgba(0,0,0,0.55)]"
             />
           ) : (
-            <div
-              className="flex size-24 items-center justify-center rounded-full border-2 border-white/40 bg-black/45"
-              style={{ transform: side === 'enemy' ? 'scaleX(-1)' : undefined }}
-            >
-              <Image src={c.icon} alt={c.name} width={64} height={64} />
-            </div>
+            <CreatureSprite
+              spriteId={spriteIdFromRefId(c.refId)}
+              fallbackSrc={c.icon}
+              dir="right"
+              flip={side === 'enemy'}
+              walking={active && c.alive}
+              px={116}
+              className="drop-shadow-[0_3px_4px_rgba(0,0,0,0.55)]"
+            />
           )}
         </div>
 

@@ -9,6 +9,7 @@ import { MONSTERS, NPCS } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import { HeroPortrait } from '@/components/game/portrait'
 import { HeroSprite as PixelHero } from '@/components/game/pixel-hero'
+import { CreatureSprite, type Facing } from '@/components/game/creature-sprite'
 import { IsoWorld } from '@/components/game/iso-world'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, DoorOpen, MessageCircle, ShieldAlert } from 'lucide-react'
 
@@ -20,21 +21,6 @@ const IMG_ZOOM = 2.7 // 이미지 맵 확대 배율 — 캐릭터가 건물 사�
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
 // 마을 NPC 폰(pawn) 색 — 역할별 로브/그림자/머리
-const NPC_ROLE_COLOR: Record<string, { robe: string; shade: string; hair: string }> = {
-  jobTrainer: { robe: '#6b53c0', shade: '#48376f', hair: '#d8d2e8' },
-  weaponMerchant: { robe: '#a85a2c', shade: '#6f3a1c', hair: '#3a2a1c' },
-  potionMerchant: { robe: '#3f9f7a', shade: '#2b6a52', hair: '#5a3a2a' },
-  toolMerchant: { robe: '#c9922f', shade: '#8a6320', hair: '#3a2f1c' },
-  petTamer: { robe: '#7fae4d', shade: '#557634', hair: '#2f2a1a' },
-  housing: { robe: '#8a8f9c', shade: '#5c606b', hair: '#d8d8e0' },
-  arenaMaster: { robe: '#b64430', shade: '#7c2c1f', hair: '#2a1a12' },
-  guard: { robe: '#5b6bd6', shade: '#3c489a', hair: '#2a2a30' },
-  templePriest: { robe: '#e6dcc0', shade: '#b7a980', hair: '#dcd6c4' },
-  saint: { robe: '#f2ede0', shade: '#cfc7b2', hair: '#e8d9b8' },
-  farmer: { robe: '#8a6a3a', shade: '#5e4726', hair: '#3a2a18' },
-  flavor: { robe: '#7a7f8c', shade: '#53585f', hair: '#3a3a44' },
-}
-
 const ELEM_SPRITE: Record<string, { robe: string; shade: string; hair: string; accent: string }> = {
   fire: { robe: '#b5462f', shade: '#7f2e20', hair: '#efe4d2', accent: '#e8641f' },
   ice: { robe: '#3f7fa6', shade: '#2b566f', hair: '#dfeef6', accent: '#6fc3e6' },
@@ -309,9 +295,15 @@ export function WorldScreen() {
 
       {mapNpcs.map((npc) => (
         <Marker key={npc.id} x={npc.cell.x} y={npc.cell.y} tile={TILE} onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}>
-          <div className="flex size-8 items-center justify-center rounded-full border-2 border-gold bg-primary-soft">
-            <Image src={npc.icon} alt={npc.name} width={18} height={18} />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={npc.icon}
+            alt={npc.name}
+            width={44}
+            height={44}
+            style={{ imageRendering: 'pixelated' }}
+            className="drop-shadow-[0_2px_2px_rgba(0,0,0,0.55)]"
+          />
           <span className="text-[10px] font-semibold text-gold-soft whitespace-nowrap">{npc.name}</span>
         </Marker>
       ))}
@@ -319,13 +311,24 @@ export function WorldScreen() {
       {visibleMonsters.map((fm) => {
         const def = MONSTERS.find((m) => m.id === fm.monsterId)
         if (!def) return null
+        // 배회 방향(wanderSeed)에 대략 맞춰 스프라이트가 바라보는 쪽 결정
+        const wdir = (['right', 'down', 'down', 'up'] as Facing[])[fm.wanderSeed % 4]
         return (
           <Marker key={fm.uid} x={fm.homeCell.x} y={fm.homeCell.y} tile={TILE} wanderSeed={fm.wanderSeed}>
-            <div
-              className={`flex size-7 items-center justify-center rounded-full border-2 ${def.isTestMonster ? 'border-emerald-400 bg-emerald-950' : 'border-red-400/80 bg-red-950/80'}`}
-            >
-              <Image src={def.icon} alt={def.name} width={16} height={16} />
-            </div>
+            {def.isTestMonster ? (
+              <div className="flex size-7 items-center justify-center rounded-full border-2 border-emerald-400 bg-emerald-950">
+                <CreatureSprite spriteId={def.id} fallbackSrc={def.icon} px={22} />
+              </div>
+            ) : (
+              <CreatureSprite
+                spriteId={def.id}
+                fallbackSrc={def.icon}
+                dir={wdir}
+                walking
+                px={30}
+                className="drop-shadow-[0_2px_2px_rgba(0,0,0,0.55)]"
+              />
+            )}
             <span className={`text-[9px] font-semibold whitespace-nowrap ${def.isTestMonster ? 'text-emerald-200' : 'text-red-200'}`}>
               {def.isTestMonster ? 'TEST' : def.name}
             </span>
@@ -616,52 +619,6 @@ interface MarkerProps {
 // 좌표 (x,y) 는 발밑(그라운드) 기준. 그림자는 발밑에, 몸은 위로 세운다.
 // ────────────────────────────────────────────────────────────────
 
-/** 작은 SD(치비) 인물 실루엣. viewBox 40x54, 발끝이 (20,54) */
-function ChibiFigure({
-  robe,
-  shade,
-  hair,
-  accent,
-  back,
-}: {
-  robe: string
-  shade: string
-  hair: string
-  accent?: string
-  back?: boolean // 위쪽을 볼 때 뒤통수
-}) {
-  return (
-    <svg width="40" height="54" viewBox="0 0 40 54" style={{ overflow: 'visible' }}>
-      {/* 다리 */}
-      <rect x="14" y="38" width="5.5" height="12" rx="2.5" fill={shade} />
-      <rect x="20.5" y="38" width="5.5" height="12" rx="2.5" fill={shade} />
-      {/* 로브(몸통) */}
-      <path d="M11 24 Q20 19 29 24 L32 44 Q20 49 8 44 Z" fill={robe} stroke="#1c1712" strokeWidth="1.4" />
-      <path d="M20 20 L20 46" stroke={shade} strokeWidth="1.6" opacity="0.7" />
-      <rect x="15" y="33" width="10" height="3.4" rx="1.5" fill={accent ?? shade} />
-      {/* 팔 */}
-      <path d="M11 25 q-4 6 -2 13" fill="none" stroke={robe} strokeWidth="4.5" strokeLinecap="round" />
-      <path d="M29 25 q4 6 2 13" fill="none" stroke={robe} strokeWidth="4.5" strokeLinecap="round" />
-      {/* 머리 */}
-      <circle cx="20" cy="14" r="8.4" fill={SKIN} stroke="#1c1712" strokeWidth="1.2" />
-      {/* 머리카락 */}
-      <path
-        d={back ? 'M10.5 15 Q10 3 20 3 Q30 3 29.5 15 Q26 9 20 9 Q14 9 10.5 15 Z' : 'M11 13 Q11 3 20 3 Q29 3 29 13 Q29 7 24 6 Q22 10 20 9 Q18 10 16 6 Q11 7 11 13 Z'}
-        fill={hair}
-        stroke="#1c1712"
-        strokeWidth="1"
-      />
-      {!back && (
-        <>
-          <circle cx="16.6" cy="15" r="1.5" fill="#241a12" />
-          <circle cx="23.4" cy="15" r="1.5" fill="#241a12" />
-        </>
-      )}
-      {accent && !back && <circle cx="33" cy="30" r="2.4" fill={accent} opacity="0.85" />}
-    </svg>
-  )
-}
-
 /** 플레이어 캐릭터 */
 function HeroSprite({
   x,
@@ -721,12 +678,11 @@ function NpcPawn({
   active,
   onClick,
 }: {
-  npc: { id: string; name: string; role: string; cell: { x: number; y: number } }
+  npc: { id: string; name: string; role: string; icon: string; cell: { x: number; y: number } }
   eff: number
   active: boolean
   onClick: () => void
 }) {
-  const c = NPC_ROLE_COLOR[npc.role] ?? NPC_ROLE_COLOR.flavor
   return (
     <div
       className="absolute z-10 cursor-pointer"
@@ -749,13 +705,14 @@ function NpcPawn({
           position: 'absolute',
           left: 0,
           bottom: 0,
-          transform: 'translate(-50%, 0) scale(0.92)',
+          transform: 'translate(-50%, 0)',
           transformOrigin: 'bottom center',
           animation: 'sprite-idle 2.8s ease-in-out infinite',
           filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))',
         }}
       >
-        <ChibiFigure robe={c.robe} shade={c.shade} hair={c.hair} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={npc.icon} alt={npc.name} width={62} height={62} style={{ imageRendering: 'pixelated', display: 'block' }} />
       </div>
       {/* 이름표 + 대화 표시 */}
       <div style={{ position: 'absolute', left: 0, bottom: 64, transform: 'translate(-50%, 0)' }}>
