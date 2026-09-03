@@ -569,6 +569,64 @@ const VOLCANO_PROPS: PropDef[] = [
   fprop('volcano', 'ashmound', 'vf1', 3.9, 7.7), fprop('volcano', 'sulfur', 'vf2', 7.7, 7.6),
 ]
 
+// ── 아틀란티스 마을 (10×8 → 16×13, 아이소 라스터) ──────────────────────────
+// 넓은 대로(3.2셀)와 십자 교차로(2.8셀)로 답답하지 않게, 바깥 테두리는 물(항구) 링.
+const AW = 16
+const AH = 13
+const ACX = 8
+const ACY = 7.2
+
+function atlantisTileAt(x: number, y: number): TileKind {
+  // 바깥 테두리 = 물(마을을 감싼 항구/해자) — 배경 돔 안 마을이 바다에 떠있는 느낌
+  if (x < 1.6 || x > AW - 1.6 || y < 1.6 || y > AH - 1.6) return 'water'
+  // 중앙 광장(분수 주변) — 원형 포석
+  if (Math.hypot(x - ACX, y - ACY) < 3.0) return 'plaza'
+  // 남북 대로(궁전 ↔ 항구) + 동서 교차로(집들 연결) — 둘 다 넉넉하게
+  if (Math.abs(x - ACX) < 1.6) return 'path'
+  if (Math.abs(y - ACY) < 1.4) return 'path'
+  return 'sand'
+}
+
+// PixelLab 생성 → sharp 트림 완료 (public/images/map/props/atlantis/)
+const ATLANTIS_SPRITE = {
+  palace: { sprite: '/images/map/props/atlantis/atl_palace.png', px: { w: 152, h: 152 } },
+  house: { sprite: '/images/map/props/atlantis/atl_house.png', px: { w: 60, h: 64 } },
+  fountain: { sprite: '/images/map/props/atlantis/atl_fountain.png', px: { w: 57, h: 72 } },
+  kelp: { sprite: '/images/map/props/atlantis/atl_kelp.png', px: { w: 53, h: 78 } },
+  lamp: { sprite: '/images/map/props/atlantis/atl_lamp.png', px: { w: 14, h: 66 } },
+}
+
+function atlantisProps(): PropDef[] {
+  const P: PropDef[] = []
+  P.push({
+    id: 'atl-palace', kind: 'dome', cell: { x: 6.7, y: 2.6 }, size: { w: 2.6, d: 2.0 },
+    solid: true, label: '인어궁전', ...ATLANTIS_SPRITE.palace,
+  })
+  const houses: [string, number, number][] = [
+    ['atl-house-l1', 2.4, 3.6], ['atl-house-r1', 12.6, 3.6],
+    ['atl-house-l2', 2.4, 8.6], ['atl-house-r2', 12.6, 8.6],
+  ]
+  houses.forEach(([id, x, y]) =>
+    P.push({ id, kind: 'cottage', cell: { x, y }, size: { w: 1.0, d: 0.9 }, solid: true, ...ATLANTIS_SPRITE.house }),
+  )
+  P.push({
+    id: 'atl-fountain', kind: 'fountain', cell: { x: ACX, y: ACY }, size: { w: 1.0, d: 1.0 },
+    collide: { w: 1.4, d: 1.4 }, radial: true, solid: true, ...ATLANTIS_SPRITE.fountain,
+  })
+  const kelp: [string, number, number][] = [
+    ['atl-kelp0', 2.0, 2.0], ['atl-kelp1', 14.0, 2.0], ['atl-kelp2', 2.0, 11.0], ['atl-kelp3', 14.0, 11.0],
+  ]
+  kelp.forEach(([id, x, y]) => P.push({ id, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...ATLANTIS_SPRITE.kelp }))
+  const lamps: [string, number, number][] = [
+    ['atl-lamp0', 6.6, 5.4], ['atl-lamp1', 9.4, 5.4], ['atl-lamp2', 6.6, 9.4], ['atl-lamp3', 9.4, 9.4],
+  ]
+  lamps.forEach(([id, x, y]) => P.push({ id, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp }))
+  return P
+}
+
+const ATLANTIS_PROPS = atlantisProps()
+const ATLANTIS_BLOCKERS = buildBlockers(ATLANTIS_PROPS)
+
 export const MAPS: Record<MapId, GameMap> = {
   village: {
     id: 'village',
@@ -691,14 +749,19 @@ export const MAPS: Record<MapId, GameMap> = {
     id: 'atlantis',
     name: '아틀란티스 마을',
     kind: 'town',
-    grid: { w: 10, h: 8 },
+    grid: { w: AW, h: AH },
     bg: 'atlantis',
+    render: 'iso',
+    assets: 'raster',
+    tileAt: atlantisTileAt,
+    props: ATLANTIS_PROPS,
+    blockers: ATLANTIS_BLOCKERS,
     zones: [
-      z('z-atlantis', 'atlantis', '아틀란티스 마을', 0, 0, 10, 8, '#2f86c0', '심해 아래 잠든 수중 도시. 해류로 지은 유리 돔 아래 인어족이 살아간다.'),
+      z('z-atlantis', 'atlantis', '아틀란티스 마을', 0, 0, AW, AH, '#2f86c0', '심해 아래 잠든 수중 도시. 해류로 지은 유리 돔 아래 인어족이 살아간다.'),
     ],
-    spawn: { x: 5, y: 6.6 },
+    spawn: { x: ACX, y: 10.4 },
     portals: [
-      { id: 'atlantis-exit', cell: { x: 5, y: 7.4 }, to: 'sea', toSpawn: { x: 10, y: 2.6 }, label: '해안으로', kind: 'exit' },
+      { id: 'atlantis-exit', cell: { x: ACX, y: 11.2 }, to: 'sea', toSpawn: { x: 10, y: 2.6 }, label: '해안으로', kind: 'exit' },
     ],
   },
 
