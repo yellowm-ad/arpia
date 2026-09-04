@@ -8,7 +8,18 @@ import { currentActor } from '@/lib/battle-engine'
 import { SKILLS, itemById } from '@/lib/mock-data'
 import { HeroSprite } from '@/components/game/pixel-hero'
 import { CreatureSprite, spriteIdFromRefId } from '@/components/game/creature-sprite'
+import { MAPS } from '@/lib/maps'
 import type { BattleAction, Combatant, Skill } from '@/lib/types'
+
+// 숲 전투 배경 위에 뿌릴 반딧불 — variant(방황 경로)·위치·속도를 미리 고정해 자연스럽게 흩뿌린다
+const FOREST_FIREFLIES: { variant: 'a' | 'b' | 'c'; left: string; top: string; delay: string }[] = [
+  { variant: 'a', left: '18%', top: '58%', delay: '0s' },
+  { variant: 'b', left: '32%', top: '42%', delay: '1.4s' },
+  { variant: 'c', left: '48%', top: '66%', delay: '0.6s' },
+  { variant: 'a', left: '63%', top: '48%', delay: '2.2s' },
+  { variant: 'b', left: '76%', top: '62%', delay: '0.9s' },
+  { variant: 'c', left: '55%', top: '30%', delay: '1.8s' },
+]
 
 // ============================================================================
 // 전투 화면 — 저장된 예시(클래식 JRPG 배틀 구도) 참고:
@@ -79,6 +90,7 @@ export function BattleScreen() {
 
   if (!battle) return null
 
+  const isForestBattle = MAPS[state.currentMapId]?.bg === 'forest'
   const enemies = battle.combatants.filter((c) => c.side === 'enemy')
   const players = battle.combatants.filter((c) => c.side === 'player')
   const hero = players.find((c) => c.kind === 'hero')
@@ -132,7 +144,7 @@ export function BattleScreen() {
     .slice(0, 8)
 
   return (
-    <div className="battle-field relative flex h-full w-full flex-col overflow-hidden">
+    <div className={`battle-field relative flex h-full w-full flex-col overflow-hidden ${isForestBattle ? 'battle-field-forest-edge' : ''}`}>
       {/* ── 상단 바 ── */}
       <div className="relative z-20 flex items-center justify-center gap-2 px-3 pt-2">
         <button
@@ -157,7 +169,23 @@ export function BattleScreen() {
       </div>
 
       {/* ── 전장 ── */}
-      <div className="relative z-10 flex-1">
+      <div className={`relative z-10 flex-1 overflow-hidden ${isForestBattle ? 'battle-field-forest-bg' : ''}`}>
+        {isForestBattle && (
+          <>
+            {/* 살랑이는 나무 그림자 */}
+            <div className="battle-forest-shadow" aria-hidden />
+            {/* 은은하게 돌아다니는 반짝임 */}
+            <div className="battle-fireflies" aria-hidden>
+              {FOREST_FIREFLIES.map((f, i) => (
+                <span
+                  key={i}
+                  className={`battle-firefly battle-firefly-${f.variant}`}
+                  style={{ left: f.left, top: f.top, animationDelay: `${f.delay}, ${f.delay}` }}
+                />
+              ))}
+            </div>
+          </>
+        )}
         {/* 적: 뒤(우상) */}
         {enemies.map((c, i) => (
           <CombatantSprite

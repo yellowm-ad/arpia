@@ -239,6 +239,81 @@
     pointer-events: none;
   }
 
+  /* ── 숲 전투 전용 배경 — PixelLab Pro로 그린 삽화(숲 전투화면 참고) ──
+     화면 전체(상단바~로그~하단 액션패널)에 깔아서 하단 UI 뒤가 초원 그라디언트로
+     뚝 끊겨 보이지 않게 한다. 전장 레이어는 위에 반투명하게 얹히는 그림자/반딧불만 담당. */
+  .battle-field.battle-field-forest-edge {
+    background: url('/images/battle/forest_bg.png') center / cover no-repeat;
+  }
+  .battle-field.battle-field-forest-edge::before {
+    content: none;
+  }
+
+  /* ── 숲 전투: 살랑이는 나무 그림자 + 은은한 반딧불 (숲 전투화면 참고) ── */
+  .battle-forest-shadow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background:
+      radial-gradient(16% 9% at 14% 28%, rgba(8, 18, 6, 0.4), transparent 70%),
+      radial-gradient(20% 11% at 38% 55%, rgba(8, 18, 6, 0.34), transparent 70%),
+      radial-gradient(15% 8% at 66% 32%, rgba(8, 18, 6, 0.38), transparent 70%),
+      radial-gradient(19% 10% at 80% 58%, rgba(8, 18, 6, 0.32), transparent 70%),
+      radial-gradient(22% 12% at 52% 78%, rgba(8, 18, 6, 0.34), transparent 70%),
+      radial-gradient(14% 8% at 25% 82%, rgba(8, 18, 6, 0.3), transparent 70%);
+    mix-blend-mode: multiply;
+    animation: battle-shadow-sway 8s ease-in-out infinite alternate;
+  }
+  @keyframes battle-shadow-sway {
+    0% { transform: translate(0%, 0%) rotate(0deg); opacity: 0.85; }
+    50% { transform: translate(1.4%, 0.8%) rotate(0.6deg); opacity: 1; }
+    100% { transform: translate(-1.2%, 0.5%) rotate(-0.5deg); opacity: 0.9; }
+  }
+
+  .battle-fireflies {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .battle-firefly {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: radial-gradient(circle, #fffef0 0%, #ffe9a8 35%, rgba(255, 220, 140, 0.5) 65%, transparent 78%);
+    filter: drop-shadow(0 0 3px rgba(255, 230, 160, 0.85)) drop-shadow(0 0 6px rgba(255, 210, 120, 0.5));
+  }
+  .battle-firefly-a { animation: firefly-wander-a var(--wander-dur, 14s) ease-in-out infinite, firefly-pulse 2.6s ease-in-out infinite; }
+  .battle-firefly-b { animation: firefly-wander-b var(--wander-dur, 16s) ease-in-out infinite, firefly-pulse 3.1s ease-in-out infinite; }
+  .battle-firefly-c { animation: firefly-wander-c var(--wander-dur, 12s) ease-in-out infinite, firefly-pulse 2.3s ease-in-out infinite; }
+  @keyframes firefly-wander-a {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(22px, -16px); }
+    50% { transform: translate(-10px, -26px); }
+    75% { transform: translate(-24px, 6px); }
+    100% { transform: translate(0, 0); }
+  }
+  @keyframes firefly-wander-b {
+    0% { transform: translate(0, 0); }
+    30% { transform: translate(-18px, -10px); }
+    60% { transform: translate(-6px, 18px); }
+    85% { transform: translate(16px, 10px); }
+    100% { transform: translate(0, 0); }
+  }
+  @keyframes firefly-wander-c {
+    0% { transform: translate(0, 0); }
+    20% { transform: translate(14px, 14px); }
+    55% { transform: translate(-16px, 20px); }
+    80% { transform: translate(-8px, -14px); }
+    100% { transform: translate(0, 0); }
+  }
+  @keyframes firefly-pulse {
+    0%, 100% { opacity: 0.25; }
+    50% { opacity: 1; }
+  }
+
   .battle-active {
     animation: battle-bob 0.9s ease-in-out infinite;
     filter: drop-shadow(0 0 6px rgba(240, 217, 153, 0.85));

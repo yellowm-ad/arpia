@@ -600,6 +600,9 @@ const GameContext = createContext<{ state: GameState; dispatch: React.Dispatch<A
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, createInitialGameState)
   const value = useMemo(() => ({ state, dispatch }), [state])
+  if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+    ;(window as unknown as { __game?: typeof value }).__game = value
+  }
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>
 }
 
