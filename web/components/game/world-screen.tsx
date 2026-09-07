@@ -20,6 +20,17 @@ const IMG_ZOOM = 2.7 // 이미지 맵 확대 배율 — 캐릭터가 건물 사�
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
 
+// 필드 스테이지(쿼터뷰) 바닥 — PixelLab로 그린 지역별 타일 텍스처. 아직 그리지 않은 bg 키는
+// undefined로 남아 기존 zoneBg() CSS 그라디언트 바닥으로 폴백된다.
+const FLOOR_TEXTURE: Partial<Record<string, string>> = {
+  forest: '/images/map/floor/forest_floor.png',
+  sea: '/images/map/floor/sea_floor.png',
+  sky: '/images/map/floor/sky_floor.png',
+  snow: '/images/map/floor/snow_floor.png',
+  ruins: '/images/map/floor/ruins_floor.png',
+  volcano: '/images/map/floor/volcano_floor.png',
+}
+
 // 마을 NPC 폰(pawn) 색 — 역할별 로브/그림자/머리
 const ELEM_SPRITE: Record<string, { robe: string; shade: string; hair: string; accent: string }> = {
   fire: { robe: '#b5462f', shade: '#7f2e20', hair: '#efe4d2', accent: '#e8641f' },
@@ -152,6 +163,7 @@ export function WorldScreen() {
   }, [state.screen])
 
   const map = MAPS[state.currentMapId]
+  const floorTexture = FLOOR_TEXTURE[map.bg]
   const mapNpcs = useMemo(
     () => NPCS.filter((n) => map.zones.some((z) => z.id === n.zoneId)),
     [map],
@@ -426,7 +438,7 @@ export function WorldScreen() {
               transformStyle: 'preserve-3d',
             }}
           >
-            {/* 바닥 그리드 */}
+            {/* 바닥 그리드 — PixelLab 타일 텍스처가 있으면 그걸, 없으면 기존 CSS 그라디언트 폴백 */}
             <div
               className="absolute"
               style={{
@@ -434,8 +446,13 @@ export function WorldScreen() {
                 top: 0,
                 width: map.grid.w * TILE,
                 height: map.grid.h * TILE,
-                backgroundImage: `linear-gradient(rgba(217,164,65,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.10) 1px, transparent 1px), ${zoneBg(map.bg)}`,
-                backgroundSize: `${TILE}px ${TILE}px, ${TILE}px ${TILE}px, cover`,
+                backgroundImage: floorTexture
+                  ? `linear-gradient(rgba(217,164,65,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.06) 1px, transparent 1px), url(${floorTexture})`
+                  : `linear-gradient(rgba(217,164,65,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(217,164,65,0.10) 1px, transparent 1px), ${zoneBg(map.bg)}`,
+                backgroundSize: floorTexture
+                  ? `${TILE}px ${TILE}px, ${TILE}px ${TILE}px, ${TILE * 4}px ${TILE * 4}px`
+                  : `${TILE}px ${TILE}px, ${TILE}px ${TILE}px, cover`,
+                backgroundRepeat: floorTexture ? 'repeat, repeat, repeat' : undefined,
                 backgroundColor: '#0e1230',
                 boxShadow: '0 0 0 4px rgba(217,164,65,0.4), inset 0 0 120px rgba(0,0,0,0.55)',
               }}

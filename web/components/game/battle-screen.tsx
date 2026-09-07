@@ -11,6 +11,17 @@ import { CreatureSprite, spriteIdFromRefId } from '@/components/game/creature-sp
 import { MAPS } from '@/lib/maps'
 import type { BattleAction, Combatant, Skill } from '@/lib/types'
 
+// 지역별 전투 배경 삽화 — 구도는 숲(forest_bg.png)과 동일한 PixelLab Pro 생성물,
+// 기후/부산물/원경만 지역에 맞게 다름. 아직 그리지 않은 bg 키(cave/mine/swamp/deepsea/demon 등)는
+// undefined로 남아 기존 CSS 그라디언트 전장으로 자연스럽게 폴백된다.
+const CUSTOM_BATTLE_BG: Partial<Record<string, string>> = {
+  sky: '/images/battle/sky_bg.png',
+  sea: '/images/battle/sea_bg.png',
+  snow: '/images/battle/snow_bg.png',
+  ruins: '/images/battle/ruins_bg.png',
+  volcano: '/images/battle/volcano_bg.png',
+}
+
 // 숲 전투 배경 위에 뿌릴 반딧불 — variant(방황 경로)·위치·속도를 미리 고정해 자연스럽게 흩뿌린다
 const FOREST_FIREFLIES: { variant: 'a' | 'b' | 'c'; left: string; top: string; delay: string }[] = [
   { variant: 'a', left: '18%', top: '58%', delay: '0s' },
@@ -20,6 +31,16 @@ const FOREST_FIREFLIES: { variant: 'a' | 'b' | 'c'; left: string; top: string; d
   { variant: 'b', left: '76%', top: '62%', delay: '0.9s' },
   { variant: 'c', left: '55%', top: '30%', delay: '1.8s' },
 ]
+
+// 나머지 지역 전투 배경 위에 뿌릴 파티클 — 반딧불과 동일한 6개 스팟을 재사용하고
+// zoneBg별로 종류(물방울/빛/영혼/눈/불씨)와 궤적(상승/낙하)만 갈아끼운다
+const ZONE_PARTICLE_KIND: Partial<Record<string, 'droplet' | 'light' | 'spirit' | 'snow' | 'ember'>> = {
+  sea: 'droplet',
+  sky: 'light',
+  ruins: 'spirit',
+  snow: 'snow',
+  volcano: 'ember',
+}
 
 // ============================================================================
 // 전투 화면 — 저장된 예시(클래식 JRPG 배틀 구도) 참고:
@@ -90,7 +111,10 @@ export function BattleScreen() {
 
   if (!battle) return null
 
-  const isForestBattle = MAPS[state.currentMapId]?.bg === 'forest'
+  const zoneBg = MAPS[state.currentMapId]?.bg
+  const isForestBattle = zoneBg === 'forest'
+  const customBattleBg = zoneBg ? CUSTOM_BATTLE_BG[zoneBg] : undefined
+  const particleKind = zoneBg ? ZONE_PARTICLE_KIND[zoneBg] : undefined
   const enemies = battle.combatants.filter((c) => c.side === 'enemy')
   const players = battle.combatants.filter((c) => c.side === 'player')
   const hero = players.find((c) => c.kind === 'hero')
@@ -144,7 +168,10 @@ export function BattleScreen() {
     .slice(0, 8)
 
   return (
-    <div className={`battle-field relative flex h-full w-full flex-col overflow-hidden ${isForestBattle ? 'battle-field-forest-edge' : ''}`}>
+    <div
+      className={`battle-field relative flex h-full w-full flex-col overflow-hidden ${isForestBattle ? 'battle-field-forest-edge' : customBattleBg ? 'battle-field-custom-bg' : ''}`}
+      style={customBattleBg ? { backgroundImage: `url(${customBattleBg})` } : undefined}
+    >
       {/* ── 상단 바 ── */}
       <div className="relative z-20 flex items-center justify-center gap-2 px-3 pt-2">
         <button
@@ -185,6 +212,17 @@ export function BattleScreen() {
               ))}
             </div>
           </>
+        )}
+        {particleKind && (
+          <div className="battle-particles" aria-hidden>
+            {FOREST_FIREFLIES.map((f, i) => (
+              <span
+                key={i}
+                className={`battle-particle battle-particle-${particleKind} battle-particle-motion-${particleKind === 'snow' ? 'fall' : 'rise'}-${f.variant}`}
+                style={{ left: f.left, top: f.top, animationDelay: `${f.delay}, ${f.delay}` }}
+              />
+            ))}
+          </div>
         )}
         {/* 적: 뒤(우상) */}
         {enemies.map((c, i) => (

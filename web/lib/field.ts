@@ -11,7 +11,8 @@ function seedForMap(mapId: string): number {
 
 /**
  * 현재 맵의 필드 몬스터 배치.
- * field 맵의 각 셀에 density 만큼 배치. testMode 면 각 셀에 허수아비 1마리 추가.
+ * field 맵의 각 셀에 density 만큼 실제 몬스터 풀에서 배치. 테스트용 허수아비는 셀마다
+ * 흩뿌리지 않고, 접근성 테스트용으로 스폰 지점(입구) 바로 근처에 딱 1마리만 남긴다.
  * town 맵(마을·아틀란티스)은 항상 빈 배열.
  */
 export function generateFieldMonsters(map: GameMap, testMode: boolean): FieldMonster[] {
@@ -20,7 +21,6 @@ export function generateFieldMonsters(map: GameMap, testMode: boolean): FieldMon
   const pool: MonsterDef[] = map.monsterPool
     ? map.monsterPool.map(monsterById).filter((m): m is MonsterDef => !!m)
     : monstersForZoneKind(map.monsterZoneKind ?? 'field')
-  if (pool.length === 0 && !testMode) return []
 
   const rand = mulberry32(seedForMap(map.id))
   const result: FieldMonster[] = []
@@ -44,15 +44,18 @@ export function generateFieldMonsters(map: GameMap, testMode: boolean): FieldMon
     })
   }
 
-  for (let cx = 0; cx < map.grid.w; cx++) {
-    for (let cy = 0; cy < map.grid.h; cy++) {
-      if (pool.length > 0) {
+  if (pool.length > 0) {
+    for (let cx = 0; cx < map.grid.w; cx++) {
+      for (let cy = 0; cy < map.grid.h; cy++) {
         const n = rollCount(density)
         for (let i = 0; i < n; i++) place(pool[Math.floor(rand() * pool.length)].id, cx, cy, 'fm')
       }
-      // 테스트 모드: 약 1/3 셀에 허수아비 추가
-      if (testMode && testMonster && rand() < 0.34) place(testMonster.id, cx, cy, 'fm-test')
     }
+  }
+
+  if (testMode && testMonster) {
+    // 입구(스폰 지점) 바로 근처에 테스트용 허수아비 1마리만 배치
+    place(testMonster.id, Math.floor(map.spawn.x) - 1, Math.floor(map.spawn.y) - 1, 'fm-test')
   }
 
   return result
