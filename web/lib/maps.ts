@@ -1442,6 +1442,17 @@ function demonVillageProps(): PropDef[] {
 const DEMON_PROPS = demonVillageProps()
 const DEMON_BLOCKERS = buildBlockers(DEMON_PROPS)
 
+// ── 관리자 테스트룸 (/admin 전용) — NPC 25종·몬스터 23종을 한 방에 모아 배치 ────
+// field.ts 의 generateFieldMonsters() 가 map.id==='testroom' 을 특수 처리해 그리드로 배치하고,
+// mock-data.ts 의 testRoomNpcs() 가 기존 NPC 전원을 zoneId:'z-testroom' 로 복제해 넣는다.
+const TESTROOM_W = 22
+const TESTROOM_H = 32
+function testroomTileAt(x: number, y: number): TileKind {
+  // NPC 구역(위)은 plaza, 몬스터 구역(아래)은 grass 로 구분
+  if (y < 17) return (Math.floor(x / 3) + Math.floor(y / 3)) % 2 === 0 ? 'plaza' : 'path'
+  return (Math.floor(x / 3) + Math.floor(y / 3)) % 2 === 0 ? 'grass' : 'grass-dark'
+}
+
 export const MAPS: Record<MapId, GameMap> = {
   village: {
     id: 'village',
@@ -1822,6 +1833,26 @@ export const MAPS: Record<MapId, GameMap> = {
     spawn: { ...SUB_SPAWN },
     portals: [
       { id: 'demon-castle-exit', cell: { ...SUB_EXIT }, to: 'volcano', toSpawn: { x: 20, y: 5.2 }, label: '화산지대로', kind: 'exit' },
+    ],
+  },
+
+  testroom: {
+    id: 'testroom',
+    name: '관리자 테스트룸',
+    kind: 'field',
+    grid: { w: TESTROOM_W, h: TESTROOM_H },
+    bg: 'plaza',
+    render: 'iso',
+    assets: 'raster',
+    tileAt: testroomTileAt,
+    zones: [
+      z('z-testroom', 'plaza', '관리자 테스트룸', 0, 0, TESTROOM_W, TESTROOM_H, '#d9a441', 'NPC·몬스터 전종이 모인 관리자 전용 테스트 공간.'),
+    ],
+    monsterDensity: 0, // generateFieldMonsters 가 testroom 을 특수 처리하므로 밀도는 미사용
+    recommendedLevel: 1,
+    spawn: { x: 11, y: 30 },
+    portals: [
+      { id: 'testroom-exit', cell: { x: 11, y: 31 }, to: 'village', label: '마을로 돌아가기', kind: 'exit' },
     ],
   },
 }

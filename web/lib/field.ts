@@ -18,6 +18,18 @@ function seedForMap(mapId: string): number {
 export function generateFieldMonsters(map: GameMap, testMode: boolean): FieldMonster[] {
   if (map.kind !== 'field') return []
 
+  // 관리자 테스트룸 — 랜덤 배치 대신 실존 몬스터 전종을 그리드에 결정론적으로 1마리씩.
+  if (map.id === 'testroom') {
+    const cols = 6
+    return MONSTERS.filter((m) => !m.isTestMonster).map((m, i) => ({
+      uid: `tr-${m.id}`,
+      monsterId: m.id,
+      cell: { x: 3 + (i % cols) * 3, y: 18 + Math.floor(i / cols) * 3 },
+      homeCell: { x: 3 + (i % cols) * 3, y: 18 + Math.floor(i / cols) * 3 },
+      wanderSeed: i * 137,
+    }))
+  }
+
   const pool: MonsterDef[] = map.monsterPool
     ? map.monsterPool.map(monsterById).filter((m): m is MonsterDef => !!m)
     : monstersForZoneKind(map.monsterZoneKind ?? 'field')

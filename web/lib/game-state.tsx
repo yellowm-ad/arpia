@@ -17,12 +17,12 @@ import {
   computeStatsForLevel,
 } from '@/lib/constants'
 import { MAPS, zoneAt } from '@/lib/maps'
-import { ITEMS, MONSTERS, NPCS, autoLearnSkillIds, itemById, npcById } from '@/lib/mock-data'
+import { ITEMS, MONSTERS, NPCS, SKILLS, autoLearnSkillIds, itemById, npcById } from '@/lib/mock-data'
 import { applyExp } from '@/lib/exp-table'
 import { createInitialGameState, createPlayer, createStarterPet } from '@/lib/player-factory'
 import { generateFieldMonsters } from '@/lib/field'
 import { getEffectiveStats } from '@/lib/derived'
-import { canTrain, clampAffection, petDefById, petStatsForLevel } from '@/lib/pets'
+import { canTrain, clampAffection, createPet, petDefById, petStatsForLevel, PET_DEFS } from '@/lib/pets'
 import {
   advanceTurn,
   checkBattleEnd,
@@ -65,6 +65,20 @@ export type Action =
   | { type: 'SHOW_TOAST'; message: string }
   | { type: 'CLEAR_TOAST' }
   | { type: 'RESET_GAME' }
+  // ── 관리자 테스트룸(/admin) 전용 ──────────────────────────────────────────
+  | { type: 'ADMIN_ENTER_TESTROOM' }
+  | { type: 'ADMIN_SET_LEVEL'; level: number }
+  | { type: 'ADMIN_SET_ELEMENT'; element: Element }
+  | { type: 'ADMIN_SET_GENDER'; gender: Gender }
+  | { type: 'ADMIN_TOGGLE_SKILL'; skillId: string }
+  | { type: 'ADMIN_LEARN_ALL_SKILLS' }
+  | { type: 'ADMIN_CLEAR_SKILLS' }
+  | { type: 'ADMIN_GIVE_ALL_ITEMS' }
+  | { type: 'ADMIN_SET_GOLD'; gold: number }
+  | { type: 'ADMIN_GRANT_ALL_PETS' }
+  | { type: 'ADMIN_SET_ACTIVE_PET'; defId: string }
+  | { type: 'ADMIN_HEAL_FULL' }
+  | { type: 'ADMIN_RESPAWN_MONSTERS' }
 
 function addToInventory(inv: GameState['inventory'], itemId: string, qty = 1) {
   const idx = inv.findIndex((s) => s.itemId === itemId)
@@ -389,6 +403,98 @@ function reducer(state: GameState, action: Action): GameState {
         toast: `${eligible.name}(으)로 전직했습니다!`,
       }
     }
+
+    // ── 관리자 테스트룸(/admin) 전용 액션 — 저장 데이터가 없는 순수 샌드박스이므로
+    // 밸런스·검증 없이 즉시 원하는 상태로 만든다 ──────────────────────────────
+    case 'ADMIN_ENTER_TESTROOM': {
+      const map = MAPS.testroom
+      return {
+        ...state,
+        currentMapId: 'testroom',
+        currentZoneId: 'z-testroom',
+        position: { ...map.spawn },
+        facing: 'down',
+        fieldMonsters: generateFieldMonsters(map, state.settings.testMode),
+        pendingEncounterUid: null,
+        pendingPortalId: null,
+        gateOpen: false,
+        screen: 'world',
+        previousScreen: 'world',
+      }
+    }
+
+    case 'ADMIN_SET_LEVEL': {
+      const level = Math.max(1, Math.min(50, Math.round(action.level)))
+      const stats = computeStatsForLevel(state.player.element, level)
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          level,
+          exp: 0,
+          jobTierId: jobTierForLevel(level).id,
+          stats,
+          hp: stats.maxHp,
+          mp: stats.maxMp,
+        },
+      }
+    }
+
+    case 'ADMIN_SET_ELEMENT': {
+      const stats = computeStatsForLevel(action.element, state.player.level)
+      return { ...state, player: { ...state.player, element: action.element, stats, hp: stats.maxHp, mp: stats.maxMp } }
+    }
+
+    case 'ADMIN_SET_GENDER':
+      return { ...state, player: { ...state.player, gender: action.gender } }
+
+    case 'ADMIN_TOGGLE_SKILL': {
+      const has = state.player.learnedSkills.includes(action.skillId)
+      const learnedSkills = has
+        ? state.player.learnedSkills.filter((id) => id !== action.skillId)
+        : [...state.player.learnedSkills, action.skillId]
+      return { ...state, player: { ...state.player, learnedSkills } }
+    }
+
+    case 'ADMIN_LEARN_ALL_SKILLS':
+      return { ...state, player: { ...state.player, learnedSkills: SKILLS.map((s) => s.id) } }
+
+    case 'ADMIN_CLEAR_SKILLS':
+      return { ...state, player: { ...state.player, learnedSkills: [] } }
+
+    case 'ADMIN_GIVE_ALL_ITEMS': {
+      const inventory = ITEMS.map((i) => ({ itemId: i.id, qty: i.stackable ? 99 : 1 }))
+      return { ...state, inventory }
+    }
+
+    case 'ADMIN_SET_GOLD':
+      return { ...state, player: { ...state.player, gold: Math.max(0, Math.round(action.gold)) } }
+
+    case 'ADMIN_GRANT_ALL_PETS': {
+      const ownedPets = PET_DEFS.map((d) => createPet(d.id, { level: state.player.level, affection: 80 }))
+      const pet = ownedPets.find((p) => p.defId === state.pet.defId) ?? ownedPets[0] ?? state.pet
+      return { ...state, ownedPets, pet }
+    }
+
+    case 'ADMIN_SET_ACTIVE_PET': {
+      const found = state.ownedPets.find((p) => p.defId === action.defId)
+      if (!found) return state
+      return { ...state, pet: found }
+    }
+
+    case 'ADMIN_HEAL_FULL': {
+      const stats = state.player.stats
+      const petDef = petDefById(state.pet.defId)
+      const petStats = petDef ? petStatsForLevel(petDef, state.pet.level) : null
+      return {
+        ...state,
+        player: { ...state.player, hp: stats.maxHp, mp: stats.maxMp },
+        pet: petStats ? { ...state.pet, hp: petStats.maxHp, mp: petStats.maxMp } : state.pet,
+      }
+    }
+
+    case 'ADMIN_RESPAWN_MONSTERS':
+      return { ...state, fieldMonsters: generateFieldMonsters(MAPS[state.currentMapId], state.settings.testMode) }
 
     case 'TOGGLE_TEST_MODE': {
       const testMode = !state.settings.testMode

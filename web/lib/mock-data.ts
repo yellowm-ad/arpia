@@ -281,7 +281,7 @@ export function monstersForZoneKind(kind: string): MonsterDef[] {
 // ============================================================================
 // NPC — 설계: §9.1
 // ============================================================================
-export const NPCS: NpcDef[] = [
+const NPCS_BASE: NpcDef[] = [
   // ── 학교 지구 (마법동) ──
   { id: 'npc-job-trainer', name: '미르엘 교수', role: 'jobTrainer', icon: '/images/npc/npc-job-trainer.png', zoneId: 'z-magic-hall', cell: { x: 7, y: 7.5 }, greeting: ['어서 오렴, 견습생. 나는 전직을 담당하는 미르엘이란다.', '레벨이 충분히 오르면 언제든 찾아오렴 — 다음 단계로 이끌어주마.'] },
   { id: 'npc-librarian', name: '사서 오웬', role: 'flavor', icon: '/images/npc/npc-librarian.png', zoneId: 'z-magic-hall', cell: { x: 9, y: 9.6 }, greeting: ['마법동 도서관에는 아직 정리 중인 마법서가 많단다. 조용히 둘러보렴.', '연금술동과 마도구동도 둘러보면 좋을 게야.'] },
@@ -325,6 +325,20 @@ export const NPCS: NpcDef[] = [
   { id: 'npc-demon-smith', name: '용암대장장이 그롯', role: 'weaponMerchant', icon: '/images/npc/npc-demon-smith.png', zoneId: 'z-demon-village', cell: { x: 21.0, y: 6.4 }, greeting: ['화산 불로 벼린 물건이다. 뭍 대장간 것과는 격이 달라.'], shopItemIds: [...wands.map((w) => w.id)] },
   { id: 'npc-demon-child', name: '꼬마 마물 삐약', role: 'flavor', icon: '/images/npc/npc-demon-child.png', zoneId: 'z-demon-village', cell: { x: 16.0, y: 13.6 }, greeting: ['인간이다! 뿔 없는 거 진짜였네…'] },
 ]
+
+// 관리자 테스트룸 — 기존 NPC 전원(상점·대화 전부)을 zoneId만 z-testroom 으로 바꿔 한 방에 복제.
+// 원본은 그대로 두고 추가만 하는 방식이라 실제 마을 NPC 배치엔 영향 없음.
+function testRoomNpcs(base: NpcDef[]): NpcDef[] {
+  const cols = 6
+  return base.map((n, i) => ({
+    ...n,
+    id: `${n.id}-tr`,
+    zoneId: 'z-testroom',
+    cell: { x: 3 + (i % cols) * 3, y: 3 + Math.floor(i / cols) * 3 },
+  }))
+}
+
+export const NPCS: NpcDef[] = [...NPCS_BASE, ...testRoomNpcs(NPCS_BASE)]
 const NPC_MAP = new Map(NPCS.map((n) => [n.id, n]))
 export function npcById(id: string): NpcDef | undefined {
   return NPC_MAP.get(id)

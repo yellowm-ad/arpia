@@ -304,6 +304,7 @@ export type MapId =
   | 'volcano'
   | 'demon-village'
   | 'demon-castle'
+  | 'testroom'
 
 /** 포탈: 타일에 서면(또는 군 통문에서 선택하면) 다른 맵으로 이동 */
 export interface Portal {
