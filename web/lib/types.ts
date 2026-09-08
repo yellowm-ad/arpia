@@ -350,6 +350,8 @@ export interface GameMap {
   monsterZoneKind?: ZoneKind
   /** 셀당 몬스터 수 (기본 1) */
   monsterDensity?: number
+  /** 몬스터 사이 최소 간격(셀) — 클수록 배치가 퍼진다 (기본 1.2) */
+  monsterSpacing?: number
   recommendedLevel?: number
   portals: Portal[]
   spawn: { x: number; y: number }
@@ -414,12 +416,25 @@ export interface BattleLogEntry {
   kind: 'info' | 'damage' | 'heal' | 'system' | 'levelup' | 'status'
 }
 
+/** 전투 스킬/공격/아이템 연출(VFX) 트리거 — 매 행동마다 새 fxId로 갱신되어 battle-screen 이 재생한다 */
+export interface BattleFx {
+  fxId: string
+  sourceUid: string
+  targetUids: string[]
+  element: ElementOrNeutral
+  /** 연출 갈래 판정용 — 스킬의 kind 그대로, 기본공격은 'attack', 아이템은 useEffect 기반 별도 태그 */
+  archetype: 'attack' | 'magicAttack' | 'heal' | 'buff' | 'debuff' | 'utility' | 'item'
+  aoe: boolean
+  power: number // 연출 스케일(파티클 양·크기) 근거
+}
+
 export interface BattleState {
   round: number
   tick: number
   activeUid: string | null // 현재 행동권을 가진 전투원(없으면 ATB 계속 충전)
   combatants: Combatant[]
   log: BattleLogEntry[]
+  lastFx?: BattleFx
   isOver: boolean
   victory: boolean
   originCell: { x: number; y: number }

@@ -40,6 +40,10 @@ export type TileKind =
   | 'ash' // 버려진 신전 — 어두운 폐허 바닥
   | 'ice' // 오로라 마을 — 밝은 남색 얼음 바닥
   | 'obsidian' // 마물 마을 — 붉은 화산암 바닥
+  | 'snow' // 루미나 설원 — 순백 눈밭
+  | 'cave' // 이끼 동굴 — 축축한 암반 + 이끼
+  | 'mine' // 폐광산 — 암반+갱목 바닥
+  | 'swamp' // 안개 늪지 — 진흙+웅덩이
 
 /**
  * 라스터 모드에서 지면 타일 PNG 경로 (다이메트릭 2:1, 폭 = ISO_TILE_W 배수).
@@ -54,6 +58,14 @@ export const TILE_SPRITES: Partial<Record<TileKind, string>> = {
   field: '/images/map/tiles/field.png',
   water: '/images/map/tiles/water.png',
   dirt: '/images/map/tiles/dirt.png',
+  snow: '/images/map/tiles/snow.png',
+  ice: '/images/map/tiles/ice.png',
+  ash: '/images/map/tiles/ash.png',
+  obsidian: '/images/map/tiles/obsidian.png',
+  cloud: '/images/map/tiles/cloud.png',
+  cave: '/images/map/tiles/cave.png',
+  mine: '/images/map/tiles/mine.png',
+  swamp: '/images/map/tiles/swamp.png',
 }
 
 /** 타일별 상/좌/우 면 색 (좌·우는 살짝 어둡게 해 미세 입체) */
@@ -70,6 +82,10 @@ export const TILE_COLORS: Record<TileKind, { top: string; edge: string }> = {
   ash: { top: '#4a4550', edge: '#332f38' },
   ice: { top: '#5f86c4', edge: '#42639e' },
   obsidian: { top: '#6b2a22', edge: '#4a1a15' },
+  snow: { top: '#eef3f8', edge: '#d3dfea' },
+  cave: { top: '#3a4038', edge: '#272b26' },
+  mine: { top: '#4a4038', edge: '#332c26' },
+  swamp: { top: '#3f4a34', edge: '#2a3122' },
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

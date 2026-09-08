@@ -11,6 +11,7 @@
 // ============================================================================
 import type {
   BattleAction,
+  BattleFx,
   BattleLogEntry,
   BattleState,
   Combatant,
@@ -356,9 +357,13 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
 
   if (action.type === 'attack') {
     const target = find(action.targetUid)
-    if (target && target.alive) damageTarget(entries, actor, target, 1.0, false, 'neutral', '공격')
+    let fx: BattleFx | undefined
+    if (target && target.alive) {
+      damageTarget(entries, actor, target, 1.0, false, 'neutral', '공격')
+      fx = { fxId: nextUid('fx'), sourceUid: actor.uid, targetUids: [target.uid], element: 'neutral', archetype: 'attack', aoe: false, power: 1.0 }
+    }
     maybeSupportAttack(entries, combatants, actor)
-    return { battle: { ...battle, combatants, log: entries } }
+    return { battle: { ...battle, combatants, log: entries, lastFx: fx } }
   }
 
   if (action.type === 'skill') {
@@ -378,6 +383,8 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
     const isMagic = !skill.physical
     const enemyList = combatants.filter((c) => c.side !== actor.side && c.alive)
     const allyList = combatants.filter((c) => c.side === actor.side && c.alive)
+    const aoe = skill.targeting === 'allEnemies' || skill.targeting === 'allAllies'
+    let fx: BattleFx | undefined
 
     if (skill.kind === 'attack' || (skill.kind === 'debuff' && skill.power > 0)) {
       const targets =
@@ -386,11 +393,29 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
         damageTarget(entries, actor, t, skill.power, isMagic, skill.element, `[${skill.name}]`)
         applyStatusRider(entries, actor, t, skill)
       }
+      fx = {
+        fxId: nextUid('fx'),
+        sourceUid: actor.uid,
+        targetUids: targets.map((t) => t.uid),
+        element: skill.element,
+        archetype: isMagic ? 'magicAttack' : 'attack',
+        aoe,
+        power: skill.power,
+      }
     } else if (skill.kind === 'debuff') {
       const targets =
         skill.targeting === 'allEnemies' ? enemyList : enemyList.filter((c) => c.uid === action.targetUid)
       for (const t of targets) applyStatusRider(entries, actor, t, skill)
       log(entries, `${actor.name}의 [${skill.name}]!`)
+      fx = {
+        fxId: nextUid('fx'),
+        sourceUid: actor.uid,
+        targetUids: targets.map((t) => t.uid),
+        element: skill.element,
+        archetype: 'debuff',
+        aoe,
+        power: skill.power || 1,
+      }
     } else if (skill.kind === 'heal') {
       const targets =
         skill.targeting === 'allAllies'
@@ -409,6 +434,15 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
           log(entries, `${actor.name}의 [${skill.name}]! ${t.name}의 HP를 ${heal} 회복했다.`, 'heal')
         }
       }
+      fx = {
+        fxId: nextUid('fx'),
+        sourceUid: actor.uid,
+        targetUids: targets.map((t) => t.uid),
+        element: skill.element,
+        archetype: 'heal',
+        aoe,
+        power: skill.power || 1,
+      }
     } else if (skill.kind === 'buff') {
       const targets = skill.targeting === 'allAllies' ? allyList : [actor]
       for (const t of targets) {
@@ -424,26 +458,46 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
         }
       }
       log(entries, `${actor.name}의 [${skill.name}]! 효과가 적용되었다.`)
+      fx = {
+        fxId: nextUid('fx'),
+        sourceUid: actor.uid,
+        targetUids: targets.map((t) => t.uid),
+        element: skill.element,
+        archetype: 'buff',
+        aoe,
+        power: 1,
+      }
     } else if (skill.kind === 'utility') {
+      const utilTarget = skill.targeting === 'self' ? actor : find(action.targetUid) ?? actor
       if (skill.cleanse) {
-        const t = skill.targeting === 'self' ? actor : find(action.targetUid) ?? actor
-        const n = cleanseStatuses(t)
-        log(entries, `${actor.name}의 [${skill.name}]! ${t.name}의 상태이상 ${n}개를 해제했다.`, n ? 'status' : 'info')
+        const n = cleanseStatuses(utilTarget)
+        log(entries, `${actor.name}의 [${skill.name}]! ${utilTarget.name}의 상태이상 ${n}개를 해제했다.`, n ? 'status' : 'info')
       }
       if (skill.restoreMpRatio) {
         const restored = Math.round(statWithEffects(actor, 'matk') * skill.restoreMpRatio)
         actor.mp = Math.min(actor.stats.maxMp, actor.mp + restored)
         log(entries, `${actor.name}의 [${skill.name}]! MP를 ${restored} 회복했다.`, 'heal')
       }
+      fx = {
+        fxId: nextUid('fx'),
+        sourceUid: actor.uid,
+        targetUids: [utilTarget.uid],
+        element: skill.element,
+        archetype: 'utility',
+        aoe: false,
+        power: 1,
+      }
     }
-    return { battle: { ...battle, combatants, log: entries } }
+    return { battle: { ...battle, combatants, log: entries, lastFx: fx } }
   }
 
   if (action.type === 'item') {
     const item = itemById(action.itemId)
+    let fx: BattleFx | undefined
     if (item?.useEffect) {
       itemConsumed = action.itemId
       const target = find(action.targetUid) ?? actor
+      fx = { fxId: nextUid('fx'), sourceUid: actor.uid, targetUids: [target.uid], element: 'neutral', archetype: 'item', aoe: false, power: 1 }
       const ue = item.useEffect
       if (ue.healHp) {
         target.hp = Math.min(target.stats.maxHp, target.hp + ue.healHp)
@@ -471,7 +525,7 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
         fled = true
       }
     }
-    return { battle: { ...battle, combatants, log: entries }, itemConsumed, fled }
+    return { battle: { ...battle, combatants, log: entries, lastFx: fx }, itemConsumed, fled }
   }
 
   return { battle: { ...battle, combatants, log: entries }, itemConsumed, fled }

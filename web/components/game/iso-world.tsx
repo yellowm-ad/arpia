@@ -5,10 +5,12 @@ import type { Action } from '@/lib/game-state'
 import type { GameState } from '@/lib/types'
 import { MAPS } from '@/lib/maps'
 import { ELEMENT_META } from '@/lib/constants'
-import { NPCS } from '@/lib/mock-data'
+import { NPCS, MONSTERS } from '@/lib/mock-data'
+import { wanderPosition, wanderFacing } from '@/lib/field'
 import { ISO_TILE_W, ISO_TILE_H, isoToScreen, isoBounds, TILE_COLORS, TILE_SPRITES } from '@/lib/iso'
 import type { TileKind, PropDef } from '@/lib/iso'
 import { renderProp } from '@/components/game/iso-sprites'
+import { CreatureSprite } from '@/components/game/creature-sprite'
 
 const SCALE = 1.15 // 맵 4배 확장(52×40)에 맞춰 축소 (기존 1.4)
 const PAD_TOP = 240 // 키 큰 건물이 앵커 위로 솟는 여유
@@ -68,6 +70,13 @@ export function IsoWorld({
     const id = setInterval(() => setHeroFrame((f) => (f + 1) % 8), 115)
     return () => clearInterval(id)
   }, [moving])
+
+  // 필드 몬스터 배회 애니메이션 시각(視刻) — 10fps 면 충분히 자연스럽다
+  const [wanderT, setWanderT] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setWanderT(performance.now()), 100)
+    return () => clearInterval(id)
+  }, [])
   const { w: VW, h: VH } = map.grid
   const bounds = useMemo(() => isoBounds(VW, VH), [VW, VH])
   const originX = -bounds.minSx
@@ -205,6 +214,49 @@ export function IsoWorld({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, interactId])
 
+  // 필드 몬스터 — 홈 셀 반경 6.5셀 안만 렌더(연산 절약), wanderT 마다 배회 위치 재계산
+  const visibleMonsters = useMemo(
+    () =>
+      state.fieldMonsters.filter(
+        (fm) => Math.hypot(fm.homeCell.x - state.position.x, fm.homeCell.y - state.position.y) < 6.5,
+      ),
+    [state.fieldMonsters, state.position.x, state.position.y],
+  )
+  const MD = 58 // 몬스터 도트 표시 크기
+  const monsterEntities = visibleMonsters.flatMap((fm) => {
+    const def = MONSTERS.find((m) => m.id === fm.monsterId)
+    if (!def) return []
+    const pos = wanderPosition(fm, wanderT)
+    const dir = wanderFacing(fm, wanderT)
+    const s = isoToScreen(pos.x, pos.y)
+    return [
+      {
+        sortY: pos.x + pos.y,
+        node: (
+          <g key={fm.uid} transform={`translate(${s.sx},${s.sy})`}>
+            <ellipse cx={0} cy={2} rx={12} ry={4} fill="rgba(0,0,0,0.34)" />
+            <foreignObject x={-MD / 2} y={-MD + 8} width={MD} height={MD} style={{ overflow: 'visible' }}>
+              <CreatureSprite spriteId={def.id} fallbackSrc={def.icon} dir={dir} walking px={MD} />
+            </foreignObject>
+            <g transform="translate(0,-54)">
+              <rect
+                x={-def.name.length * 5 - 5}
+                y={-9}
+                width={def.name.length * 10 + 10}
+                height={14}
+                rx={3}
+                fill={def.isTestMonster ? 'rgba(6,60,30,0.75)' : 'rgba(60,10,10,0.68)'}
+              />
+              <text x={0} y={2} textAnchor="middle" fontSize={10} fontWeight={700} fill={def.isTestMonster ? '#a8f0c0' : '#f0c0c0'}>
+                {def.isTestMonster ? 'TEST' : def.name}
+              </text>
+            </g>
+          </g>
+        ),
+      },
+    ]
+  })
+
   // ── 포탈/통문: 푸른 계열 마법진 (도트). 건물 위에 항상 렌더 → 클릭 보장 ──
   const portalNodes = useMemo(() => {
     const seen = new Set<string>()
@@ -302,8 +354,9 @@ export function IsoWorld({
     </g>
   )
 
-  const behind = staticEntities.filter((e) => e.sortY <= playerSortY).map((e) => e.node)
-  const front = staticEntities.filter((e) => e.sortY > playerSortY).map((e) => e.node)
+  const allEntities = [...staticEntities, ...monsterEntities].sort((a, b) => a.sortY - b.sortY)
+  const behind = allEntities.filter((e) => e.sortY <= playerSortY).map((e) => e.node)
+  const front = allEntities.filter((e) => e.sortY > playerSortY).map((e) => e.node)
 
   const camX = clamp(viewportSize.w / 2 - (originX + ps.sx) * SCALE, Math.min(0, viewportSize.w - worldW * SCALE), 0)
   const camY = clamp(viewportSize.h / 2 - (originY + ps.sy) * SCALE, Math.min(0, viewportSize.h - worldH * SCALE), 0)

@@ -8,8 +8,20 @@ import { currentActor } from '@/lib/battle-engine'
 import { SKILLS, itemById } from '@/lib/mock-data'
 import { HeroSprite } from '@/components/game/pixel-hero'
 import { CreatureSprite, spriteIdFromRefId } from '@/components/game/creature-sprite'
+import { SkillFxLayer, type FxPos } from '@/components/game/skill-fx'
 import { MAPS } from '@/lib/maps'
 import type { BattleAction, Combatant, Skill } from '@/lib/types'
+
+/** 전장 배치 좌표(%) — CombatantSprite 렌더와 SkillFxLayer 위치 계산이 같은 값을 쓰도록 공유 */
+function combatantPos(side: 'player' | 'enemy', index: number, count: number): FxPos {
+  const spread = count > 1 ? index / (count - 1) - 0.5 : 0
+  const left = side === 'enemy' ? 68 + spread * 22 : 32 + spread * 24
+  const top =
+    side === 'enemy'
+      ? 42 + Math.abs(spread) * 12 + (index % 2) * 7
+      : 58 + Math.abs(spread) * 8 + (index % 2) * 8
+  return { left, top }
+}
 
 // 지역별 전투 배경 삽화 — 구도는 숲(forest_bg.png)과 동일한 PixelLab Pro 생성물,
 // 기후/부산물/원경만 지역에 맞게 다름. 아직 그리지 않은 bg 키(cave/mine/swamp/deepsea/demon 등)는
@@ -119,6 +131,10 @@ export function BattleScreen() {
   const players = battle.combatants.filter((c) => c.side === 'player')
   const hero = players.find((c) => c.kind === 'hero')
 
+  const posMap: Record<string, FxPos> = {}
+  enemies.forEach((c, i) => { posMap[c.uid] = combatantPos('enemy', i, enemies.length) })
+  players.forEach((c, i) => { posMap[c.uid] = combatantPos('player', i, players.length) })
+
   function submit(action: BattleAction) {
     if (!actor) return
     if (action.type === 'attack' || action.type === 'skill') triggerLunge()
@@ -225,26 +241,24 @@ export function BattleScreen() {
           </div>
         )}
         {/* 적: 뒤(우상) */}
-        {enemies.map((c, i) => (
+        {enemies.map((c) => (
           <CombatantSprite
             key={c.uid}
             c={c}
             side="enemy"
-            index={i}
-            count={enemies.length}
+            pos={posMap[c.uid]}
             active={actor?.uid === c.uid}
             targetable={targetableSide === 'enemy' && c.alive}
             onClick={() => handleTargetClick(c)}
           />
         ))}
         {/* 아군: 앞(좌하) */}
-        {players.map((c, i) => (
+        {players.map((c) => (
           <CombatantSprite
             key={c.uid}
             c={c}
             side="player"
-            index={i}
-            count={players.length}
+            pos={posMap[c.uid]}
             active={actor?.uid === c.uid}
             targetable={targetableSide === 'player' && c.alive}
             onClick={() => handleTargetClick(c)}
@@ -253,6 +267,7 @@ export function BattleScreen() {
             heroAnim={c.kind === 'hero' ? heroAnim : undefined}
           />
         ))}
+        <SkillFxLayer fx={battle.lastFx} posOf={(uid) => posMap[uid]} />
       </div>
 
       {/* ── 로그 스트립 ── */}
@@ -383,8 +398,7 @@ function RingBtn({ label, hint, onClick }: { label: string; hint?: string; onCli
 function CombatantSprite({
   c,
   side,
-  index,
-  count,
+  pos,
   active,
   targetable,
   onClick,
@@ -394,8 +408,7 @@ function CombatantSprite({
 }: {
   c: Combatant
   side: 'player' | 'enemy'
-  index: number
-  count: number
+  pos: FxPos
   active: boolean
   targetable: boolean
   onClick: () => void
@@ -404,11 +417,7 @@ function CombatantSprite({
   heroAnim?: 'idle' | 'lunge' | 'hit'
 }) {
   // 필드 배치: 중앙에서 대치 — 아군은 좌중앙(근경, 크게), 적은 우중앙(원경, 약간 작게)
-  const spread = count > 1 ? index / (count - 1) - 0.5 : 0
-  const left = side === 'enemy' ? 68 + spread * 22 : 32 + spread * 24
-  const top = side === 'enemy'
-    ? 42 + Math.abs(spread) * 12 + (index % 2) * 7
-    : 58 + Math.abs(spread) * 8 + (index % 2) * 8
+  const { left, top } = pos
   const scale = side === 'enemy' ? 0.95 : 1.12
 
   const statuses = c.effects.filter((e) => e.kind === 'status')
