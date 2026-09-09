@@ -1,16 +1,43 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useGame } from '@/lib/game-state'
 import { Button } from '@/components/ui/button'
 import { currentActor } from '@/lib/battle-engine'
 import { SKILLS, itemById } from '@/lib/mock-data'
 import { HeroSprite } from '@/components/game/pixel-hero'
 import { CreatureSprite, spriteIdFromRefId } from '@/components/game/creature-sprite'
-import { SkillFxLayer, type FxPos } from '@/components/game/skill-fx'
+import { SkillFxLayer, fxTier, type FxPos } from '@/components/game/skill-fx'
 import { MAPS } from '@/lib/maps'
-import type { BattleAction, Combatant, Skill } from '@/lib/types'
+import type { BattleAction, Combatant, ElementOrNeutral, Skill } from '@/lib/types'
+import { FlaskConical, Shield, Sparkles, Swords } from 'lucide-react'
+
+/** 상태이상/버프 뱃지 아이콘 — 데스크톱 "속성, 아이템 각종 아이콘.png" 시트에서 크롭 */
+const STATUS_ICON: Record<string, string> = {
+  burn: '/images/icons/status/burn.png',
+  bleed: '/images/icons/status/bleed.png',
+  slow: '/images/icons/status/freeze.png',
+  paralysis: '/images/icons/status/stun.png',
+  weaken: '/images/icons/status/poison.png',
+  sleep: '/images/icons/status/sleep.png',
+  silence: '/images/icons/status/antimagic.png',
+  blind: '/images/icons/status/detect.png',
+}
+const BUFF_ICON: Record<string, string> = {
+  ironWall: '/images/icons/status/defense.png',
+  rally: '/images/icons/status/battle.png',
+  lastStand: '/images/icons/status/battle.png',
+  defendGuard: '/images/icons/status/defense.png',
+}
+
+/** 스킬 젬 버튼 배경색 — skill-fx.tsx 의 FX_COLORS 와 별개로, HUD 버튼 전용으로 가볍게 유지 */
+const GEM_ELEMENT_BG: Record<ElementOrNeutral, string> = {
+  fire: 'linear-gradient(160deg, #6b2b18, #3a140a)',
+  ice: 'linear-gradient(160deg, #1c4f66, #0e2a38)',
+  earth: 'linear-gradient(160deg, #5a4423, #2f2312)',
+  neutral: 'linear-gradient(160deg, #3a3560, #201c3c)',
+}
 
 /** 전장 배치 좌표(%) — CombatantSprite 렌더와 SkillFxLayer 위치 계산이 같은 값을 쓰도록 공유 */
 function combatantPos(side: 'player' | 'enemy', index: number, count: number): FxPos {
@@ -82,6 +109,7 @@ export function BattleScreen() {
   const [pending, setPending] = useState<Pending>(null)
   const [heroAnim, setHeroAnim] = useState<'idle' | 'lunge' | 'hit'>('idle')
   const [auto, setAuto] = useState(false)
+  const [shake, setShake] = useState(false)
   const autoRef = useRef(false)
 
   const actor = battle ? currentActor(battle) : null
@@ -101,6 +129,15 @@ export function BattleScreen() {
     setMenu('root')
     setPending(null)
   }, [battle?.activeUid])
+
+  // 궁극기(tier4) 연출 발동 시 전장을 짧게 흔든다
+  useEffect(() => {
+    const fx = battle?.lastFx
+    if (!fx || fxTier(fx) < 4) return
+    setShake(true)
+    const t = setTimeout(() => setShake(false), 520)
+    return () => clearTimeout(t)
+  }, [battle?.lastFx])
 
   // 자동 전투: 히어로 턴이면 기본 공격 자동 실행
   useEffect(() => {
@@ -212,7 +249,7 @@ export function BattleScreen() {
       </div>
 
       {/* ── 전장 ── */}
-      <div className={`relative z-10 flex-1 overflow-hidden ${isForestBattle ? 'battle-field-forest-bg' : ''}`}>
+      <div className={`relative z-10 flex-1 overflow-hidden ${isForestBattle ? 'battle-field-forest-bg' : ''} ${shake ? 'battle-shake' : ''}`}>
         {isForestBattle && (
           <>
             {/* 살랑이는 나무 그림자 */}
@@ -291,24 +328,23 @@ export function BattleScreen() {
       {/* ── 하단: 타임라인 + 액션 ── */}
       <div className="relative z-20 flex items-end gap-2 px-3 pb-3">
         {/* 타임라인 */}
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="text-[10px] font-display text-white/60">행동 순서 (TU)</span>
-          <div className="flex gap-1 overflow-x-auto scrollbar-thin pb-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <span className="text-[11px] font-display text-white/60">행동 순서</span>
+          <div className="flex gap-2 overflow-x-auto scrollbar-thin pb-1">
             {order.map(({ c, tu }, i) => (
-              <div
-                key={c.uid}
-                className={`flex shrink-0 flex-col items-center rounded-md border px-1 py-0.5 ${
-                  i === 0 ? 'border-gold bg-gold/20' : c.side === 'player' ? 'border-sky-400/50 bg-sky-950/50' : 'border-red-400/50 bg-red-950/50'
-                }`}
-              >
-                <div className="flex size-7 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-black/40">
+              <div key={c.uid} className="flex shrink-0 flex-col items-center gap-0.5">
+                <div
+                  className={`portrait-ring ${c.side === 'player' ? 'portrait-ring-player' : 'portrait-ring-enemy'} ${
+                    i === 0 ? 'portrait-ring-active' : ''
+                  } flex size-11 items-center justify-center`}
+                >
                   {c.kind === 'hero' ? (
-                    <HeroSprite element={state.player.element} gender={state.player.gender} dir="down" px={26} />
+                    <HeroSprite element={state.player.element} gender={state.player.gender} dir="down" px={34} />
                   ) : (
-                    <Image src={c.icon} alt={c.name} width={16} height={16} />
+                    <Image src={c.icon} alt={c.name} width={22} height={22} />
                   )}
                 </div>
-                <span className={`mt-0.5 text-[9px] font-bold ${i === 0 ? 'text-gold-soft' : 'text-white/70'}`}>
+                <span className={`rounded-full px-1.5 text-[9px] font-bold ${i === 0 ? 'bg-gold/25 text-gold-soft' : 'bg-black/40 text-white/70'}`}>
                   {tu < 0 ? 'NOW' : `TU ${tu}`}
                 </span>
               </div>
@@ -316,8 +352,8 @@ export function BattleScreen() {
           </div>
         </div>
 
-        {/* 액션 패널 (링 스타일) */}
-        <div className="w-[46%] max-w-[340px] shrink-0 rounded-xl border-2 border-gold/60 bg-[#141024]/92 p-2">
+        {/* 액션 패널 (에버테일풍 글래스 패널) */}
+        <div className="panel-glass w-[48%] max-w-[360px] shrink-0 p-2.5">
           {battle.isOver ? (
             <BattleResult />
           ) : !isHeroTurn ? (
@@ -330,14 +366,14 @@ export function BattleScreen() {
               <Button size="sm" variant="ghost" onClick={() => setPending(null)}>취소</Button>
             </div>
           ) : menu === 'root' ? (
-            <div className="grid grid-cols-2 gap-1.5">
-              <RingBtn label="공격" hint="기본 공격" onClick={() => setPending({ kind: 'attack' })} />
-              <RingBtn label="스킬" hint={`${availableSkills.length}개`} onClick={() => setMenu('skill')} />
-              <RingBtn label="물약·도구" hint={`${availableItems.length}개`} onClick={() => setMenu('item')} />
-              <RingBtn label="방어" hint="피해 감소" onClick={() => submit({ type: 'defend' })} />
+            <div className="grid grid-cols-2 gap-2">
+              <RingBtn icon={<Swords className="size-5" />} label="공격" hint="기본 공격" onClick={() => setPending({ kind: 'attack' })} />
+              <RingBtn icon={<Sparkles className="size-5" />} label="스킬" hint={`${availableSkills.length}개`} onClick={() => setMenu('skill')} />
+              <RingBtn icon={<FlaskConical className="size-5" />} label="물약·도구" hint={`${availableItems.length}개`} onClick={() => setMenu('item')} />
+              <RingBtn icon={<Shield className="size-5" />} label="방어" hint="피해 감소" onClick={() => submit({ type: 'defend' })} />
             </div>
           ) : menu === 'skill' ? (
-            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto scrollbar-thin">
+            <div className="flex max-h-28 flex-wrap content-start gap-1.5 overflow-y-auto scrollbar-thin">
               {availableSkills.length === 0 && <span className="text-xs opacity-60">사용 가능한 스킬이 없습니다.</span>}
               {availableSkills.map((s) => (
                 <button
@@ -351,15 +387,18 @@ export function BattleScreen() {
                       setPending({ kind: 'skill', skill: s })
                     }
                   }}
-                  className="rounded-md border border-gold/40 bg-black/40 px-2 py-1 text-[11px] text-white/90 disabled:opacity-40"
+                  style={{ ['--gem-bg' as string]: GEM_ELEMENT_BG[s.element] }}
+                  className="gem-btn flex w-[30%] min-w-16 flex-col items-center gap-0.5 px-1.5 py-1.5 text-white/90"
                 >
-                  {s.name} <span className="text-mp/90 text-[10px]">{s.mpCost}MP</span>
+                  <Image src={s.icon} alt={s.name} width={22} height={22} />
+                  <span className="text-center text-[10px] leading-tight">{s.name}</span>
+                  <span className="rounded-full bg-black/40 px-1.5 text-[9px] font-bold text-mp">{s.mpCost}MP</span>
                 </button>
               ))}
-              <button onClick={() => setMenu('root')} className="rounded-md px-2 py-1 text-[11px] text-white/60">뒤로</button>
+              <button onClick={() => setMenu('root')} className="self-center rounded-md px-2 py-1 text-[11px] text-white/60">뒤로</button>
             </div>
           ) : (
-            <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto scrollbar-thin">
+            <div className="flex max-h-28 flex-wrap content-start gap-1.5 overflow-y-auto scrollbar-thin">
               {availableItems.length === 0 && <span className="text-xs opacity-60">보유한 물약/도구가 없습니다.</span>}
               {availableItems.map(({ slot, item }) => (
                 <button
@@ -369,12 +408,15 @@ export function BattleScreen() {
                     if (item!.useEffect?.reviveOnly) setPending({ kind: 'item', itemId: slot.itemId, needsTarget: true })
                     else submit({ type: 'item', itemId: slot.itemId, targetUid: actor!.uid })
                   }}
-                  className="rounded-md border border-gold/40 bg-black/40 px-2 py-1 text-[11px] text-white/90"
+                  style={{ ['--gem-bg' as string]: 'linear-gradient(160deg, #3a3560, #201c3c)' }}
+                  className="gem-btn flex w-[30%] min-w-16 flex-col items-center gap-0.5 px-1.5 py-1.5 text-white/90"
                 >
-                  {item!.name} ×{slot.qty}
+                  <Image src={item!.icon} alt={item!.name} width={22} height={22} />
+                  <span className="text-center text-[10px] leading-tight">{item!.name}</span>
+                  <span className="rounded-full bg-black/40 px-1.5 text-[9px] font-bold text-gold-soft">×{slot.qty}</span>
                 </button>
               ))}
-              <button onClick={() => setMenu('root')} className="rounded-md px-2 py-1 text-[11px] text-white/60">뒤로</button>
+              <button onClick={() => setMenu('root')} className="self-center rounded-md px-2 py-1 text-[11px] text-white/60">뒤로</button>
             </div>
           )}
         </div>
@@ -383,12 +425,20 @@ export function BattleScreen() {
   )
 }
 
-function RingBtn({ label, hint, onClick }: { label: string; hint?: string; onClick: () => void }) {
+function RingBtn({
+  icon,
+  label,
+  hint,
+  onClick,
+}: {
+  icon?: ReactNode
+  label: string
+  hint?: string
+  onClick: () => void
+}) {
   return (
-    <button
-      onClick={onClick}
-      className="flex h-14 flex-col items-center justify-center rounded-lg border border-gold/60 bg-gradient-to-b from-[#2a2350] to-[#1a1636] text-gold-soft transition-all hover:brightness-125 active:translate-y-px"
-    >
+    <button onClick={onClick} className="gem-btn flex h-16 flex-col items-center justify-center gap-0.5 text-gold-soft">
+      {icon}
       <span className="font-display text-[13px] leading-none">{label}</span>
       {hint && <span className="mt-0.5 text-[9px] text-white/50">{hint}</span>}
     </button>
@@ -423,6 +473,8 @@ function CombatantSprite({
   const statuses = c.effects.filter((e) => e.kind === 'status')
   const buffs = c.effects.filter((e) => e.kind === 'buff')
   const hpPct = (c.hp / Math.max(1, c.stats.maxHp)) * 100
+  const statusIcon = (id: string) => STATUS_ICON[id]
+  const buffIcon = (id: string) => BUFF_ICON[id]
 
   return (
     <div
@@ -438,10 +490,16 @@ function CombatantSprite({
           {(statuses.length > 0 || buffs.length > 0) && (
             <div className="flex flex-wrap justify-center gap-0.5">
               {statuses.map((e) => (
-                <span key={e.key} className="rounded bg-violet-900/80 px-1 text-[7px] text-violet-100">{e.name}</span>
+                <span key={e.key} className="flex items-center gap-0.5 rounded-full bg-violet-950/85 py-0.5 pl-0.5 pr-1.5 text-[7px] text-violet-100 ring-1 ring-violet-400/50">
+                  {statusIcon(e.id) && <Image src={statusIcon(e.id)!} alt="" width={11} height={11} className="rounded-full" />}
+                  {e.name}
+                </span>
               ))}
               {buffs.map((e) => (
-                <span key={e.key} className="rounded bg-emerald-900/80 px-1 text-[7px] text-emerald-100">{e.name}</span>
+                <span key={e.key} className="flex items-center gap-0.5 rounded-full bg-emerald-950/85 py-0.5 pl-0.5 pr-1.5 text-[7px] text-emerald-100 ring-1 ring-emerald-400/50">
+                  {buffIcon(e.id) && <Image src={buffIcon(e.id)!} alt="" width={11} height={11} className="rounded-full" />}
+                  {e.name}
+                </span>
               ))}
             </div>
           )}
@@ -450,8 +508,8 @@ function CombatantSprite({
               {c.name}
             </span>
           </div>
-          <div className="h-1.5 w-14 overflow-hidden rounded-full border border-black/50 bg-black/50">
-            <div className="h-full bg-hp transition-all duration-300" style={{ width: `${hpPct}%` }} />
+          <div className="h-2 w-16 overflow-hidden rounded-full border border-gold/40 bg-black/55">
+            <div className="bar-hp-fill h-full transition-all duration-300" style={{ width: `${hpPct}%` }} />
           </div>
         </div>
 

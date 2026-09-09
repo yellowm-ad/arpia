@@ -6,11 +6,11 @@ import type { GameState } from '@/lib/types'
 import { MAPS } from '@/lib/maps'
 import { ELEMENT_META } from '@/lib/constants'
 import { NPCS, MONSTERS } from '@/lib/mock-data'
-import { wanderPosition, wanderFacing } from '@/lib/field'
+import { wanderPosition, wanderFacing, npcWanderPosition, npcWanderFacing } from '@/lib/field'
 import { ISO_TILE_W, ISO_TILE_H, isoToScreen, isoBounds, TILE_COLORS, TILE_SPRITES } from '@/lib/iso'
 import type { TileKind, PropDef } from '@/lib/iso'
 import { renderProp } from '@/components/game/iso-sprites'
-import { CreatureSprite } from '@/components/game/creature-sprite'
+import { CreatureSprite, NpcSprite } from '@/components/game/creature-sprite'
 
 const SCALE = 1.15 // 맵 4배 확장(52×40)에 맞춰 축소 (기존 1.4)
 const PAD_TOP = 240 // 키 큰 건물이 앵커 위로 솟는 여유
@@ -175,44 +175,43 @@ export function IsoWorld({
       })
     }
 
-    const npcs = NPCS.filter((n) => map.zones.some((z) => z.id === n.zoneId))
-    const ND = 74 // NPC 도트 스프라이트 표시 크기
-    for (const npc of npcs) {
-      const s = isoToScreen(npc.cell.x, npc.cell.y)
-      list.push({
-        sortY: npc.cell.x + npc.cell.y + 0.2,
-        node: (
-          <g
-            key={npc.id}
-            transform={`translate(${s.sx},${s.sy})`}
-            style={{ cursor: 'pointer' }}
-            onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}
-          >
-            <ellipse cx={0} cy={1} rx={13} ry={4.5} fill="rgba(0,0,0,0.32)" />
-            <image
-              href={npc.icon}
-              x={-ND / 2}
-              y={-ND + 7}
-              width={ND}
-              height={ND}
-              style={{ imageRendering: 'pixelated' }}
-            />
-            <g transform="translate(0,-58)">
-              <rect x={-npc.name.length * 5 - 5} y={-9} width={npc.name.length * 10 + 10} height={14} rx={3} fill={interactId === npc.id ? '#e0b050' : 'rgba(10,8,16,0.68)'} />
-              <text x={0} y={2} textAnchor="middle" fontSize={10} fontWeight={700} fill={interactId === npc.id ? '#000' : '#e8dcc0'}>
-                {npc.name}
-              </text>
-            </g>
-            <circle cx={0} cy={-52} r={2.2} fill={interactId === npc.id ? '#e8dcc0' : '#ffffffaa'} />
-          </g>
-        ),
-      })
-    }
-
     list.sort((a, b) => a.sortY - b.sortY)
     return list
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, interactId])
+  }, [map])
+
+  // NPC — 홈 셀(npc.cell) 주변을 배회(npcWanderPosition, 몬스터와 동일한 시간기반 리사주 곡선).
+  // wanderT 마다 위치 재계산되므로 static 메모 밖(몬스터와 동일 패턴)에 둔다.
+  const mapNpcsForRoam = useMemo(() => NPCS.filter((n) => map.zones.some((z) => z.id === n.zoneId)), [map])
+  const ND = 74 // NPC 도트 스프라이트 표시 크기
+  const npcEntities = mapNpcsForRoam.map((npc) => {
+    const pos = npcWanderPosition(npc, wanderT)
+    const dir = npcWanderFacing(npc, wanderT)
+    const s = isoToScreen(pos.x, pos.y)
+    return {
+      sortY: pos.x + pos.y + 0.2,
+      node: (
+        <g
+          key={npc.id}
+          transform={`translate(${s.sx},${s.sy})`}
+          style={{ cursor: 'pointer' }}
+          onClick={() => dispatch({ type: 'OPEN_NPC', npcId: npc.id })}
+        >
+          <ellipse cx={0} cy={1} rx={13} ry={4.5} fill="rgba(0,0,0,0.32)" />
+          <foreignObject x={-ND / 2} y={-ND + 7} width={ND} height={ND} style={{ overflow: 'visible' }}>
+            <NpcSprite npcId={`${npc.id}-walk`} fallbackSrc={npc.icon} dir={dir} walking px={ND} />
+          </foreignObject>
+          <g transform="translate(0,-58)">
+            <rect x={-npc.name.length * 5 - 5} y={-9} width={npc.name.length * 10 + 10} height={14} rx={3} fill={interactId === npc.id ? '#e0b050' : 'rgba(10,8,16,0.68)'} />
+            <text x={0} y={2} textAnchor="middle" fontSize={10} fontWeight={700} fill={interactId === npc.id ? '#000' : '#e8dcc0'}>
+              {npc.name}
+            </text>
+          </g>
+          <circle cx={0} cy={-52} r={2.2} fill={interactId === npc.id ? '#e8dcc0' : '#ffffffaa'} />
+        </g>
+      ),
+    }
+  })
 
   // 필드 몬스터 — 홈 셀 반경 6.5셀 안만 렌더(연산 절약), wanderT 마다 배회 위치 재계산
   const visibleMonsters = useMemo(
@@ -354,7 +353,7 @@ export function IsoWorld({
     </g>
   )
 
-  const allEntities = [...staticEntities, ...monsterEntities].sort((a, b) => a.sortY - b.sortY)
+  const allEntities = [...staticEntities, ...monsterEntities, ...npcEntities].sort((a, b) => a.sortY - b.sortY)
   const behind = allEntities.filter((e) => e.sortY <= playerSortY).map((e) => e.node)
   const front = allEntities.filter((e) => e.sortY > playerSortY).map((e) => e.node)
 

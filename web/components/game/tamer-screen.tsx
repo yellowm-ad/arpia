@@ -25,8 +25,8 @@ export function TamerScreen() {
     <Modal open onClose={close} title="조련사 리코의 훈련소" widthClass="max-w-2xl">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-12 items-center justify-center rounded-full border-2 border-gold/60 bg-black/30">
-            <Image src={def.icon} alt={pet.nickname} width={28} height={28} />
+          <div className="portrait-ring flex size-14 items-center justify-center">
+            <Image src={def.icon} alt={pet.nickname} width={32} height={32} />
           </div>
           <div>
             <div className="text-sm font-semibold">
@@ -42,7 +42,7 @@ export function TamerScreen() {
         </Badge>
       </div>
 
-      <Progress value={pet.affection} barClassName="bg-exp" className="mb-4 h-2" />
+      <Progress value={pet.affection} barClassName="bar-exp-fill" className="bar-thick mb-4" />
 
       <div className="mb-3">
         <h3 className="mb-1.5 font-display text-sm text-gold-soft">보유 스킬</h3>

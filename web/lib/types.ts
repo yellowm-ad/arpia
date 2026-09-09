@@ -427,6 +427,7 @@ export interface BattleFx {
   archetype: 'attack' | 'magicAttack' | 'heal' | 'buff' | 'debuff' | 'utility' | 'item'
   aoe: boolean
   power: number // 연출 스케일(파티클 양·크기) 근거
+  mpCost?: number // 연출 등급(tier) 산정 근거 — 클수록 더 화려하고 광범위한 연출
 }
 
 export interface BattleState {

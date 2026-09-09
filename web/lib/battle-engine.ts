@@ -401,6 +401,7 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
         archetype: isMagic ? 'magicAttack' : 'attack',
         aoe,
         power: skill.power,
+        mpCost: skill.mpCost,
       }
     } else if (skill.kind === 'debuff') {
       const targets =
@@ -415,6 +416,7 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
         archetype: 'debuff',
         aoe,
         power: skill.power || 1,
+        mpCost: skill.mpCost,
       }
     } else if (skill.kind === 'heal') {
       const targets =
@@ -442,6 +444,7 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
         archetype: 'heal',
         aoe,
         power: skill.power || 1,
+        mpCost: skill.mpCost,
       }
     } else if (skill.kind === 'buff') {
       const targets = skill.targeting === 'allAllies' ? allyList : [actor]
@@ -466,6 +469,7 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
         archetype: 'buff',
         aoe,
         power: 1,
+        mpCost: skill.mpCost,
       }
     } else if (skill.kind === 'utility') {
       const utilTarget = skill.targeting === 'self' ? actor : find(action.targetUid) ?? actor
@@ -486,6 +490,7 @@ export function resolveAction(battle: BattleState, actorUid: string, action: Bat
         archetype: 'utility',
         aoe: false,
         power: 1,
+        mpCost: skill.mpCost,
       }
     }
     return { battle: { ...battle, combatants, log: entries, lastFx: fx } }

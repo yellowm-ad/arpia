@@ -79,30 +79,41 @@ function PropShape({ prop, accent }: { prop: Prop; accent: string }) {
 }
 
 /**
- * NPC 초상화. `public/images/npc/<id>.png`(도트 전신 스프라이트)가 있으면 상반신을 크롭해 보여주고,
- * 없으면 아래 절차적 SVG(SPECS/FALLBACK)를 쓴다.
+ * NPC 초상화. 우선순위: ① `public/images/npc/portrait-<id>.png`(대화창용 채색 일러스트 흉상 크롭,
+ * "npc 본거지 일러.png" 시트에서 추출한 본거지 12종) → ② `public/images/npc/<id>.png`(도트 전신
+ * 스프라이트 상반신 크롭) → ③ 절차적 SVG(SPECS/FALLBACK).
  */
 export function Portrait({ id, className }: { id: string; className?: string }) {
+  const candidates = [`/images/npc/portrait-${id}.png`, `/images/npc/${id}.png`]
+  const [idx, setIdx] = useState(0)
   const [ready, setReady] = useState(false)
-  const src = `/images/npc/${id}.png`
-  useEffect(() => setReady(false), [id])
+  useEffect(() => {
+    setIdx(0)
+    setReady(false)
+  }, [id])
+  const src = candidates[idx]
+  const isIllustration = idx === 0
   return (
     <span className={className} style={{ display: 'inline-block', position: 'relative', overflow: 'hidden' }}>
       <NpcPortraitSvg id={id} className={`h-full w-full ${ready ? 'invisible' : ''}`} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        key={src}
         src={src}
         alt=""
         onLoad={(e) => setReady((e.target as HTMLImageElement).naturalWidth > 0)}
-        onError={() => setReady(false)}
+        onError={() => {
+          if (idx < candidates.length - 1) setIdx(idx + 1)
+          else setReady(false)
+        }}
         style={{
           position: 'absolute',
           inset: 0,
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          objectPosition: '50% 6%',
-          imageRendering: 'pixelated',
+          objectPosition: isIllustration ? '50% 15%' : '50% 6%',
+          imageRendering: isIllustration ? 'auto' : 'pixelated',
           display: ready ? 'block' : 'none',
         }}
       />

@@ -1,4 +1,4 @@
-import type { FieldMonster, GameMap, MonsterDef } from '@/lib/types'
+import type { FieldMonster, GameMap, MonsterDef, NpcDef } from '@/lib/types'
 import { MONSTERS, monsterById, monstersForZoneKind } from '@/lib/mock-data'
 import { mulberry32 } from '@/lib/rng'
 
@@ -93,6 +93,42 @@ export function wanderPosition(fm: FieldMonster, timeMs: number): { x: number; y
 export function wanderFacing(fm: FieldMonster, timeMs: number): 'down' | 'up' | 'left' | 'right' {
   const a = wanderPosition(fm, timeMs)
   const b = wanderPosition(fm, timeMs + 100)
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up'
+}
+
+// ── NPC 자유 이동(배회) ── npc.cell(홈 위치) 주변을 몬스터와 동일한 방식(결정론적 리사주 곡선)으로
+// 맴돈다. 상점/훈련 등 기능형 NPC는 카운터를 이탈하면 상호작용이 어려워지므로 반경을 아주 작게(제자리
+// 서성임) 두고, flavor(장식용 주민) NPC만 넓게 돌아다니게 한다.
+const NPC_FULL_ROAM_ROLES = new Set(['flavor'])
+
+function npcSeed(id: string): number {
+  let h = 20260909
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
+  return h >>> 0
+}
+
+/** NPC 배회 반경(그리드 셀) — 자기 발밑 넓이(~1셀)의 16배 면적 ≈ 선형 4배 → flavor는 반경 2셀. */
+export function npcWanderRadius(npc: NpcDef): number {
+  return NPC_FULL_ROAM_ROLES.has(npc.role) ? 2.0 : 0.4
+}
+
+export function npcWanderPosition(npc: NpcDef, timeMs: number): { x: number; y: number } {
+  const seed = npcSeed(npc.id)
+  const t = timeMs / 1000 + (seed % 1000)
+  const radius = npcWanderRadius(npc)
+  const speed = 0.14 + (seed % 53) / 1000 // NPC마다 살짝 다른 속도로 동기화된 움직임 방지
+  return {
+    x: npc.cell.x + Math.cos(t * speed) * radius,
+    y: npc.cell.y + Math.sin(t * speed * 1.35) * radius * 0.85,
+  }
+}
+
+/** npcWanderPosition의 순간 이동 방향(도트 스프라이트 걷기용) */
+export function npcWanderFacing(npc: NpcDef, timeMs: number): 'down' | 'up' | 'left' | 'right' {
+  const a = npcWanderPosition(npc, timeMs)
+  const b = npcWanderPosition(npc, timeMs + 100)
   const dx = b.x - a.x
   const dy = b.y - a.y
   return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up'

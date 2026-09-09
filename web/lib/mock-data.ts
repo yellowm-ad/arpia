@@ -1,10 +1,10 @@
 import type { ItemDef, MonsterDef, NpcDef, Skill, Stats } from '@/lib/types'
 import { computeStatsForLevel } from '@/lib/constants'
 
-const FIRE = '/images/elements/fire.svg'
-const ICE = '/images/elements/ice.svg'
-const EARTH = '/images/elements/earth.svg'
-const NEUT = '/images/elements/neutral.svg'
+const FIRE = '/images/elements/fire-crest.png'
+const ICE = '/images/elements/ice-crest.png'
+const EARTH = '/images/elements/earth-crest.png'
+const NEUT = '/images/elements/neutral-crest.png'
 
 // ============================================================================
 // 스킬 — 설계: Documents/울토르 시스템 DB.md §7

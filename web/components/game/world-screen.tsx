@@ -6,6 +6,7 @@ import { useGame } from '@/lib/game-state'
 import { ELEMENT_META } from '@/lib/constants'
 import { MAPS, zoneAt } from '@/lib/maps'
 import { MONSTERS, NPCS } from '@/lib/mock-data'
+import { npcWanderPosition } from '@/lib/field'
 import { Button } from '@/components/ui/button'
 import { HeroPortrait } from '@/components/game/portrait'
 import { HeroSprite as PixelHero } from '@/components/game/pixel-hero'
@@ -178,7 +179,9 @@ export function WorldScreen() {
     let best: (typeof NPCS)[number] | null = null
     let bestDist = 1.2
     for (const npc of mapNpcs) {
-      const d = Math.hypot(npc.cell.x - state.position.x, npc.cell.y - state.position.y)
+      // 배회 중인 NPC는 홈 셀이 아니라 현재(시간 기반) 배회 위치 기준으로 근접 판정
+      const pos = npcWanderPosition(npc, Date.now())
+      const d = Math.hypot(pos.x - state.position.x, pos.y - state.position.y)
       if (d < bestDist) {
         bestDist = d
         best = npc

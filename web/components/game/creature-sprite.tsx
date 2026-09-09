@@ -25,8 +25,8 @@ const WALK_ROW: Record<Facing, number> = { down: 1, right: 2, left: 2, up: 3 }
 const WALK_FRAMES = 8
 const WALK_MS = 130
 
-export function creatureSheetSrc(spriteId: string) {
-  return `/images/creatures/${spriteId}.png`
+export function creatureSheetSrc(spriteId: string, basePath = '/images/creatures') {
+  return `${basePath}/${spriteId}.png`
 }
 
 /** Combatant.refId → 스프라이트 id */
@@ -42,6 +42,8 @@ export function CreatureSprite({
   px = 64,
   flip = false,
   className,
+  basePath = '/images/creatures',
+  label = '크리처 스프라이트',
 }: {
   spriteId: string
   fallbackSrc?: string
@@ -51,6 +53,9 @@ export function CreatureSprite({
   /** 추가 좌우 반전(적군이 왼쪽을 보게 할 때 등). 걷기 left 반전과 XOR 합성. */
   flip?: boolean
   className?: string
+  /** 시트 폴더 — 크리처는 /images/creatures, NPC는 /images/npc(NpcSprite 참고) */
+  basePath?: string
+  label?: string
 }) {
   const [sheetOk, setSheetOk] = useState(false)
   const [frame, setFrame] = useState(0)
@@ -61,12 +66,12 @@ export function CreatureSprite({
     const img = new Image()
     img.onload = () => setSheetOk(img.naturalWidth > 0)
     img.onerror = () => setSheetOk(false)
-    img.src = creatureSheetSrc(spriteId)
+    img.src = creatureSheetSrc(spriteId, basePath)
     return () => {
       img.onload = null
       img.onerror = null
     }
-  }, [spriteId])
+  }, [spriteId, basePath])
 
   useEffect(() => {
     if (!walking) {
@@ -95,13 +100,13 @@ export function CreatureSprite({
           width: px,
           height: px,
           transform: flipX ? 'scaleX(-1)' : undefined,
-          backgroundImage: `url(${creatureSheetSrc(spriteId)})`,
+          backgroundImage: `url(${creatureSheetSrc(spriteId, basePath)})`,
           backgroundSize: `${px * SHEET_COLS}px ${px * SHEET_ROWS}px`,
           backgroundPosition: `-${col * px}px -${row * px}px`,
           imageRendering: 'pixelated',
         }}
         role="img"
-        aria-label="크리처 스프라이트"
+        aria-label={label}
       />
     )
   }
@@ -116,4 +121,9 @@ export function CreatureSprite({
   }
 
   return <div className={className} style={{ width: px, height: px }} />
+}
+
+/** NPC 도트 스프라이트 — CreatureSprite와 동일 시트 규격(8열×4행), public/images/npc/<npcId>.png */
+export function NpcSprite({ npcId, ...rest }: { npcId: string } & Omit<Parameters<typeof CreatureSprite>[0], 'spriteId' | 'basePath' | 'label'>) {
+  return <CreatureSprite spriteId={npcId} basePath="/images/npc" label="NPC 스프라이트" {...rest} />
 }

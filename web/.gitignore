@@ -29,3 +29,10 @@ next-env.d.ts
 
 # pixellab export 캐시 (재생성 가능)
 /scripts/_pixellab/sheets/
+/scripts/_pixellab/npc-sheets/
+/scripts/_pixellab/npc-b64/
+/scripts/_pixellab/npc-charids.txt
+
+# 아이콘/일러 크롭 원본·중간 산출물 (재생성 가능)
+/public/images/npc/_ref/
+/public/images/icons/ui/

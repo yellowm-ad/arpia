@@ -8,14 +8,14 @@ import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import type { ItemType } from '@/lib/types'
 
-const TABS: { id: ItemType | 'all'; label: string }[] = [
+const TABS: { id: ItemType | 'all'; label: string; icon?: string }[] = [
   { id: 'all', label: '전체' },
-  { id: 'weapon', label: '무기' },
-  { id: 'armor', label: '방어구' },
-  { id: 'accessory', label: '장신구' },
-  { id: 'potion', label: '물약' },
-  { id: 'tool', label: '도구' },
-  { id: 'feed', label: '먹이' },
+  { id: 'weapon', label: '무기', icon: '/images/icons/items/weapon.png' },
+  { id: 'armor', label: '방어구', icon: '/images/icons/items/armor.png' },
+  { id: 'accessory', label: '장신구', icon: '/images/icons/items/accessory.png' },
+  { id: 'potion', label: '물약', icon: '/images/icons/items/potion.png' },
+  { id: 'tool', label: '도구', icon: '/images/icons/items/tool.png' },
+  { id: 'feed', label: '먹이', icon: '/images/icons/items/feed.png' },
 ]
 
 export function InventoryScreen() {
@@ -41,14 +41,15 @@ export function InventoryScreen() {
     <Modal open onClose={close} title="가방" widthClass="max-w-3xl">
       <div className="mb-3 flex flex-wrap gap-1.5">
         {TABS.map((t) => (
-          <Button key={t.id} size="sm" variant={tab === t.id ? 'default' : 'outline'} onClick={() => setTab(t.id)}>
+          <Button key={t.id} variant={tab === t.id ? 'default' : 'outline'} onClick={() => setTab(t.id)} className="gap-1.5">
+            {t.icon && <Image src={t.icon} alt="" width={20} height={20} className="rounded-full" />}
             {t.label}
           </Button>
         ))}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="grid grid-cols-6 gap-1.5 sm:w-2/3">
+        <div className="grid grid-cols-5 gap-2 sm:w-2/3">
           {cells.map((slot, i) => {
             const item = slot ? itemById(slot.itemId) : null
             return (
@@ -56,15 +57,20 @@ export function InventoryScreen() {
                 key={i}
                 disabled={!item}
                 onClick={() => item && setSelected(item.id)}
-                className={`relative flex aspect-square items-center justify-center rounded-md border ${
-                  selected === item?.id ? 'border-gold bg-primary-soft' : 'border-border bg-black/25'
-                } ${item ? 'hover:border-gold/70' : 'opacity-40'}`}
+                style={{
+                  ['--gem-bg' as string]: item ? undefined : 'rgba(0,0,0,0.25)',
+                  borderColor: !item ? 'var(--border)' : selected === item.id ? 'var(--gold-soft)' : undefined,
+                  boxShadow: !item ? 'none' : undefined,
+                }}
+                className={`gem-btn relative flex aspect-square items-center justify-center p-1 ${!item ? 'opacity-35 grayscale' : ''}`}
               >
                 {item && (
                   <>
-                    <Image src={item.icon} alt={item.name} width={26} height={26} />
+                    <Image src={item.icon} alt={item.name} width={40} height={40} />
                     {slot && slot.qty > 1 && (
-                      <span className="absolute bottom-0.5 right-1 text-[10px] font-bold text-gold-soft">{slot.qty}</span>
+                      <span className="absolute bottom-1 right-1 rounded-full bg-black/60 px-1.5 text-[11px] font-bold text-gold-soft">
+                        {slot.qty}
+                      </span>
                     )}
                   </>
                 )}

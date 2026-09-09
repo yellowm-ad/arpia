@@ -147,6 +147,70 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   }
 
+  /* ── 에버테일풍 UI 강화(2026-09-09): 원형 초상 뱃지, 젬 버튼, 두꺼운 바 ── */
+  .panel-glass {
+    position: relative;
+    background: linear-gradient(180deg, rgba(24, 46, 54, 0.94) 0%, rgba(9, 19, 27, 0.96) 100%);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-xl);
+    box-shadow: inset 0 0 0 1px rgba(217, 164, 65, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 10px 28px rgba(0, 0, 0, 0.5);
+  }
+
+  .portrait-ring {
+    position: relative;
+    border-radius: 999px;
+    border: 3px solid var(--ring-col, var(--gold));
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 10px 2px var(--ring-glow, rgba(217, 164, 65, 0.55));
+    background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.22), transparent 55%), #10122a;
+    overflow: hidden;
+  }
+  .portrait-ring-active {
+    border-color: var(--gold-soft);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6), 0 0 16px 4px rgba(240, 217, 153, 0.9);
+  }
+  .portrait-ring-player {
+    --ring-col: #6fb6ff;
+    --ring-glow: rgba(111, 182, 255, 0.55);
+  }
+  .portrait-ring-enemy {
+    --ring-col: #ff6f6f;
+    --ring-glow: rgba(255, 111, 111, 0.5);
+  }
+
+  .gem-btn {
+    position: relative;
+    border-radius: 1.1rem;
+    border: 2px solid var(--gold);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.3) 60%), var(--gem-bg, #262b58);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -4px 8px rgba(0, 0, 0, 0.35),
+      0 4px 10px rgba(0, 0, 0, 0.4);
+    transition: transform 0.12s ease, filter 0.12s ease;
+  }
+  .gem-btn:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+  .gem-btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+  }
+  .gem-btn:disabled {
+    filter: grayscale(0.55) brightness(0.55);
+  }
+
+  .bar-thick {
+    height: 0.85rem;
+    border-radius: 999px;
+  }
+  .bar-hp-fill {
+    background: linear-gradient(180deg, #ff9a86 0%, var(--hp) 55%, #7a1a15 100%);
+  }
+  .bar-mp-fill {
+    background: linear-gradient(180deg, #8fc2ff 0%, var(--mp) 55%, #12326b 100%);
+  }
+  .bar-exp-fill {
+    background: linear-gradient(180deg, #a6f0a6 0%, var(--exp) 55%, #1f5c1f 100%);
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -538,5 +602,96 @@
     0% { opacity: 0; }
     25% { opacity: 1; }
     100% { opacity: 0; }
+  }
+
+  /* ── tier2+ 확장 연출: 룬 서클·충격파·파티클·궁극기 노바(2026-09-09) ── */
+  .fx-particle {
+    width: 5px; height: 5px;
+    opacity: 0;
+    animation: fx-particle 0.65s ease-out forwards;
+  }
+  @keyframes fx-particle {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    18% { opacity: 1; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--fx-dx)), calc(-50% + var(--fx-dy))) scale(0.8); }
+  }
+
+  .fx-rune {
+    opacity: 0;
+    animation: fx-rune-fade 1s ease-out forwards;
+  }
+  @keyframes fx-rune-fade {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    25% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.08); }
+  }
+  .fx-rune-spin { animation: fx-rune-spin 1.6s linear infinite; }
+  .fx-rune-spin-rev { animation: fx-rune-spin-rev 2s linear infinite; }
+  @keyframes fx-rune-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes fx-rune-spin-rev { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+
+  .fx-shockwave {
+    border: 3px solid;
+    opacity: 0;
+    animation: fx-shockwave 0.65s ease-out forwards;
+  }
+  @keyframes fx-shockwave {
+    0% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.15); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  .fx-nova-core {
+    opacity: 0;
+    animation: fx-nova-core 0.8s ease-out forwards;
+  }
+  @keyframes fx-nova-core {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); }
+    30% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(30deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(75deg); }
+  }
+
+  .fx-light-pillar {
+    width: 26px;
+    opacity: 0;
+    animation: fx-light-pillar 1s ease-out forwards;
+  }
+  @keyframes fx-light-pillar {
+    0% { opacity: 0; transform: translateX(-50%) scaleY(0.4); }
+    25% { opacity: 0.95; transform: translateX(-50%) scaleY(1); }
+    70% { opacity: 0.75; }
+    100% { opacity: 0; }
+  }
+
+  .fx-screen-flash-strong {
+    opacity: 0;
+    animation: fx-screen-flash-strong 0.9s ease-out forwards;
+  }
+  @keyframes fx-screen-flash-strong {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .fx-vignette-pulse {
+    opacity: 0;
+    animation: fx-vignette-pulse 0.9s ease-out forwards;
+  }
+  @keyframes fx-vignette-pulse {
+    0% { opacity: 0; }
+    35% { opacity: 0.85; }
+    100% { opacity: 0; }
+  }
+
+  .battle-shake {
+    animation: fx-screen-shake 0.5s ease-in-out;
+  }
+  @keyframes fx-screen-shake {
+    0%, 100% { transform: translate(0, 0); }
+    15% { transform: translate(-6px, 3px); }
+    30% { transform: translate(6px, -4px); }
+    45% { transform: translate(-5px, 4px); }
+    60% { transform: translate(5px, -3px); }
+    75% { transform: translate(-3px, 2px); }
+    90% { transform: translate(3px, -1px); }
   }
 }

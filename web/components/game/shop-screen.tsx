@@ -36,9 +36,9 @@ export function ShopScreen() {
           if (!item) return null
           const owned = state.inventory.find((s) => s.itemId === id)?.qty ?? 0
           return (
-            <div key={id} className="panel-parchment flex items-center gap-2.5 p-2.5">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-md border border-black/20 bg-white/40">
-                <Image src={item.icon} alt={item.name} width={26} height={26} />
+            <div key={id} className="panel-parchment flex items-center gap-3 p-3">
+              <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-[3px] border-gold bg-white/45 shadow-[0_0_0_2px_rgba(0,0,0,0.15)]">
+                <Image src={item.icon} alt={item.name} width={34} height={34} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-semibold">{item.name}</div>
@@ -46,7 +46,6 @@ export function ShopScreen() {
                 {owned > 0 && <div className="text-[10px] opacity-60">보유: {owned}개</div>}
               </div>
               <Button
-                size="sm"
                 variant="default"
                 disabled={state.player.gold < item.price}
                 onClick={() => dispatch({ type: 'BUY_ITEM', itemId: id })}
