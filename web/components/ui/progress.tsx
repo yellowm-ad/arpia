@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 interface ProgressProps {
   value: number // 0 - 100
   className?: string
   barClassName?: string
-  label?: string
+  label?: ReactNode
 }
 
 function Progress({ value, className, barClassName, label }: ProgressProps) {

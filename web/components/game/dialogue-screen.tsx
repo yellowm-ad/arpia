@@ -5,6 +5,7 @@ import { useGame } from '@/lib/game-state'
 import { npcById } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import { Portrait } from '@/components/game/portrait'
+import { DiamondMark } from '@/components/game/ui-motifs'
 import { JOB_TIERS, jobTierForLevel } from '@/lib/constants'
 
 const ROLE_LABEL: Record<string, string> = {
@@ -45,28 +46,30 @@ export function DialogueScreen() {
 
   return (
     <div className="pointer-events-auto absolute inset-0 z-40 flex items-end justify-center bg-black/50 p-3 sm:p-6">
-      {/* RPG 대화창 */}
-      <div className="dialogue-box relative w-full max-w-3xl">
+      {/* RPG 대화창 — 참고자료처럼 아이보리 양피지 본문 + 남색·금 이름표 */}
+      <div className="relative w-full max-w-3xl">
         <div className="flex items-stretch gap-0">
           {/* 초상화 */}
-          <div className="relative w-28 shrink-0 overflow-hidden rounded-l-xl border-y-2 border-l-2 border-gold/70 sm:w-40">
+          <div className="relative w-28 shrink-0 overflow-hidden rounded-l-xl border-y-[3px] border-l-[3px] border-gold sm:w-40">
             <Portrait id={npc.id} className="h-full w-full" />
           </div>
 
           {/* 본문 */}
-          <div className="flex-1 rounded-r-xl border-2 border-gold/70 bg-[#1c1731] p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="rounded bg-gold/20 px-2 py-0.5 font-display text-sm text-gold-soft text-shadow-ink">
-                {npc.name}
-              </span>
-              <span className="text-[11px] text-muted-foreground">{ROLE_LABEL[npc.role]}</span>
+          <div
+            className="panel-parchment relative flex-1 p-4 pt-5"
+            style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+          >
+            <div className="absolute -top-3 left-4 flex items-center gap-1.5 rounded-full border-2 border-gold bg-gradient-to-b from-[#2a3068] to-[#191c40] px-3 py-1 font-display text-sm text-gold-soft text-shadow-ink shadow-md">
+              <DiamondMark size={10} />
+              {npc.name}
+              <span className="text-[10px] font-normal text-white/60">{ROLE_LABEL[npc.role]}</span>
             </div>
 
-            <p className="min-h-16 text-sm leading-relaxed text-foreground/90">{npc.greeting[lineIdx]}</p>
+            <p className="min-h-16 pt-1 text-sm leading-relaxed text-[var(--parchment-foreground)]">{npc.greeting[lineIdx]}</p>
 
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
               {!lastLine && (
-                <Button variant="outline" size="sm" onClick={() => setLineIdx((i) => Math.min(npc.greeting.length - 1, i + 1))}>
+                <Button variant="parchment" size="sm" onClick={() => setLineIdx((i) => Math.min(npc.greeting.length - 1, i + 1))}>
                   ▼ 다음
                 </Button>
               )}
@@ -102,13 +105,13 @@ export function DialogueScreen() {
                     {eligible.name}(으)로 전직
                   </Button>
                 ) : (
-                  <span className="self-center text-[11px] text-muted-foreground">
+                  <span className="self-center text-[11px] text-[#6b5a38]">
                     현재 {currentTier.name} · 다음 전직 Lv.
                     {JOB_TIERS.find((t) => t.order === currentTier.order + 1)?.minLevel ?? '-'}
                   </span>
                 ))}
 
-              <Button variant="ghost" size="sm" onClick={close}>
+              <Button variant="ghost" size="sm" onClick={close} className="text-[var(--parchment-foreground)] hover:bg-black/10">
                 닫기
               </Button>
             </div>

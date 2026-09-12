@@ -9,6 +9,7 @@ import { SKILLS, itemById } from '@/lib/mock-data'
 import { HeroSprite } from '@/components/game/pixel-hero'
 import { CreatureSprite, spriteIdFromRefId } from '@/components/game/creature-sprite'
 import { SkillFxLayer, fxTier, type FxPos } from '@/components/game/skill-fx'
+import { DiamondMark } from '@/components/game/ui-motifs'
 import { MAPS } from '@/lib/maps'
 import type { BattleAction, Combatant, ElementOrNeutral, Skill } from '@/lib/types'
 import { FlaskConical, Shield, Sparkles, Swords } from 'lucide-react'
@@ -213,6 +214,8 @@ export function BattleScreen() {
           ? 'player'
           : null
 
+  const primaryEnemy = enemies.find((c) => c.alive) ?? enemies[0]
+
   // 타임라인: 살아있는 전투원을 TU 오름차순으로
   const order = battle.combatants
     .filter((c) => c.alive)
@@ -225,27 +228,49 @@ export function BattleScreen() {
       className={`battle-field relative flex h-full w-full flex-col overflow-hidden ${isForestBattle ? 'battle-field-forest-edge' : customBattleBg ? 'battle-field-custom-bg' : ''}`}
       style={customBattleBg ? { backgroundImage: `url(${customBattleBg})` } : undefined}
     >
-      {/* ── 상단 바 ── */}
-      <div className="relative z-20 flex items-center justify-center gap-2 px-3 pt-2">
-        <button
-          onClick={() => setAuto((a) => !a)}
-          className={`rounded-full border px-3 py-1 text-xs font-display ${auto ? 'border-gold bg-gold/25 text-gold-soft' : 'border-white/30 bg-black/40 text-white/80'}`}
-        >
-          자동 {auto ? 'ON' : 'OFF'}
-        </button>
-        <button
-          onClick={() => dispatch({ type: 'UPDATE_SETTINGS', settings: { battleAnimSpeed: speed === 2 ? 1 : 2 } })}
-          className={`rounded-full border px-3 py-1 text-xs font-display ${speed === 2 ? 'border-gold bg-gold/25 text-gold-soft' : 'border-white/30 bg-black/40 text-white/80'}`}
-        >
-          x{speed}
-        </button>
-        <button
-          onClick={() => actor && isHeroTurn && submit({ type: 'flee' })}
-          disabled={!isHeroTurn}
-          className="rounded-full border border-white/30 bg-black/40 px-3 py-1 text-xs font-display text-white/80 disabled:opacity-40"
-        >
-          도망
-        </button>
+      {/* ── 상단 바: 좌측 보스 배너 + 가운데 컨트롤(자동/속도/도망) ── */}
+      <div className="relative z-20 flex items-start px-3 pt-2">
+        {primaryEnemy && (
+          <div className={`boss-banner ${!primaryEnemy.alive ? 'opacity-40 grayscale' : ''}`}>
+            <div className="portrait-ring portrait-ring-enemy flex size-9 shrink-0 items-center justify-center">
+              <Image src={primaryEnemy.icon} alt={primaryEnemy.name} width={20} height={20} />
+            </div>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="flex items-center gap-1 whitespace-nowrap text-[11px] font-display text-white/90 text-shadow-ink">
+                <DiamondMark size={9} />
+                Lv.{primaryEnemy.level} {primaryEnemy.name}
+              </span>
+              <div className="boss-banner-hp">
+                <div
+                  className="bar-hp-fill h-full transition-all duration-300"
+                  style={{ width: `${(primaryEnemy.hp / Math.max(1, primaryEnemy.stats.maxHp)) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="absolute left-1/2 top-2 flex -translate-x-1/2 items-center gap-2">
+          <button
+            onClick={() => setAuto((a) => !a)}
+            className={`rounded-full border px-3 py-1 text-xs font-display ${auto ? 'border-gold bg-gold/25 text-gold-soft' : 'border-white/30 bg-black/40 text-white/80'}`}
+          >
+            자동 {auto ? 'ON' : 'OFF'}
+          </button>
+          <button
+            onClick={() => dispatch({ type: 'UPDATE_SETTINGS', settings: { battleAnimSpeed: speed === 2 ? 1 : 2 } })}
+            className={`rounded-full border px-3 py-1 text-xs font-display ${speed === 2 ? 'border-gold bg-gold/25 text-gold-soft' : 'border-white/30 bg-black/40 text-white/80'}`}
+          >
+            x{speed}
+          </button>
+          <button
+            onClick={() => actor && isHeroTurn && submit({ type: 'flee' })}
+            disabled={!isHeroTurn}
+            className="rounded-full border border-white/30 bg-black/40 px-3 py-1 text-xs font-display text-white/80 disabled:opacity-40"
+          >
+            도망
+          </button>
+        </div>
       </div>
 
       {/* ── 전장 ── */}
@@ -308,7 +333,7 @@ export function BattleScreen() {
       </div>
 
       {/* ── 로그 스트립 ── */}
-      <div className="relative z-20 mx-3 mb-1 max-h-12 overflow-y-auto rounded bg-black/45 px-2 py-1 text-[11px] leading-tight scrollbar-thin">
+      <div className="relative z-20 mx-3 mb-1 max-h-12 overflow-y-auto rounded-lg border border-gold/30 bg-black/50 px-2.5 py-1.5 text-[11px] leading-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] scrollbar-thin">
         {battle.log.slice(-3).map((l) => (
           <div
             key={l.id}
@@ -329,7 +354,10 @@ export function BattleScreen() {
       <div className="relative z-20 flex items-end gap-2 px-3 pb-3">
         {/* 타임라인 */}
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span className="text-[11px] font-display text-white/60">행동 순서</span>
+          <span className="flex items-center gap-1 text-xs font-display text-white/60">
+            <DiamondMark size={9} />
+            행동 순서
+          </span>
           <div className="flex gap-2 overflow-x-auto scrollbar-thin pb-1">
             {order.map(({ c, tu }, i) => (
               <div key={c.uid} className="flex shrink-0 flex-col items-center gap-0.5">
@@ -344,7 +372,7 @@ export function BattleScreen() {
                     <Image src={c.icon} alt={c.name} width={22} height={22} />
                   )}
                 </div>
-                <span className={`rounded-full px-1.5 text-[9px] font-bold ${i === 0 ? 'bg-gold/25 text-gold-soft' : 'bg-black/40 text-white/70'}`}>
+                <span className={`rounded-full px-1.5 text-[10px] font-bold ${i === 0 ? 'bg-gold/25 text-gold-soft' : 'bg-black/40 text-white/70'}`}>
                   {tu < 0 ? 'NOW' : `TU ${tu}`}
                 </span>
               </div>
@@ -352,8 +380,8 @@ export function BattleScreen() {
           </div>
         </div>
 
-        {/* 액션 패널 (에버테일풍 글래스 패널) */}
-        <div className="panel-glass w-[48%] max-w-[360px] shrink-0 p-2.5">
+        {/* 액션 패널 */}
+        <div className="panel-royal w-[48%] max-w-[360px] shrink-0 p-2.5">
           {battle.isOver ? (
             <BattleResult />
           ) : !isHeroTurn ? (
@@ -422,26 +450,6 @@ export function BattleScreen() {
         </div>
       </div>
     </div>
-  )
-}
-
-function RingBtn({
-  icon,
-  label,
-  hint,
-  onClick,
-}: {
-  icon?: ReactNode
-  label: string
-  hint?: string
-  onClick: () => void
-}) {
-  return (
-    <button onClick={onClick} className="gem-btn flex h-16 flex-col items-center justify-center gap-0.5 text-gold-soft">
-      {icon}
-      <span className="font-display text-[13px] leading-none">{label}</span>
-      {hint && <span className="mt-0.5 text-[9px] text-white/50">{hint}</span>}
-    </button>
   )
 }
 
@@ -550,6 +558,26 @@ function CombatantSprite({
         {targetable && <span className="absolute -top-2 text-xs text-red-400">▼</span>}
       </button>
     </div>
+  )
+}
+
+function RingBtn({
+  icon,
+  label,
+  hint,
+  onClick,
+}: {
+  icon?: ReactNode
+  label: string
+  hint?: string
+  onClick: () => void
+}) {
+  return (
+    <button onClick={onClick} className="gem-btn flex h-16 flex-col items-center justify-center gap-0.5 text-gold-soft">
+      {icon}
+      <span className="font-display text-sm leading-none">{label}</span>
+      {hint && <span className="mt-0.5 text-[10px] text-white/60">{hint}</span>}
+    </button>
   )
 }
 

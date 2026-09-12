@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Portrait } from '@/components/game/portrait'
+import { rarityGlowStyle } from '@/components/game/ui-motifs'
 import { Coins } from 'lucide-react'
 
 export function ShopScreen() {
@@ -25,7 +26,7 @@ export function ShopScreen() {
         <div className="panel-parchment flex-1 p-2.5 text-xs leading-relaxed">
           {npc.greeting[0]}
         </div>
-        <Badge className="shrink-0 text-sm">
+        <Badge className="shrink-0 gap-1.5 border-gold bg-primary-soft text-sm text-gold-soft">
           <Coins className="size-3.5" /> {state.player.gold.toLocaleString()} G
         </Badge>
       </div>
@@ -37,7 +38,10 @@ export function ShopScreen() {
           const owned = state.inventory.find((s) => s.itemId === id)?.qty ?? 0
           return (
             <div key={id} className="panel-parchment flex items-center gap-3 p-3">
-              <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-[3px] border-gold bg-white/45 shadow-[0_0_0_2px_rgba(0,0,0,0.15)]">
+              <div
+                style={rarityGlowStyle(item.type)}
+                className="rarity-glow flex size-14 shrink-0 items-center justify-center rounded-full border-[3px] border-gold bg-white/45 shadow-[0_0_0_2px_rgba(0,0,0,0.15)]"
+              >
                 <Image src={item.icon} alt={item.name} width={34} height={34} />
               </div>
               <div className="min-w-0 flex-1">

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { ELEMENT_META, JOB_TIERS, jobTierForLevel } from '@/lib/constants'
 import { petDefById, petStatsForLevel } from '@/lib/pets'
 import { expProgressPercent, expRequiredForLevel, MAX_LEVEL } from '@/lib/exp-table'
+import { DiamondMark } from '@/components/game/ui-motifs'
 import { Backpack, Settings, Sparkles, User, Users } from 'lucide-react'
 
 export function Hud() {
@@ -24,7 +25,7 @@ export function Hud() {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 p-2 sm:p-3">
       {/* 좌측: 캐릭터 정보 패널 */}
-      <div className="panel-glass pointer-events-auto flex w-72 flex-col gap-2 p-3 sm:w-80">
+      <div className="panel-royal pointer-events-auto flex w-72 flex-col gap-2 p-3 sm:w-80">
         <div className="flex items-center gap-2.5">
           <div
             className="portrait-ring flex size-14 shrink-0 items-center justify-center"
@@ -34,6 +35,7 @@ export function Hud() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
+              <DiamondMark size={11} className="text-gold" />
               <span className="truncate font-display text-base text-gold-soft text-shadow-ink">{player.name}</span>
               <Badge>Lv.{player.level}</Badge>
             </div>
@@ -50,13 +52,23 @@ export function Hud() {
           value={(player.hp / player.stats.maxHp) * 100}
           barClassName="bar-hp-fill"
           className="bar-thick"
-          label={`HP ${player.hp}/${player.stats.maxHp}`}
+          label={
+            <span className="flex items-center gap-1">
+              <DiamondMark size={9} />
+              HP {player.hp}/{player.stats.maxHp}
+            </span>
+          }
         />
         <Progress
           value={(player.mp / player.stats.maxMp) * 100}
           barClassName="bar-mp-fill"
           className="bar-thick"
-          label={`MP ${player.mp}/${player.stats.maxMp}`}
+          label={
+            <span className="flex items-center gap-1">
+              <DiamondMark size={9} />
+              MP {player.mp}/{player.stats.maxMp}
+            </span>
+          }
         />
         <Progress
           value={expProgressPercent(player.level, player.exp)}
@@ -70,7 +82,7 @@ export function Hud() {
       </div>
 
       {/* 펫 미니 패널 */}
-      <div className="panel-glass pointer-events-auto hidden w-60 flex-col gap-2 p-3 sm:flex">
+      <div className="panel-royal pointer-events-auto hidden w-60 flex-col gap-2 p-3 sm:flex">
         <div className="flex items-center gap-2.5">
           <div className="portrait-ring flex size-11 shrink-0 items-center justify-center">
             <Image src={petDef.icon} alt={pet.nickname} width={24} height={24} />

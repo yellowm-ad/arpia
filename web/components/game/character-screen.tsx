@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { HeroPortrait } from '@/components/game/portrait'
+import { DiamondMark, rarityGlowStyle } from '@/components/game/ui-motifs'
 import { ELEMENT_META, JOB_TIERS } from '@/lib/constants'
 import { itemById, SKILLS } from '@/lib/mock-data'
 import { getEffectiveStats } from '@/lib/derived'
@@ -54,8 +55,26 @@ export function CharacterScreen() {
             </div>
           </div>
           <div className="w-full space-y-1">
-            <Progress value={(player.hp / effStats.maxHp) * 100} barClassName="bg-hp" label={`HP ${player.hp}/${effStats.maxHp}`} />
-            <Progress value={(player.mp / effStats.maxMp) * 100} barClassName="bg-mp" label={`MP ${player.mp}/${effStats.maxMp}`} />
+            <Progress
+              value={(player.hp / effStats.maxHp) * 100}
+              barClassName="bg-hp"
+              label={
+                <span className="flex items-center gap-1">
+                  <DiamondMark size={9} />
+                  HP {player.hp}/{effStats.maxHp}
+                </span>
+              }
+            />
+            <Progress
+              value={(player.mp / effStats.maxMp) * 100}
+              barClassName="bg-mp"
+              label={
+                <span className="flex items-center gap-1">
+                  <DiamondMark size={9} />
+                  MP {player.mp}/{effStats.maxMp}
+                </span>
+              }
+            />
             <Progress value={expProgressPercent(player.level, player.exp)} barClassName="bg-exp" className="h-2" />
             <div className="text-center text-[10px] text-muted-foreground">
               {player.level >= MAX_LEVEL ? '최대 레벨' : `다음 레벨까지 ${(expRequiredForLevel(player.level) - player.exp).toLocaleString()} EXP`}
@@ -70,7 +89,8 @@ export function CharacterScreen() {
                 <button
                   key={slot}
                   onClick={() => item && dispatch({ type: 'UNEQUIP_ITEM', slot })}
-                  className="panel-parchment flex aspect-square flex-col items-center justify-center gap-0.5 p-1"
+                  style={item ? rarityGlowStyle(item.type) : undefined}
+                  className="panel-parchment rarity-glow flex aspect-square flex-col items-center justify-center gap-0.5 p-1"
                   title={item ? `${item.name} (클릭하여 해제)` : SLOT_LABELS[slot]}
                 >
                   {item ? <Image src={item.icon} alt={item.name} width={22} height={22} /> : <span className="text-[9px] opacity-50">{SLOT_LABELS[slot]}</span>}
@@ -80,13 +100,16 @@ export function CharacterScreen() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="panel-parchment space-y-3 p-4">
           <div>
-            <h3 className="mb-1.5 font-display text-sm text-gold-soft">스탯</h3>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            <h3 className="mb-1.5 flex items-center gap-1.5 font-display text-sm font-bold text-[#8a6a2c]">
+              <DiamondMark size={11} />
+              스탯
+            </h3>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
               {(Object.keys(STAT_LABELS) as (keyof typeof STAT_LABELS)[]).map((key) => (
-                <div key={key} className="flex justify-between border-b border-border/40 py-0.5">
-                  <span className="opacity-70">{STAT_LABELS[key]}</span>
+                <div key={key} className="flex justify-between border-b border-[#c2a061]/40 py-0.5">
+                  <span className="opacity-75">{STAT_LABELS[key]}</span>
                   <span className="font-semibold">{(effStats as any)[key]}</span>
                 </div>
               ))}
@@ -94,7 +117,10 @@ export function CharacterScreen() {
           </div>
 
           <div>
-            <h3 className="mb-1.5 font-display text-sm text-gold-soft">습득 스킬 ({jobTier.name})</h3>
+            <h3 className="mb-1.5 flex items-center gap-1.5 font-display text-sm font-bold text-[#8a6a2c]">
+              <DiamondMark size={11} />
+              습득 스킬 ({jobTier.name})
+            </h3>
             <div className="flex flex-wrap gap-1.5">
               {learnedSkills.length === 0 && <span className="text-xs opacity-50">습득한 스킬이 없습니다.</span>}
               {learnedSkills.map((s) => (
@@ -106,7 +132,10 @@ export function CharacterScreen() {
           </div>
 
           <div>
-            <h3 className="mb-1.5 font-display text-sm text-gold-soft">전직 단계</h3>
+            <h3 className="mb-1.5 flex items-center gap-1.5 font-display text-sm font-bold text-[#8a6a2c]">
+              <DiamondMark size={11} />
+              전직 단계
+            </h3>
             <div className="flex flex-wrap gap-1">
               {JOB_TIERS.map((t) => (
                 <Badge key={t.id} className={t.id === player.jobTierId ? 'border-gold bg-primary-soft text-gold' : 'opacity-40'}>

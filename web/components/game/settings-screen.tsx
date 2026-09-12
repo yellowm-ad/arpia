@@ -3,6 +3,7 @@
 import { useGame } from '@/lib/game-state'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
+import { DiamondMark } from '@/components/game/ui-motifs'
 
 export function SettingsScreen() {
   const { state, dispatch } = useGame()
@@ -14,7 +15,10 @@ export function SettingsScreen() {
       <div className="space-y-4 text-sm">
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <span>배경음 음량</span>
+            <span className="flex items-center gap-1.5">
+              <DiamondMark size={10} />
+              배경음 음량
+            </span>
             <span className="text-gold-soft">{state.settings.bgmVolume}</span>
           </div>
           <input
@@ -28,7 +32,10 @@ export function SettingsScreen() {
         </div>
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <span>효과음 음량</span>
+            <span className="flex items-center gap-1.5">
+              <DiamondMark size={10} />
+              효과음 음량
+            </span>
             <span className="text-gold-soft">{state.settings.sfxVolume}</span>
           </div>
           <input

@@ -5,6 +5,7 @@ import { useGame } from '@/lib/game-state'
 import { MAPS } from '@/lib/maps'
 import { ELEMENT_META } from '@/lib/constants'
 import { MONSTERS } from '@/lib/mock-data'
+import { DiamondMark } from '@/components/game/ui-motifs'
 
 const MAX = 148
 
@@ -37,15 +38,21 @@ export function Minimap() {
   const elem = ELEMENT_META[state.player.element]
   const gateShown = new Set<string>()
 
+  const diameter = Math.max(w, h) + 8
+
   return (
-    <div className="pointer-events-none absolute right-2 top-[4.5rem] z-30 sm:right-3 sm:top-24">
-      <div className="panel-gilded flex flex-col gap-1 p-1.5">
-        <div className="px-0.5 text-center font-display text-[10px] text-gold-soft text-shadow-ink">
-          {map.name}
-        </div>
+    <div className="pointer-events-none absolute right-2 top-[4.5rem] z-30 flex flex-col items-center gap-1 sm:right-3 sm:top-24">
+      <div className="flex items-center gap-1 rounded-full border border-gold/60 bg-black/55 px-2.5 py-0.5 text-[10px] font-display text-gold-soft text-shadow-ink">
+        <DiamondMark size={9} />
+        {map.name}
+      </div>
+      <div
+        className="relative shrink-0 overflow-hidden rounded-full border-2 border-gold bg-[#0b0e22] shadow-[0_0_0_2px_rgba(0,0,0,0.55),0_6px_16px_rgba(0,0,0,0.45)]"
+        style={{ width: diameter, height: diameter }}
+      >
         <div
-          className="relative overflow-hidden rounded border border-gold/40 bg-[#0b0e22]"
-          style={{ width: w, height: h }}
+          className="absolute overflow-hidden"
+          style={{ width: w, height: h, left: (diameter - w) / 2, top: (diameter - h) / 2 }}
         >
           {/* 구역 블록 */}
           {map.zones.map((z) => (

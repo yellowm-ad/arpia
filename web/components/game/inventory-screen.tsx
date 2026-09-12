@@ -6,6 +6,7 @@ import { useGame } from '@/lib/game-state'
 import { itemById } from '@/lib/mock-data'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
+import { DiamondMark, rarityGlowStyle } from '@/components/game/ui-motifs'
 import type { ItemType } from '@/lib/types'
 
 const TABS: { id: ItemType | 'all'; label: string; icon?: string }[] = [
@@ -39,17 +40,29 @@ export function InventoryScreen() {
 
   return (
     <Modal open onClose={close} title="가방" widthClass="max-w-3xl">
-      <div className="mb-3 flex flex-wrap gap-1.5">
-        {TABS.map((t) => (
-          <Button key={t.id} variant={tab === t.id ? 'default' : 'outline'} onClick={() => setTab(t.id)} className="gap-1.5">
-            {t.icon && <Image src={t.icon} alt="" width={20} height={20} className="rounded-full" />}
-            {t.label}
-          </Button>
-        ))}
+      <div className="mb-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <DiamondMark size={11} className="text-gold" />
+          <span>보유 아이템 {state.inventory.length}종</span>
+        </div>
+        <span className="text-sm font-semibold text-gold-soft">{state.player.gold.toLocaleString()} G</span>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="grid grid-cols-5 gap-2 sm:w-2/3">
+        <nav className="nav-tab-list shrink-0 sm:w-28">
+          {TABS.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`nav-tab ${tab === t.id ? 'nav-tab-active' : ''}`}>
+              {t.icon ? (
+                <Image src={t.icon} alt="" width={16} height={16} className="rounded-full" />
+              ) : (
+                <DiamondMark size={10} />
+              )}
+              {t.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="panel-parchment grid grid-cols-5 gap-2 p-3 sm:w-2/3">
           {cells.map((slot, i) => {
             const item = slot ? itemById(slot.itemId) : null
             return (
@@ -61,8 +74,9 @@ export function InventoryScreen() {
                   ['--gem-bg' as string]: item ? undefined : 'rgba(0,0,0,0.25)',
                   borderColor: !item ? 'var(--border)' : selected === item.id ? 'var(--gold-soft)' : undefined,
                   boxShadow: !item ? 'none' : undefined,
+                  ...(item ? rarityGlowStyle(item.type) : {}),
                 }}
-                className={`gem-btn relative flex aspect-square items-center justify-center p-1 ${!item ? 'opacity-35 grayscale' : ''}`}
+                className={`gem-btn rarity-glow relative flex aspect-square items-center justify-center p-1 ${!item ? 'opacity-35 grayscale' : ''}`}
               >
                 {item && (
                   <>
@@ -117,7 +131,12 @@ export function InventoryScreen() {
                     먹이 주기
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => dispatch({ type: 'SELL_ITEM', itemId: selectedItem.id })}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-[#8a6a2c] text-[var(--parchment-foreground)] hover:bg-black/10"
+                  onClick={() => dispatch({ type: 'SELL_ITEM', itemId: selectedItem.id })}
+                >
                   판매 ({selectedItem.sellPrice}G)
                 </Button>
               </div>
