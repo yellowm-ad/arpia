@@ -22,6 +22,37 @@ const FX_COLORS: Record<ElementOrNeutral, { a: string; b: string }> = {
   neutral: { a: '#f0e6c0', b: '#ffffff' },
 }
 
+// PixelLab 도트 이펙트 스프라이트시트(9프레임) — 절차적 CSS 연출 위에 얹는 실제 픽셀아트 레이어.
+// animate_image 로 생성(불/얼음/대지 임팩트 + 회복 반짝임), 가로 9프레임 시트로 합성됨.
+const PIXEL_BURST_SHEET: Partial<Record<ElementOrNeutral, string>> = {
+  fire: '/images/battle/vfx/fire_burst.png',
+  ice: '/images/battle/vfx/ice_burst.png',
+  earth: '/images/battle/vfx/earth_burst.png',
+}
+const PIXEL_HEAL_SHEET = '/images/battle/vfx/heal_burst.png'
+const PIXEL_FRAMES = 9
+
+function PixelBurst({ pos, sheet, size = 84, duration = 420, delay = 0 }: { pos: FxPos; sheet: string; size?: number; duration?: number; delay?: number }) {
+  return (
+    <div
+      className="fx-pixel-burst absolute -translate-x-1/2 -translate-y-1/2"
+      style={{
+        left: `${pos.left}%`,
+        top: `${pos.top}%`,
+        width: size,
+        height: size,
+        backgroundImage: `url(${sheet})`,
+        backgroundSize: `${PIXEL_FRAMES * size}px ${size}px`,
+        animationDelay: `${delay}ms`,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ['--fx-dur' as any]: `${duration}ms`,
+        ['--fx-steps' as any]: PIXEL_FRAMES - 1,
+        ['--fx-end' as any]: `${-(PIXEL_FRAMES - 1) * size}px`,
+      }}
+    />
+  )
+}
+
 export type FxTier = 1 | 2 | 3 | 4
 
 /** MP 소모량(+ 전체 대상 여부)으로 연출 등급을 산정 — 클수록 더 화려한 연출이 추가된다. */
@@ -328,6 +359,14 @@ function MagicBolt({
         <ParticleBurst pos={to} color={color} count={tier >= 3 ? 8 : 5} radius={36 * scale} delay={(aoe ? 0 : 280) + delay + 40} />
       )}
       {tier === 4 && <UltimateBurst pos={to} element={element} color={color} delay={(aoe ? 0 : 280) + delay + 20} />}
+      {PIXEL_BURST_SHEET[element] && (
+        <PixelBurst
+          pos={to}
+          sheet={PIXEL_BURST_SHEET[element]!}
+          size={60 * scale}
+          delay={(aoe ? 0 : 280) + delay}
+        />
+      )}
     </>
   )
 }
@@ -377,6 +416,7 @@ function HealGlow({ pos, color, scale, tier, delay }: { pos: FxPos; color: { a: 
         className="fx-heal absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{ left: `${pos.left}%`, top: `${pos.top}%`, animationDelay: `${delay}ms` }}
       />
+      <PixelBurst pos={pos} sheet={PIXEL_HEAL_SHEET} size={56 * scale} delay={delay} />
       {tier >= 2 && <ParticleBurst pos={pos} color={{ a: '#bff7c8', b: '#ffffff' }} count={6} radius={30 * scale} delay={delay + 40} direction="up" />}
       {tier === 4 && (
         <>

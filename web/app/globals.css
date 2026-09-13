@@ -644,6 +644,26 @@
     100% { left: var(--fx-x1); top: var(--fx-y1); opacity: 0.4; }
   }
 
+  /* PixelLab 도트 이펙트 스프라이트시트(9프레임, 가로 배치) 재생 — steps()로 프레임 스냅.
+     background-position-x 를 0 → -(frames-1)*size 로 스텝 이동, steps(frames-1) 로 끝 프레임에서
+     정확히 멈춘다. */
+  .fx-pixel-burst {
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    opacity: 0;
+    animation: fx-pixel-fade var(--fx-dur) ease-out forwards, fx-pixel-play var(--fx-dur) steps(var(--fx-steps)) forwards;
+  }
+  @keyframes fx-pixel-play {
+    from { background-position-x: 0; }
+    to { background-position-x: var(--fx-end); }
+  }
+  @keyframes fx-pixel-fade {
+    0% { opacity: 0; }
+    8% { opacity: 1; }
+    78% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
   .fx-burst {
     opacity: 0;
     animation: fx-burst 0.5s ease-out forwards;
