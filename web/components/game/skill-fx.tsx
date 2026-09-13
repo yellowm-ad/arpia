@@ -30,6 +30,9 @@ const PIXEL_BURST_SHEET: Partial<Record<ElementOrNeutral, string>> = {
   earth: '/images/battle/vfx/earth_burst.png',
 }
 const PIXEL_HEAL_SHEET = '/images/battle/vfx/heal_burst.png'
+const PIXEL_SLASH_SHEET = '/images/battle/vfx/slash_burst.png'
+const PIXEL_DEBUFF_SHEET = '/images/battle/vfx/debuff_burst.png'
+const PIXEL_BUFF_SHEET = '/images/battle/vfx/buff_burst.png'
 const PIXEL_FRAMES = 9
 
 function PixelBurst({ pos, sheet, size = 84, duration = 420, delay = 0 }: { pos: FxPos; sheet: string; size?: number; duration?: number; delay?: number }) {
@@ -385,6 +388,7 @@ function SlashImpact({ pos, color, scale, tier, delay }: { pos: FxPos; color: { 
         </svg>
       </div>
       {tier >= 2 && <ParticleBurst pos={pos} color={color} count={5} radius={28 * scale} delay={delay + 30} />}
+      <PixelBurst pos={pos} sheet={PIXEL_SLASH_SHEET} size={56 * scale} delay={delay} />
     </>
   )
 }
@@ -405,6 +409,7 @@ function DebuffCloud({ pos, color, scale, tier, delay }: { pos: FxPos; color: { 
       />
       {tier >= 2 && <RuneCircle pos={pos} color={color.a} size={38 * scale} delay={delay} />}
       {tier >= 3 && <ParticleBurst pos={pos} color={color} count={6} radius={30 * scale} delay={delay + 60} direction="down" />}
+      <PixelBurst pos={pos} sheet={PIXEL_DEBUFF_SHEET} size={56 * scale} delay={delay} />
     </>
   )
 }
@@ -438,6 +443,7 @@ function BuffRing({ pos, color, tier, delay }: { pos: FxPos; color: { a: string;
       />
       {tier >= 2 && <RuneCircle pos={pos} color={color.a} size={46} delay={delay} />}
       {tier >= 3 && <ParticleBurst pos={pos} color={color} count={6} radius={30} delay={delay + 80} direction="up" />}
+      <PixelBurst pos={pos} sheet={PIXEL_BUFF_SHEET} size={52} delay={delay} />
     </>
   )
 }
