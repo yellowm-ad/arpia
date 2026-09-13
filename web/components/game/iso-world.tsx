@@ -185,8 +185,8 @@ export function IsoWorld({
   const mapNpcsForRoam = useMemo(() => NPCS.filter((n) => map.zones.some((z) => z.id === n.zoneId)), [map])
   const ND = 74 // NPC 도트 스프라이트 표시 크기
   const npcEntities = mapNpcsForRoam.map((npc) => {
-    const pos = npcWanderPosition(npc, wanderT)
-    const dir = npcWanderFacing(npc, wanderT)
+    const pos = npcWanderPosition(npc, wanderT, map.blockers)
+    const dir = npcWanderFacing(npc, wanderT, map.blockers)
     const s = isoToScreen(pos.x, pos.y)
     return {
       sortY: pos.x + pos.y + 0.2,
@@ -225,8 +225,8 @@ export function IsoWorld({
   const monsterEntities = visibleMonsters.flatMap((fm) => {
     const def = MONSTERS.find((m) => m.id === fm.monsterId)
     if (!def) return []
-    const pos = wanderPosition(fm, wanderT)
-    const dir = wanderFacing(fm, wanderT)
+    const pos = wanderPosition(fm, wanderT, map.blockers)
+    const dir = wanderFacing(fm, wanderT, map.blockers)
     const s = isoToScreen(pos.x, pos.y)
     return [
       {

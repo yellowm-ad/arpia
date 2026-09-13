@@ -78,21 +78,40 @@ export function generateFieldMonsters(map: GameMap, testMode: boolean): FieldMon
   return result
 }
 
+type Blocker = { x0: number; y0: number; x1: number; y1: number }
+
+/**
+ * 배회 위치가 구조물(blocker) 안으로 파고들면 집(home) 위치로 되돌린다 —
+ * 몬스터/NPC가 나무·건물을 뚫고 걷는 것처럼 보이는 걸 막는 저비용 방지책.
+ * 정교한 경로탐색 대신 "막히면 그 프레임은 집에 서 있는다" 방식이라 부드럽지는 않지만,
+ * 배회 반경이 작고(1.1~2.0셀) blocker 는 드물게 겹치므로 시각적으로 자연스럽다.
+ */
+function avoidBlockers(pos: { x: number; y: number }, home: { x: number; y: number }, blockers: Blocker[] | undefined, r: number): { x: number; y: number } {
+  if (!blockers || blockers.length === 0) return pos
+  for (const b of blockers) {
+    if (pos.x > b.x0 - r && pos.x < b.x1 + r && pos.y > b.y0 - r && pos.y < b.y1 + r) return home
+  }
+  return pos
+}
+
+const MONSTER_BODY_R = 0.3
+
 /** 배회 애니메이션: 홈 셀 주변을 실제로 걷는 것처럼 맴도는 위치 계산 (시간 기반, 결정론적) */
-export function wanderPosition(fm: FieldMonster, timeMs: number): { x: number; y: number } {
+export function wanderPosition(fm: FieldMonster, timeMs: number, blockers?: Blocker[]): { x: number; y: number } {
   const t = timeMs / 1000 + fm.wanderSeed
   const radius = 1.1
   const speed = 0.22
-  return {
+  const pos = {
     x: fm.homeCell.x + Math.cos(t * speed) * radius,
     y: fm.homeCell.y + Math.sin(t * speed * 1.35) * radius * 0.85,
   }
+  return avoidBlockers(pos, fm.homeCell, blockers, MONSTER_BODY_R)
 }
 
 /** wanderPosition의 순간 이동 방향(도트 스프라이트 걷기용, down/up/left/right) */
-export function wanderFacing(fm: FieldMonster, timeMs: number): 'down' | 'up' | 'left' | 'right' {
-  const a = wanderPosition(fm, timeMs)
-  const b = wanderPosition(fm, timeMs + 100)
+export function wanderFacing(fm: FieldMonster, timeMs: number, blockers?: Blocker[]): 'down' | 'up' | 'left' | 'right' {
+  const a = wanderPosition(fm, timeMs, blockers)
+  const b = wanderPosition(fm, timeMs + 100, blockers)
   const dx = b.x - a.x
   const dy = b.y - a.y
   return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up'
@@ -114,21 +133,24 @@ export function npcWanderRadius(npc: NpcDef): number {
   return NPC_FULL_ROAM_ROLES.has(npc.role) ? 2.0 : 0.4
 }
 
-export function npcWanderPosition(npc: NpcDef, timeMs: number): { x: number; y: number } {
+const NPC_BODY_R = 0.28
+
+export function npcWanderPosition(npc: NpcDef, timeMs: number, blockers?: Blocker[]): { x: number; y: number } {
   const seed = npcSeed(npc.id)
   const t = timeMs / 1000 + (seed % 1000)
   const radius = npcWanderRadius(npc)
   const speed = 0.14 + (seed % 53) / 1000 // NPC마다 살짝 다른 속도로 동기화된 움직임 방지
-  return {
+  const pos = {
     x: npc.cell.x + Math.cos(t * speed) * radius,
     y: npc.cell.y + Math.sin(t * speed * 1.35) * radius * 0.85,
   }
+  return avoidBlockers(pos, npc.cell, blockers, NPC_BODY_R)
 }
 
 /** npcWanderPosition의 순간 이동 방향(도트 스프라이트 걷기용) */
-export function npcWanderFacing(npc: NpcDef, timeMs: number): 'down' | 'up' | 'left' | 'right' {
-  const a = npcWanderPosition(npc, timeMs)
-  const b = npcWanderPosition(npc, timeMs + 100)
+export function npcWanderFacing(npc: NpcDef, timeMs: number, blockers?: Blocker[]): 'down' | 'up' | 'left' | 'right' {
+  const a = npcWanderPosition(npc, timeMs, blockers)
+  const b = npcWanderPosition(npc, timeMs + 100, blockers)
   const dx = b.x - a.x
   const dy = b.y - a.y
   return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up'

@@ -5,12 +5,29 @@ import { mulberry32 } from '@/lib/rng'
 
 type Blocker = { x0: number; y0: number; x1: number; y1: number }
 
+/**
+ * 명시적 size/collide 가 없는 "점 배치" 프롭(야생 필드의 나무·기둥 등)에 줄 기본 충돌 반경.
+ * kind 기준 — SOLID_KINDS 에 새 kind 를 추가할 때 여기도 같이 채워야 실제로 막힌다.
+ */
+const DEFAULT_COLLIDE_SIZE: Partial<Record<PropDef['kind'], { w: number; d: number }>> = {
+  tree: { w: 0.5, d: 0.5 },
+}
+
 /** solid 프롭들의 충돌 사각형을 그림(footprint)에서 그대로 산출 → "보이는 것 = 막히는 것" */
 function buildBlockers(props: PropDef[], extra: Blocker[] = []): Blocker[] {
   const out: Blocker[] = [...extra]
   for (const p of props) {
-    if (!p.solid) continue
-    const a = propAABB(p)
+    const solid = p.solid || SOLID_KINDS.has(p.kind)
+    if (!solid) continue
+    if (p.collide || p.size) {
+      const a = propAABB(p)
+      if (a) out.push(a)
+      continue
+    }
+    // size/collide 미지정 프롭(야생 필드 fprop 점배치) — kind 기본 반경으로 중심 기준 박스 생성
+    const fb = DEFAULT_COLLIDE_SIZE[p.kind]
+    if (!fb) continue
+    const a = propAABB({ ...p, collide: fb, radial: true })
     if (a) out.push(a)
   }
   return out
@@ -123,9 +140,8 @@ function villageTileAt(x: number, y: number): TileKind {
   if (Math.hypot((x - TEMPLE_YARD.x) * 1.1, y - TEMPLE_YARD.y) < 4.8) return 'plaza'
   // 농가 밭이랑 (공원에 자리 내주고 남쪽으로)
   if (x > 22.5 && x < 30.8 && y > 32.6 && y < 37.4) return 'field'
-  // 대성당 앞광장 좌·우 대칭 반사 연못 (parterre d'eau)
-  if (Math.hypot((x - 5.7) * 0.85, y - 33.4) < 1.5) return 'water'
-  if (Math.hypot((x - 13.3) * 0.85, y - 33.4) < 1.5) return 'water'
+  // 대성당 앞광장 좌·우 대칭 반사 연못 — 이제 PixelLab 프롭(b-pondL/R)이 물+테두리를
+  // 통째로 그려서 바닥 타일로 물을 덧칠할 필요가 없다 (타일 몇 개만 찍은 것처럼 보이던 문제).
   // 대로 격자 (지구 경계)
   if (between(x, AV_L) || between(x, AV_R) || between(y, ST_N) || between(y, ST_S)) return 'path'
   // 주둔지 의전 대로 (ST_S → 군 통문, 폭 4셀)
@@ -153,6 +169,10 @@ function villageTileAt(x: number, y: number): TileKind {
 const SOLID_KINDS = new Set<PropDef['kind']>([
   'hall', 'cottage', 'shop', 'dome', 'barn', 'windmill', 'colosseum', 'fountain', 'tower', 'wall',
   'statue', 'gazebo', 'cloister',
+  // 야생 필드/던전 나무류(fprop 의 'tree' kind — 실제 나무·기둥·첨탑·맹그로브·켈프·현수막대 등
+  // 굵은 수직 구조물 전부 포함)도 충돌 처리 — 뚫고 지나가지 못하게. bush/lamp kind(관목·작은
+  // 바위·버섯·등불 등)는 저프로필 장식이라 의도적으로 보행 가능하게 둔다.
+  'tree',
 ])
 // 앵커가 footprint 중심인 원형 구조물 (z정렬·충돌 모두 중심 기준)
 const RADIAL_KINDS = new Set<PropDef['kind']>(['colosseum', 'fountain', 'statue', 'gazebo'])
@@ -187,6 +207,10 @@ const B_ = (n: string, w: number, h: number, ax: number, ay: number): Rs => ({
 })
 // id 별 (개별 footprint)
 const BUILDING_SPRITE: Record<string, Rs> = {
+  // 대성당 앞광장 연못 — kind:'fountain' 공용이라 KIND_BUILDING_SPRITE.fountain(중앙광장 분수)로
+  // 자동 덮어써지는 걸 막으려면 id 기준 오버라이드가 먼저 매치되어야 한다.
+  'b-pondL': B_('temple_pond', 160, 96, 80, 96),
+  'b-pondR': B_('temple_pond', 160, 96, 80, 96),
   'b-magic': B_('b_hall_magic', 259, 283, 130, 150),
   'b-alch': B_('b_hall_small', 157, 178, 79, 100),
   'b-arti': B_('b_hall_small', 157, 178, 79, 100),
@@ -309,6 +333,10 @@ function villageProps(): PropDef[] {
   P.push({ id: 'b-priest1', kind: 'cottage', cell: { x: 6.4, y: 36.0 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
   P.push({ id: 'b-priest2', kind: 'cottage', cell: { x: 13.6, y: 35.6 }, size: { w: 1.6, d: 1.4 }, variant: 'slate' })
   P.push({ id: 'b-statue-saint', kind: 'statue', cell: { x: TEMPLE_YARD.x, y: 32.4 }, size: { w: 1.0, d: 1.0 }, label: '성녀 상' })
+  // 대성당 앞광장 좌·우 대칭 반사 연못 — PixelLab 프롭(돌 테두리+수련) 로 교체.
+  // radial: true → cell 이 중심점. solid: true → 벤치·나무가 실제 footprint 만큼만 피해감.
+  P.push({ id: 'b-pondL', kind: 'fountain', cell: { x: 5.7, y: 33.4 }, size: { w: 2.0, d: 1.2 }, radial: true, solid: true })
+  P.push({ id: 'b-pondR', kind: 'fountain', cell: { x: 13.3, y: 33.4 }, size: { w: 2.0, d: 1.2 }, radial: true, solid: true })
   // 앞광장 진입부 소형 봉헌 조상 2기
   P.push({ id: 'b-shrineL', kind: 'statue', cell: { x: 7.2, y: 36.4 }, size: { w: 0.8, d: 0.8 } })
   P.push({ id: 'b-shrineR', kind: 'statue', cell: { x: 11.8, y: 36.4 }, size: { w: 0.8, d: 0.8 } })
@@ -328,7 +356,8 @@ function villageProps(): PropDef[] {
   // ════════ 햇살 농가 (x20–33, y33–38) — 밭을 서·동에서 헛간·풍차·농가가 감쌈 ════════
   P.push({ id: 'b-barn', kind: 'barn', cell: { x: 20.0, y: 32.8 }, size: { w: 2.6, d: 2.0 } })
   P.push({ id: 'b-mill', kind: 'windmill', cell: { x: 20.4, y: 35.6 }, size: { w: 1.6, d: 1.4 } })
-  P.push({ id: 'b-farmhouse', kind: 'cottage', cell: { x: 30.6, y: 33.0 }, size: { w: 1.8, d: 1.6 }, variant: 'red' })
+  // 공원 남측 가로수(y≈31.7)와 겹쳐 지붕을 뚫고 나와 보이던 문제 — 밭 쪽으로 더 내림
+  P.push({ id: 'b-farmhouse', kind: 'cottage', cell: { x: 31.0, y: 34.3 }, size: { w: 1.8, d: 1.6 }, variant: 'red' })
 
   // ════════ 통문 주둔지 (x36–50, y27–38) — 성벽 사각 + 망루 4 + 막사 + 마구간 + 군 통문 ════════
   const BX0 = 37, BX1 = 49, BY0 = 28.5, BY1 = 36.5
@@ -362,8 +391,15 @@ function villageProps(): PropDef[] {
   //  거리 furniture — 52×40 맵. 대로 가장자리 규칙 배치.
   //  건물 footprint 와 겹치면 자동 스킵(blocked).
   // ════════════════════════════════════════════════════════════════════
-  const solidBoxes = P.filter((p) => p.solid && p.size)
-    .map((p) => propAABB(p))
+  // 이 시점엔 아직 종류 기반 solid/radial 플래그 부여 루프(함수 맨 끝)가 안 돌았으므로
+  // p.solid 뿐 아니라 SOLID_KINDS 로도 판정해야 건물 footprint 가 실제로 걸러지고,
+  // radial 구조물(분수·콜로세움 등, collide 를 직접 지정하고 radial 은 안 적은 경우)도
+  // RADIAL_KINDS 로 미리 보정해야 propAABB 가 중심 기준 박스를 계산한다 — 안 그러면
+  // "뒤쪽 모서리부터 +collide" 로 잘못 계산되어 실제보다 훨씬 크고 엉뚱한 방향으로 치우친
+  // 박스가 나와 멀쩡한 위치의 벤치까지 차단해버린다.
+  // (안 그러면 "건물 footprint 와 겹치면 자동 스킵" 주석과 달리 나무·벤치 등이 건물을 뚫고 배치됨).
+  const solidBoxes = P.filter((p) => (p.solid || SOLID_KINDS.has(p.kind)) && p.size)
+    .map((p) => propAABB(p.radial != null ? p : { ...p, radial: RADIAL_KINDS.has(p.kind) }))
     .filter((b): b is NonNullable<typeof b> => !!b)
   const blocked = (x: number, y: number, m = 0.4) =>
     solidBoxes.some((b) => x > b.x0 - m && x < b.x1 + m && y > b.y0 - m && y < b.y1 + m)
@@ -379,9 +415,10 @@ function villageProps(): PropDef[] {
     (Math.abs(y - FOUNTAIN.y) < 2.2 && x > 2.0 && x < AV_R.b) || // 광장 동서 진입로
     (x > AV_R.a && x < VW - 2.5 && Math.abs(y - 20.5) < 1.5) || // 상점가 아케이드
     (Math.abs(x - TEMPLE_YARD.x) < 1.5 && y > ST_S.a) || // 대성당 진입로
-    (x > 19.8 && x < 33 && Math.abs(y - 29.9) < 0.7) || // 공원 산책로
-    Math.hypot((x - 5.7) * 0.85, y - 33.4) < 1.9 || // 대성당 연못 좌
-    Math.hypot((x - 13.3) * 0.85, y - 33.4) < 1.9 // 대성당 연못 우
+    (x > 19.8 && x < 33 && Math.abs(y - 29.9) < 0.7) // 공원 산책로
+    // 대성당 연못은 이제 실제 프롭(b-pondL/R, solid+radial)이라 blocked()/solidBoxes 가
+    // 정확한 footprint 로 자동 처리 — 예전엔 반경 1.9 짜리 과도한 제외구역이라 근처 벤치까지
+    // 전부 조용히 걸러내던 문제가 있었음.
   const place = (id: string, kind: PropDef['kind'], x: number, y: number, extra: Partial<PropDef> = {}) => {
     if (blocked(x, y) || onRoad(x, y) || onPlaza(x, y) || onSand(x, y)) return
     P.push({ id, kind, cell: { x, y }, ...extra })
@@ -407,9 +444,11 @@ function villageProps(): PropDef[] {
     if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `tg-bush${i}`, kind: 'bush', cell: { x, y } })
   })
   // 앞광장 — 성녀 상 앞, 마주보는 벤치 두 쌍(관상 공간)
+  // (원래 y오프셋 -0.2/+2.1 이 대성당 돔 남벽·연못 테두리와 겹쳐 4개 전부 조용히 걸러졌었음 —
+  // 돔(y<32.0)·연못(y 32.4~34.4) 사이 빈 공간과 연못 남쪽으로 오프셋 재조정)
   const yardBench: [number, number, 'l' | 'r'][] = [
-    [TEMPLE_YARD.x - 2.6, TEMPLE_YARD.y - 0.2, 'l'], [TEMPLE_YARD.x + 2.6, TEMPLE_YARD.y - 0.2, 'r'],
-    [TEMPLE_YARD.x - 2.6, TEMPLE_YARD.y + 2.1, 'r'], [TEMPLE_YARD.x + 2.6, TEMPLE_YARD.y + 2.1, 'l'],
+    [TEMPLE_YARD.x - 2.6, TEMPLE_YARD.y + 0.2, 'l'], [TEMPLE_YARD.x + 2.6, TEMPLE_YARD.y + 0.2, 'r'],
+    [TEMPLE_YARD.x - 2.6, TEMPLE_YARD.y + 2.7, 'r'], [TEMPLE_YARD.x + 2.6, TEMPLE_YARD.y + 2.7, 'l'],
   ]
   yardBench.forEach(([x, y, v], i) => {
     if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be-tp${i}`, kind: 'bench', cell: { x, y }, variant: v })
@@ -443,11 +482,13 @@ function villageProps(): PropDef[] {
   place('bn3', 'banner', GATE_WAY.b + 0.7, ST_S.b + 0.6, { variant: '#b64430' })
 
   // ── 벤치 — 분수 둘레 / 아케이드 / 투기장. variant l|r = 아이소 축 방향 ──
+  // (과거 좌표들이 진입로/대로 판정 경계에 딱 걸쳐 onRoad()에 은근슬쩍 걸러지던 문제 —
+  // 분수 진입로 폭 ±2.2, 아케이드 폭 ±1.5, 대로 AV_L/AV_R 과 확실히 떨어지도록 여유를 둠)
   const benchSpots: [number, number, 'l' | 'r'][] = [
-    [FOUNTAIN.x - 3.4, FOUNTAIN.y - 2.2, 'l'], [FOUNTAIN.x + 3.4, FOUNTAIN.y - 2.2, 'r'],
-    [FOUNTAIN.x - 3.4, FOUNTAIN.y + 2.2, 'r'], [FOUNTAIN.x + 3.4, FOUNTAIN.y + 2.2, 'l'],
-    [40.2, 19.2, 'l'], [43.5, 22.2, 'r'], [46.6, 19.2, 'l'], // 아케이드
-    [COLOSSEUM.x - 6.9, COLOSSEUM.y, 'r'], [COLOSSEUM.x + 6.9, COLOSSEUM.y, 'l'], // 투기장 동서
+    [FOUNTAIN.x - 3.4, FOUNTAIN.y - 2.7, 'l'], [FOUNTAIN.x + 3.4, FOUNTAIN.y - 2.7, 'r'],
+    [FOUNTAIN.x - 3.4, FOUNTAIN.y + 2.7, 'r'], [FOUNTAIN.x + 3.4, FOUNTAIN.y + 2.7, 'l'],
+    [36.2, 22.2, 'l'], [43.5, 22.2, 'r'], [48.0, 22.2, 'l'], // 아케이드(북측은 상가 건물과 겹쳐 전부 남측으로)
+    [COLOSSEUM.x - 5.2, COLOSSEUM.y - 3.2, 'r'], [COLOSSEUM.x + 5.2, COLOSSEUM.y + 3.2, 'l'], // 투기장 대각 코너(동서는 대로에 걸림)
   ]
   benchSpots.forEach(([x, y, v], i) => {
     if (!blocked(x, y) && !onRoad(x, y)) P.push({ id: `be${i}`, kind: 'bench', cell: { x, y }, variant: v })
@@ -1489,6 +1530,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: forestTileAt,
     props: FOREST_PROPS,
+    blockers: buildBlockers(FOREST_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'forest',
     monsterDensity: 0.1,
@@ -1511,6 +1553,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: caveTileAt,
     props: CAVE_PROPS,
+    blockers: buildBlockers(CAVE_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'forest',
     monsterDensity: 0.12,
@@ -1532,6 +1575,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: mineTileAt,
     props: MINE_PROPS,
+    blockers: buildBlockers(MINE_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
     monsterDensity: 0.12,
@@ -1552,6 +1596,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: swampTileAt,
     props: SWAMP_PROPS,
+    blockers: buildBlockers(SWAMP_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'forest',
     monsterDensity: 0.11,
@@ -1574,6 +1619,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: seaTileAt,
     props: SEA_PROPS,
+    blockers: buildBlockers(SEA_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'sea',
     monsterDensity: 0.1,
@@ -1596,6 +1642,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: deepseaTileAt,
     props: DEEPSEA_PROPS,
+    blockers: buildBlockers(DEEPSEA_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'sea',
     monsterDensity: 0.12,
@@ -1637,6 +1684,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: stormhavenTileAt,
     props: STORM_PROPS,
+    blockers: buildBlockers(STORM_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'sea',
     monsterDensity: 0.1,
@@ -1679,6 +1727,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: ruinsFieldTileAt,
     props: RUINSF_PROPS,
+    blockers: buildBlockers(RUINSF_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
     monsterDensity: 0.1,
@@ -1701,6 +1750,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: graveyardTileAt,
     props: GRAVEYARD_PROPS,
+    blockers: buildBlockers(GRAVEYARD_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
     monsterDensity: 0.12,
@@ -1742,6 +1792,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: snowfieldTileAt,
     props: SNOWF_PROPS,
+    blockers: buildBlockers(SNOWF_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
     monsterDensity: 0.1,
@@ -1784,6 +1835,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: volcanoTileAt,
     props: VOLCANO_PROPS,
+    blockers: buildBlockers(VOLCANO_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
     monsterDensity: 0.1,
@@ -1825,6 +1877,7 @@ export const MAPS: Record<MapId, GameMap> = {
     assets: 'raster',
     tileAt: demonCastleTileAt,
     props: DEMONCASTLE_PROPS,
+    blockers: buildBlockers(DEMONCASTLE_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
     monsterDensity: 0.12,
