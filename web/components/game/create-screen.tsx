@@ -12,6 +12,18 @@ import type { Element, Gender } from '@/lib/types'
 // 반투명 글로우/그라디언트에서만 실제 16진값이 필요해 여기서 따로 미러링해 둔다.
 const ELEMENT_HEX: Record<Element, string> = { fire: '#e2542a', ice: '#4fb8e6', earth: '#a97c3f' }
 
+// 원화 삼면도는 얼굴/머리가 어떤 경우에도 잘리면 안 돼서 object-cover 대신 object-contain을 쓴다
+// (cover는 종횡비에 따라 위/아래 또는 좌/우가 잘려 얼굴 반쪽·정수리가 잘리는 문제가 반복됐음).
+// contain의 여백은 원본 배경색과 동일하게 맞춰 이음매 없이 자연스럽게 보이도록 한다.
+const TURNAROUND_BG: Record<string, string> = {
+  'fire-male': '#e0d4ca',
+  'fire-female': '#dbd0c5',
+  'ice-male': '#eee0d5',
+  'ice-female': '#ede0d5',
+  'earth-male': '#1b1b10',
+  'earth-female': '#1b1c11',
+}
+
 // 인게임 캐릭터 발밑 마법진 — iso-world.tsx 게이트 포탈과 같은 시각 언어(룬 링+회전 다이아) 재사용
 function CreateMagicCircle({ color }: { color: string }) {
   const R = 92
@@ -55,14 +67,14 @@ export function CreateScreen() {
 
         <h1 className="relative z-[2] pt-5 text-center font-display text-2xl text-gold-soft text-shadow-ink">캐릭터 생성</h1>
 
-        {/* 좌측: 원화 삼면도 장식 — 머리 위 여백은 항상 보이도록 위쪽 기준 cover(다리 쪽은 잘려도 무방) */}
+        {/* 좌측: 원화 삼면도 장식 — object-contain이라 얼굴/머리가 잘릴 일이 없다(여백은 원본 배경색으로 채움) */}
         <div className="absolute top-5 left-5 z-[2] hidden w-44 sm:block md:w-52 lg:w-60">
-          <div className="create-portrait-frame aspect-[4/5]">
+          <div className="create-portrait-frame aspect-[4/5]" style={{ background: TURNAROUND_BG[`${element}-${gender}`] }}>
             <Image
               src={`/images/portraits/turnaround-${element}-${gender}.png`}
               alt={`${meta.name} 원화 삼면도`}
               fill
-              className="object-cover object-[50%_2%]"
+              className="object-contain"
             />
             <div className="create-portrait-vignette" />
           </div>
