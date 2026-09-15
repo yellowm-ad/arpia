@@ -1,16 +1,16 @@
 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 190" width="400" height="190">
   <defs>
-    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f0d999"/>
-      <stop offset="55%" stop-color="#d9a441"/>
-      <stop offset="100%" stop-color="#a97a2a"/>
+    <linearGradient id="silverGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f6f8fc"/>
+      <stop offset="50%" stop-color="#c7d0e0"/>
+      <stop offset="100%" stop-color="#8b93a8"/>
     </linearGradient>
   </defs>
 
-  <text x="200" y="118" text-anchor="middle" font-family="'Gowun Batang', 'Noto Serif KR', serif" font-size="34" fill="url(#goldGrad)" font-weight="700">마법학교 울토르</text>
-  <text x="200" y="142" text-anchor="middle" font-family="'Gowun Batang', 'Noto Serif KR', serif" font-size="14" letter-spacing="3" fill="#9aa0c8">MAGIC SCHOOL ULTOR</text>
+  <text x="200" y="118" text-anchor="middle" font-family="'Gowun Batang', 'Noto Serif KR', serif" font-size="34" fill="url(#silverGrad)" font-weight="700">마법학교 울토르</text>
+  <text x="200" y="142" text-anchor="middle" font-family="'Gowun Batang', 'Noto Serif KR', serif" font-size="14" letter-spacing="3" fill="#aab4c8">MAGIC SCHOOL ULTOR</text>
 
-  <line x1="60" y1="158" x2="340" y2="158" stroke="url(#goldGrad)" stroke-width="2"/>
-  <circle cx="200" cy="158" r="4" fill="url(#goldGrad)"/>
+  <line x1="60" y1="158" x2="340" y2="158" stroke="url(#silverGrad)" stroke-width="2"/>
+  <circle cx="200" cy="158" r="4" fill="url(#silverGrad)"/>
 </svg>

@@ -16,7 +16,7 @@ export function CreateScreen() {
 
   return (
     <div className="flex h-full w-full items-center justify-center bg-[#0a0d20] px-4">
-      <div className="panel-gilded w-full max-w-lg p-5">
+      <div className="panel-gilded screen-fade-in w-full max-w-lg p-5">
         <h1 className="mb-4 text-center font-display text-xl text-gold-soft text-shadow-ink">캐릭터 생성</h1>
 
         <div className="mb-4 flex gap-4">
