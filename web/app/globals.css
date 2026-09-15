@@ -1027,15 +1027,14 @@
     background: #10131f;
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
   }
-  .create-portrait-glow {
-    position: relative;
-    height: 14px;
-    width: 70%;
-    margin: -7px auto 0;
-    border-radius: 999px;
-    background: var(--glow-color, #d9a441);
-    filter: blur(10px);
-    opacity: 0.55;
-    animation: portal-pulse 2.6s ease-in-out infinite;
+  /* 캐릭터 생성 화면 상단 씬에 곁들이는 작은 일러스트 인셋 카드용 — 같은 액자를 더 얇은 테두리로 */
+  .create-portrait-frame-sm {
+    border-width: 8px;
+    border-image-width: 8px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  }
+  /* 인게임 캐릭터가 마법진 위에 가만히 서있을 때의 아주 미세한 숨쉬기 */
+  .create-hero-idle {
+    animation: sprite-idle 3s ease-in-out infinite;
   }
 }
