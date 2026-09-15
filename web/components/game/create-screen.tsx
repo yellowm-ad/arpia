@@ -57,24 +57,24 @@ export function CreateScreen() {
         <h1 className="relative z-[2] pt-5 text-center font-display text-2xl text-gold-soft text-shadow-ink">캐릭터 생성</h1>
 
         {/* 좌측: 원화 삼면도 장식 */}
-        <div className="absolute top-5 left-5 z-[2] hidden w-32 sm:block md:w-40">
-          <div className="create-portrait-frame aspect-[3/4]">
+        <div className="absolute top-5 left-5 z-[2] hidden w-40 sm:block md:w-48 lg:w-56">
+          <div className="create-portrait-frame aspect-[4/5]">
             <Image
               src={`/images/portraits/turnaround-${element}-${gender}.png`}
               alt={`${meta.name} 원화 삼면도`}
               fill
-              className="object-cover"
+              className="object-contain"
             />
           </div>
-          <p className="text-shadow-ink mt-1.5 text-center text-[10px] text-muted-foreground">원화 설정</p>
+          <p className="text-shadow-ink mt-1.5 text-center text-xs text-muted-foreground">원화 설정</p>
         </div>
 
         {/* 우측 상단: 일러스트 미리보기 */}
-        <div className="absolute top-5 right-5 z-[2] w-24 sm:w-28 md:w-32">
+        <div className="absolute top-5 right-5 z-[2] w-32 sm:w-36 md:w-40">
           <div className="create-portrait-frame create-portrait-frame-sm">
             <HeroPortrait element={element} gender={gender} className="h-full w-full" />
           </div>
-          <p className="text-shadow-ink mt-1.5 text-center text-[10px] text-muted-foreground">일러스트</p>
+          <p className="text-shadow-ink mt-1.5 text-center text-xs text-muted-foreground">일러스트</p>
         </div>
 
         {/* 인게임 캐릭터 + 마법진 */}
@@ -88,28 +88,28 @@ export function CreateScreen() {
         </div>
       </div>
 
-      {/* 하단: 선택 바 — 넓게 펼쳐 배치 */}
-      <div className="create-select-bar relative z-[3] shrink-0 px-5 py-6 sm:px-10">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-end justify-between gap-x-8 gap-y-6">
+      {/* 하단: 선택 바 — 넓게 펼쳐 배치, 흑금 고급 프레임 */}
+      <div className="create-select-bar relative z-[3] shrink-0 px-6 py-8 sm:px-14">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-x-10 gap-y-7">
           <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">이름</label>
+            <label className="mb-2 block text-sm text-muted-foreground">이름</label>
             <input
               value={name}
               maxLength={10}
               onChange={(e) => setName(e.target.value)}
               placeholder="견습생의 이름"
-              className="create-name-input w-52 rounded-lg px-4 py-2.5 text-base outline-none"
+              className="create-name-input w-64 rounded-lg px-5 py-3.5 text-lg outline-none"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">성별</label>
-            <div className="inline-flex rounded-full border border-gold/30 bg-black/20 p-1.5">
+            <label className="mb-2 block text-sm text-muted-foreground">성별</label>
+            <div className="inline-flex rounded-full border border-gold/40 bg-black/35 p-2">
               {(['male', 'female'] as Gender[]).map((gd) => (
                 <button
                   key={gd}
                   onClick={() => setGender(gd)}
-                  className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-all ${
+                  className={`rounded-full px-8 py-3.5 text-base font-semibold transition-all ${
                     gender === gd ? 'bg-gold text-ink' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -120,24 +120,24 @@ export function CreateScreen() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">계통</label>
-            <div className="flex gap-4">
+            <label className="mb-2 block text-sm text-muted-foreground">계통</label>
+            <div className="flex gap-5">
               {ELEMENTS.map((el) => {
                 const m = ELEMENT_META[el]
                 const hex = ELEMENT_HEX[el]
                 const active = element === el
                 return (
-                  <button key={el} onClick={() => setElement(el)} className="flex flex-col items-center gap-1.5">
+                  <button key={el} onClick={() => setElement(el)} className="flex flex-col items-center gap-2">
                     <span
-                      className="flex h-14 w-14 items-center justify-center rounded-full transition-all"
+                      className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full transition-all"
                       style={{
                         background: active ? `radial-gradient(circle at 35% 30%, ${hex}66, ${hex}1a 72%)` : 'rgba(255,255,255,0.05)',
-                        boxShadow: active ? `0 0 0 2px ${hex}, 0 0 16px ${hex}99` : '0 0 0 1px rgba(255,255,255,0.12)',
+                        boxShadow: active ? `0 0 0 2px ${hex}, 0 0 18px ${hex}99` : '0 0 0 1px rgba(255,255,255,0.14)',
                       }}
                     >
-                      <Image src={m.icon} alt={m.name} width={32} height={32} />
+                      <Image src={m.icon} alt={m.name} width={40} height={40} />
                     </span>
-                    <span className="text-xs font-semibold" style={active ? { color: m.color } : undefined}>
+                    <span className="text-sm font-semibold" style={active ? { color: m.color } : undefined}>
                       {m.line}
                     </span>
                   </button>
@@ -147,12 +147,13 @@ export function CreateScreen() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="ghost" onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'title' })}>
+            <Button variant="ghost" size="lg" onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'title' })}>
               뒤로
             </Button>
             <Button
               variant="default"
               size="lg"
+              className="px-8 text-base"
               onClick={() => dispatch({ type: 'START_GAME', name: name.trim() || '이름없는 견습생', element, gender })}
             >
               모험 시작
@@ -160,8 +161,8 @@ export function CreateScreen() {
           </div>
         </div>
 
-        <p className="mx-auto mt-4 max-w-5xl text-xs leading-relaxed text-muted-foreground">{meta.blurb}</p>
-        <p className="mx-auto mt-1 max-w-5xl text-[11px] text-muted-foreground/60">삼원 상성: 화염계 → 빙결계 → 대지계 → 화염계</p>
+        <p className="mx-auto mt-5 max-w-6xl text-sm leading-relaxed text-muted-foreground">{meta.blurb}</p>
+        <p className="mx-auto mt-1.5 max-w-6xl text-xs text-muted-foreground/60">삼원 상성: 화염계 → 빙결계 → 대지계 → 화염계</p>
       </div>
     </div>
   )

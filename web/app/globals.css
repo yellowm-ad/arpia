@@ -1012,7 +1012,7 @@
     animation: screen-fade-in 0.55s ease-out both;
   }
 
-  /* 캐릭터 생성 화면 — 왼쪽 일러스트를 감싸는 금테 액자(기존 navy-frame.png 재사용) +
+  /* 캐릭터 생성 화면 — 일러스트를 감싸는 흑금 액자(PixelLab gold-frame.png) +
      발밑 은은한 마법진 광원(계통 선택에 따라 색이 즉시 반응) */
   .create-portrait-frame {
     position: relative;
@@ -1020,44 +1020,50 @@
     aspect-ratio: 3 / 4;
     border-style: solid;
     border-width: 14px;
-    border-image-source: url('/images/ui/panels/navy-frame.png');
+    border-image-source: url('/images/ui/panels/gold-frame.png');
     border-image-slice: 90;
     border-image-width: 14px;
     border-image-repeat: stretch;
-    background: #10131f;
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+    background: #050403;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
   }
   /* 캐릭터 생성 화면 상단 씬에 곁들이는 작은 일러스트 인셋 카드용 — 같은 액자를 더 얇은 테두리로 */
   .create-portrait-frame-sm {
     border-width: 8px;
     border-image-width: 8px;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55);
   }
   /* 인게임 캐릭터가 마법진 위에 가만히 서있을 때의 아주 미세한 숨쉬기 */
   .create-hero-idle {
     animation: sprite-idle 3s ease-in-out infinite;
   }
 
-  /* 하단 선택 바 — 플랫한 어두운 남색 대신 panel-gilded와 같은 밝은 남색 그라디언트 */
+  /* 하단 선택 바 — 남색 대신 흑금(PixelLab gold-frame.png) 고급 프레임 */
   .create-select-bar {
     position: relative;
-    border-top: 1px solid rgba(240, 217, 153, 0.35);
-    background: radial-gradient(120% 180% at 15% -20%, rgba(255, 255, 255, 0.07), transparent 55%),
-      linear-gradient(180deg, #2a3068 0%, #1c2049 55%, #14173a 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    background: radial-gradient(120% 180% at 15% -20%, rgba(255, 255, 255, 0.05), transparent 55%),
+      linear-gradient(180deg, #1a1611 0%, #100d09 55%, #060504 100%);
+    border-style: solid;
+    border-width: 20px;
+    border-image-source: url('/images/ui/panels/gold-frame.png');
+    border-image-slice: 90;
+    border-image-width: 20px;
+    border-image-repeat: stretch;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.55);
   }
-  /* 이름 입력창 — 거의 검정에 가깝던 것을 밝게 */
+  /* 이름 입력창 — 흑금 톤에 맞춰 유리질 어두운 배경 + 금테 */
   .create-name-input {
-    border: 1.5px solid rgba(240, 217, 153, 0.35);
-    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(217, 164, 65, 0.5);
+    background: rgba(0, 0, 0, 0.38);
     color: var(--foreground);
-    transition: border-color 0.2s ease, background 0.2s ease;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   }
   .create-name-input::placeholder {
-    color: rgba(154, 160, 200, 0.75);
+    color: rgba(180, 170, 150, 0.55);
   }
   .create-name-input:focus {
     border-color: var(--gold);
-    background: rgba(255, 255, 255, 0.11);
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 0 3px rgba(217, 164, 65, 0.22);
   }
 }
