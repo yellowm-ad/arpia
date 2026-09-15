@@ -44,7 +44,7 @@ export function AdminPanel() {
   }
 
   return (
-    <div className="fixed right-0 top-0 z-[70] flex h-full w-[min(94vw,340px)] flex-col border-l border-gold/50 bg-[#0c0a18]/96 text-xs text-white/90 shadow-2xl">
+    <div className="fixed right-0 top-0 z-[70] flex h-full w-[min(94vw,340px)] flex-col border-l border-gold/50 bg-[#17130e]/96 text-xs text-white/90 shadow-2xl">
       <div className="flex items-center justify-between border-b border-gold/30 px-3 py-2">
         <span className="font-display text-gold-soft">관리자 테스트 패널</span>
         <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>

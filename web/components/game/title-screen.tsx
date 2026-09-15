@@ -32,7 +32,7 @@ export function TitleScreen() {
   }
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#0a0d20] text-center">
+    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#0b0907] text-center">
       {/* 배경 삽화 — PixelLab Pro로 생성한 울토르 마법학교 정문 계단 */}
       <div className="title-bg-frame">
         <div className="title-bg" />

@@ -53,14 +53,14 @@
 :root {
   color-scheme: dark;
 
-  /* 세계 배경 - 깊은 마법 남색 */
-  --background: #0d1024;
+  /* 세계 배경 - 흑금(2026-09-15: 남색 톤 전면 폐기, 검정+금으로 통일) */
+  --background: #0b0907;
   --foreground: #f2ecd8;
-  --surface: #14173a;
+  --surface: #17130e;
 
-  --card: #1c2044;
+  --card: #1e1912;
   --card-foreground: #f2ecd8;
-  --popover: #1c2044;
+  --popover: #1e1912;
   --popover-foreground: #f2ecd8;
 
   --primary: #d9a441;
@@ -68,18 +68,18 @@
   --primary-hover: #e8b95c;
   --primary-soft: #3a2d10;
 
-  --secondary: #2a2f5c;
+  --secondary: #2a2116;
   --secondary-foreground: #f2ecd8;
-  --muted: #232752;
-  --muted-foreground: #9aa0c8;
+  --muted: #211c15;
+  --muted-foreground: #a89e8c;
   --accent: #3a2d10;
   --accent-foreground: #e8b95c;
 
   --destructive: #e5484d;
   --destructive-foreground: #ffffff;
 
-  --border: #33386b;
-  --input: #262b58;
+  --border: #4a3d24;
+  --input: #201a12;
   --ring: #d9a441;
 
   /* 울토르풍 UI 팔레트: 금테 + 양피지 */
@@ -115,8 +115,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
-    background-image: radial-gradient(circle at 20% 10%, #1c2461 0%, transparent 45%),
-      radial-gradient(circle at 85% 85%, #241748 0%, transparent 50%);
+    background-image: radial-gradient(circle at 20% 10%, #241b0e 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, #1c130a 0%, transparent 50%);
     background-attachment: fixed;
   }
 }
@@ -126,11 +126,11 @@
     font-family: var(--font-display);
   }
 
-  /* 울토르풍 금테 남색 패널(2026-09-12 v2: 다중 그라디언트 + 이중 테두리로 고급감 강화) */
+  /* 울토르풍 금테 흑금 패널(2026-09-15: 남색 그라디언트 → 흑금으로 교체) */
   .panel-gilded {
     position: relative;
-    background: radial-gradient(120% 55% at 18% -8%, rgba(255, 255, 255, 0.09), transparent 55%),
-      linear-gradient(165deg, #2a3068 0%, #1c2049 45%, #100f28 100%);
+    background: radial-gradient(120% 55% at 18% -8%, rgba(255, 255, 255, 0.07), transparent 55%),
+      linear-gradient(165deg, #241f17 0%, #17130e 45%, #0a0806 100%);
     border: 3px solid var(--gold);
     border-radius: var(--radius-lg);
     box-shadow: inset 0 0 0 1px rgba(240, 217, 153, 0.22), inset 0 2px 0 rgba(255, 255, 255, 0.08),
@@ -168,15 +168,15 @@
     border-image-repeat: stretch;
   }
 
-  /* 참고자료 스타일로 PixelLab에 직접 생성 요청한 남색+금 唐草(당초) 테두리 프레임 —
+  /* PixelLab에 직접 생성 요청한 흑금 唐草(당초) 테두리 프레임(2026-09-15: navy-frame → gold-frame) —
      Modal/HUD 대형 패널 전용(작은 배지·버튼엔 기존 panel-gilded 유지) */
   .panel-royal {
     position: relative;
-    background: radial-gradient(120% 55% at 18% -8%, rgba(255, 255, 255, 0.09), transparent 55%),
-      linear-gradient(165deg, #2a3068 0%, #1c2049 45%, #100f28 100%);
+    background: radial-gradient(120% 55% at 18% -8%, rgba(255, 255, 255, 0.07), transparent 55%),
+      linear-gradient(165deg, #241f17 0%, #17130e 45%, #0a0806 100%);
     border-style: solid;
     border-width: 26px;
-    border-image-source: url('/images/ui/panels/navy-frame.png');
+    border-image-source: url('/images/ui/panels/gold-frame.png');
     border-image-slice: 90;
     border-image-width: 26px;
     border-image-repeat: stretch;
@@ -211,7 +211,7 @@
     border-radius: 999px;
     border: 3px solid var(--ring-col, var(--gold));
     box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 10px 2px var(--ring-glow, rgba(217, 164, 65, 0.55));
-    background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.22), transparent 55%), #10122a;
+    background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.22), transparent 55%), #140f0a;
     overflow: hidden;
   }
   .portrait-ring-active {
@@ -232,7 +232,7 @@
     border-radius: 1.1rem;
     border: 2.5px solid var(--gold);
     background: radial-gradient(120% 100% at 30% 0%, rgba(255, 255, 255, 0.2), transparent 60%),
-      linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.32) 60%), var(--gem-bg, #262b58);
+      linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.32) 60%), var(--gem-bg, #1f1912);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -4px 9px rgba(0, 0, 0, 0.38),
       inset 0 0 0 1px rgba(240, 217, 153, 0.2), 0 4px 10px rgba(0, 0, 0, 0.4);
     transition: transform 0.12s ease, filter 0.12s ease;
@@ -271,7 +271,7 @@
     gap: 0.5rem;
     border-radius: 999px;
     border: 2px solid var(--gold);
-    background: linear-gradient(180deg, rgba(24, 27, 58, 0.92) 0%, rgba(10, 12, 30, 0.94) 100%);
+    background: linear-gradient(180deg, rgba(26, 20, 14, 0.92) 0%, rgba(10, 8, 6, 0.94) 100%);
     box-shadow: inset 0 0 0 1px rgba(217, 164, 65, 0.3), 0 6px 16px rgba(0, 0, 0, 0.45);
     padding: 0.3rem 0.9rem 0.3rem 0.3rem;
   }

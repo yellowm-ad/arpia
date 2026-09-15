@@ -373,7 +373,7 @@ export function WorldScreen() {
   }
 
   return (
-    <div ref={viewportRef} className="relative h-full w-full overflow-hidden bg-[#0b1020]" style={{ perspective: 1500 }}>
+    <div ref={viewportRef} className="relative h-full w-full overflow-hidden bg-[#0b0907]" style={{ perspective: 1500 }}>
       {iso ? (
         <>
           <IsoWorld
@@ -859,7 +859,7 @@ function Marker({
           onClick={onClick}
           style={{ position: 'absolute', left: 0, top: -40, transform: 'translate(-50%, -100%)' }}
         >
-          <div className="flex flex-col items-center gap-0.5 rounded-lg border border-gold/60 bg-[#0d0b18]/90 px-1.5 py-1 shadow-[0_4px_10px_rgba(0,0,0,0.6)]">
+          <div className="flex flex-col items-center gap-0.5 rounded-lg border border-gold/60 bg-[#14100a]/90 px-1.5 py-1 shadow-[0_4px_10px_rgba(0,0,0,0.6)]">
             {children}
           </div>
         </div>

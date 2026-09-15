@@ -59,7 +59,7 @@ export function DialogueScreen() {
             className="panel-parchment relative flex-1 p-4 pt-5"
             style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
           >
-            <div className="absolute -top-3 left-4 flex items-center gap-1.5 rounded-full border-2 border-gold bg-gradient-to-b from-[#2a3068] to-[#191c40] px-3 py-1 font-display text-sm text-gold-soft text-shadow-ink shadow-md">
+            <div className="absolute -top-3 left-4 flex items-center gap-1.5 rounded-full border-2 border-gold bg-gradient-to-b from-[#241f17] to-[#100d09] px-3 py-1 font-display text-sm text-gold-soft text-shadow-ink shadow-md">
               <DiamondMark size={10} />
               {npc.name}
               <span className="text-[10px] font-normal text-white/60">{ROLE_LABEL[npc.role]}</span>

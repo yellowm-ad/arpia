@@ -37,7 +37,7 @@ function AdminGate({ children }: { children: React.ReactNode }) {
   if (unlocked) return <>{children}</>
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[#0a0d20] px-4">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[#0b0907] px-4">
       <form
         onSubmit={(e) => {
           e.preventDefault()

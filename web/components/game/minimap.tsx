@@ -47,7 +47,7 @@ export function Minimap() {
         {map.name}
       </div>
       <div
-        className="relative shrink-0 overflow-hidden rounded-full border-2 border-gold bg-[#0b0e22] shadow-[0_0_0_2px_rgba(0,0,0,0.55),0_6px_16px_rgba(0,0,0,0.45)]"
+        className="relative shrink-0 overflow-hidden rounded-full border-2 border-gold bg-[#100c08] shadow-[0_0_0_2px_rgba(0,0,0,0.55),0_6px_16px_rgba(0,0,0,0.45)]"
         style={{ width: diameter, height: diameter }}
       >
         <div
