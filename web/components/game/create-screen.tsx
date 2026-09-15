@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { useGame } from '@/lib/game-state'
 import { Button } from '@/components/ui/button'
-import { HeroPortrait } from '@/components/game/portrait'
 import { HeroSprite } from '@/components/game/pixel-hero'
 import { ELEMENTS, ELEMENT_META } from '@/lib/constants'
 import type { Element, Gender } from '@/lib/types'
@@ -76,14 +75,21 @@ export function CreateScreen() {
               fill
               className="object-contain"
             />
+            <div className="create-portrait-vignette" />
           </div>
           <p className="text-shadow-ink mt-1.5 text-center text-xs text-muted-foreground">원화 설정</p>
         </div>
 
-        {/* 우측 상단: 일러스트 미리보기 */}
+        {/* 우측 상단: 일러스트 미리보기 — 키(비율)에 상관없이 전신이 잘리지 않도록 object-contain */}
         <div className="absolute top-5 right-5 z-[2] w-36 sm:w-40 md:w-44">
           <div className="create-portrait-frame create-portrait-frame-sm">
-            <HeroPortrait element={element} gender={gender} className="h-full w-full" />
+            <Image
+              src={`/images/portraits/hero-${element}-${gender}.png`}
+              alt={`${meta.name} 일러스트`}
+              fill
+              className="object-contain"
+            />
+            <div className="create-portrait-vignette" />
           </div>
           <p className="text-shadow-ink mt-1.5 text-center text-xs text-muted-foreground">일러스트</p>
         </div>

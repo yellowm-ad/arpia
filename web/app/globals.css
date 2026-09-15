@@ -1033,6 +1033,14 @@
     border-image-width: 8px;
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55);
   }
+  /* object-contain 여백/원화 배경 가장자리를 액자 안쪽 색으로 은은하게 녹여 어떤 원본이든
+     이음매 없이 자연스럽게 보이도록 하는 비네트 */
+  .create-portrait-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 78% 72% at 50% 42%, transparent 58%, rgba(5, 4, 3, 0.5) 84%, rgba(5, 4, 3, 0.92) 100%);
+  }
   /* 인게임 캐릭터가 마법진 위에 가만히 서있을 때의 아주 미세한 숨쉬기 */
   .create-hero-idle {
     animation: sprite-idle 3s ease-in-out infinite;
