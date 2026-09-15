@@ -1011,4 +1011,31 @@
   .screen-fade-in {
     animation: screen-fade-in 0.55s ease-out both;
   }
+
+  /* 캐릭터 생성 화면 — 왼쪽 일러스트를 감싸는 금테 액자(기존 navy-frame.png 재사용) +
+     발밑 은은한 마법진 광원(계통 선택에 따라 색이 즉시 반응) */
+  .create-portrait-frame {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    border-style: solid;
+    border-width: 14px;
+    border-image-source: url('/images/ui/panels/navy-frame.png');
+    border-image-slice: 90;
+    border-image-width: 14px;
+    border-image-repeat: stretch;
+    background: #10131f;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+  }
+  .create-portrait-glow {
+    position: relative;
+    height: 14px;
+    width: 70%;
+    margin: -7px auto 0;
+    border-radius: 999px;
+    background: var(--glow-color, #d9a441);
+    filter: blur(10px);
+    opacity: 0.55;
+    animation: portal-pulse 2.6s ease-in-out infinite;
+  }
 }
