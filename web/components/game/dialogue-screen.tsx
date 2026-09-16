@@ -21,6 +21,7 @@ const ROLE_LABEL: Record<string, string> = {
   templePriest: '신관',
   saint: '성녀',
   farmer: '농부',
+  craftStation: '제작대',
 }
 
 export function DialogueScreen() {
@@ -39,6 +40,7 @@ export function DialogueScreen() {
   const isTamer = npc.role === 'petTamer'
   const isJobTrainer = npc.role === 'jobTrainer'
   const isElder = npc.role === 'housing'
+  const isCraftStation = npc.role === 'craftStation'
   const eligible = jobTierForLevel(state.player.level)
   const canJobChange = isJobTrainer && eligible.id !== state.player.jobTierId
   const currentTier = JOB_TIERS.find((t) => t.id === state.player.jobTierId)!
@@ -83,6 +85,12 @@ export function DialogueScreen() {
               {lastLine && isTamer && (
                 <Button variant="default" size="sm" onClick={() => dispatch({ type: 'OPEN_TAMER', npcId: npc.id })}>
                   펫 훈련
+                </Button>
+              )}
+
+              {lastLine && isCraftStation && (
+                <Button variant="default" size="sm" onClick={() => dispatch({ type: 'OPEN_CRAFT', npcId: npc.id })}>
+                  제작하기
                 </Button>
               )}
 

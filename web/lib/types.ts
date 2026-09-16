@@ -103,6 +103,8 @@ export interface Skill {
 // ─────────────────────────────────────────────────────────────────────────────
 export type ItemType = 'weapon' | 'armor' | 'accessory' | 'potion' | 'tool' | 'feed' | 'material'
 export type EquipSlot = 'weapon' | 'armor' | 'accessory'
+/** 장비 성장 등급(§장비·아이템 PRD). 티어(전직 단계)와 독립적인 별도 축 */
+export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'mythic' | 'unique'
 
 export interface ItemDef {
   id: string
@@ -130,11 +132,37 @@ export interface ItemDef {
   feedElement?: Element | 'neutral'
   stackable: boolean
   maxStack: number
+  /** 장비 성장 단계(전직 5단계와 동일 축). 소모품·재료는 생략 가능 */
+  tier?: 1 | 2 | 3 | 4 | 5
+  /** 장비 성장 등급. 소모품·재료는 생략 가능 */
+  rarity?: ItemRarity
+  /** 상점 구매 가능 여부. 생략 시 true 취급(기존 상점 아이템 호환) */
+  shopBuyable?: boolean
+  /** 제작대 레시피로 만들 수 있는지. 생략 시 false 취급 */
+  craftable?: boolean
+  /** craftable=true 일 때 RecipeDef.id 참조 */
+  recipeId?: string
 }
 
 export interface InventorySlot {
   itemId: string
   qty: number
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 제작(크래프팅)
+// ─────────────────────────────────────────────────────────────────────────────
+export type CraftStationKind = 'magic_workbench' | 'alchemy_pot'
+
+export interface RecipeDef {
+  id: string
+  /** 어느 제작대에서 만들 수 있는지(현재는 UI에서 구분 없이 전부 노출) */
+  station: CraftStationKind
+  ingredients: { itemId: string; quantity: number }[]
+  outputItemId: string
+  outputQuantity: number
+  /** 스토리 시스템 연결 전까지는 사용하지 않음 — 구조만 마련 */
+  unlockCondition?: { type: 'regionReached' | 'bossDefeated'; value: string }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -237,6 +265,8 @@ export interface MonsterDef {
   goldReward: number
   dropTable?: { itemId: string; chance: number }[]
   zoneKinds: ZoneKind[]
+  /** 생략 시 'normal'. 중간보스/필드보스는 monstersForZoneKind 랜덤풀에서 제외되고 GameMap.bossSpawns로만 등장한다 */
+  rank?: 'normal' | 'midBoss' | 'fieldBoss' | 'storyBoss'
   isTestMonster?: boolean
 }
 
@@ -353,6 +383,8 @@ export interface GameMap {
   monsterDensity?: number
   /** 몬스터 사이 최소 간격(셀) — 클수록 배치가 퍼진다 (기본 1.2) */
   monsterSpacing?: number
+  /** 중간보스/필드보스 고정 배치 — 랜덤 풀과 별개로 항상 이 위치에 등장(맵 재입장 시 재생성=재도전) */
+  bossSpawns?: { monsterId: string; cell: { x: number; y: number } }[]
   recommendedLevel?: number
   portals: Portal[]
   spawn: { x: number; y: number }
@@ -373,6 +405,7 @@ export type NpcRole =
   | 'templePriest'
   | 'saint'
   | 'farmer'
+  | 'craftStation'
 
 export interface NpcDef {
   id: string
@@ -461,6 +494,7 @@ export type ScreenId =
   | 'tamer'
   | 'settings'
   | 'dialogue'
+  | 'craft'
 
 export interface GameSettings {
   testMode: boolean

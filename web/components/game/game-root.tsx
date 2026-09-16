@@ -14,6 +14,7 @@ import { CharacterScreen } from '@/components/game/character-screen'
 import { PartyScreen } from '@/components/game/party-screen'
 import { TamerScreen } from '@/components/game/tamer-screen'
 import { SettingsScreen } from '@/components/game/settings-screen'
+import { CraftScreen } from '@/components/game/craft-screen'
 import { Toast } from '@/components/game/toast'
 
 function GameShell() {
@@ -35,6 +36,7 @@ function GameShell() {
       <CharacterScreen />
       <PartyScreen />
       <TamerScreen />
+      <CraftScreen />
       <SettingsScreen />
     </div>
   )

@@ -585,11 +585,26 @@ function BattleResult() {
   const { state, dispatch } = useGame()
   const battle = state.battle
   if (!battle) return null
+
+  const dropCounts = new Map<string, number>()
+  for (const id of battle.rewardDrops ?? []) dropCounts.set(id, (dropCounts.get(id) ?? 0) + 1)
+  const drops = [...dropCounts.entries()].map(([id, qty]) => ({ item: itemById(id), qty })).filter((d) => d.item)
+
   return (
-    <div className="flex h-16 flex-col items-center justify-center gap-1">
+    <div className="flex flex-col items-center justify-center gap-1.5 py-1">
       <span className={`font-display text-sm ${battle.victory ? 'text-gold-soft' : 'text-red-300'}`}>
         {battle.victory ? `승리! EXP +${battle.rewardExp} · Gold +${battle.rewardGold}` : '전투 패배...'}
       </span>
+      {battle.victory && drops.length > 0 && (
+        <div className="flex max-w-xs flex-wrap items-center justify-center gap-1.5">
+          {drops.map(({ item, qty }) => (
+            <span key={item!.id} className="flex items-center gap-1 rounded-full bg-black/40 px-2 py-0.5 text-[11px] text-white/85">
+              <Image src={item!.icon} alt="" width={14} height={14} />
+              {item!.name} {qty > 1 ? `x${qty}` : ''}
+            </span>
+          ))}
+        </div>
+      )}
       <Button size="sm" onClick={() => dispatch({ type: 'BATTLE_END_CONTINUE' })}>계속하기</Button>
     </div>
   )

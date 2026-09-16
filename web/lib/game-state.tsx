@@ -17,7 +17,7 @@ import {
   computeStatsForLevel,
 } from '@/lib/constants'
 import { MAPS, zoneAt } from '@/lib/maps'
-import { ITEMS, MONSTERS, NPCS, SKILLS, autoLearnSkillIds, itemById, npcById } from '@/lib/mock-data'
+import { ITEMS, MONSTERS, NPCS, SKILLS, autoLearnSkillIds, itemById, npcById, recipeById } from '@/lib/mock-data'
 import { applyExp } from '@/lib/exp-table'
 import { createInitialGameState, createPlayer, createStarterPet } from '@/lib/player-factory'
 import { generateFieldMonsters } from '@/lib/field'
@@ -40,9 +40,11 @@ export type Action =
   | { type: 'OPEN_NPC'; npcId: string }
   | { type: 'OPEN_SHOP'; npcId: string }
   | { type: 'OPEN_TAMER'; npcId: string }
+  | { type: 'OPEN_CRAFT'; npcId: string }
   | { type: 'CLOSE_OVERLAY' }
   | { type: 'BUY_ITEM'; itemId: string }
   | { type: 'SELL_ITEM'; itemId: string }
+  | { type: 'CRAFT_ITEM'; recipeId: string }
   | { type: 'USE_ITEM_FIELD'; itemId: string }
   | { type: 'PET_TRAIN'; skillId: string }
   | { type: 'REST' }
@@ -273,6 +275,9 @@ function reducer(state: GameState, action: Action): GameState {
     case 'OPEN_TAMER':
       return { ...state, activeNpcId: action.npcId, previousScreen: state.screen, screen: 'tamer' }
 
+    case 'OPEN_CRAFT':
+      return { ...state, activeNpcId: action.npcId, previousScreen: state.screen, screen: 'craft' }
+
     case 'CLOSE_OVERLAY':
       return { ...state, activeNpcId: null, activeShopId: null, screen: 'world' }
 
@@ -297,6 +302,21 @@ function reducer(state: GameState, action: Action): GameState {
         inventory: removeFromInventory(state.inventory, action.itemId, 1),
         toast: `${item.name}을(를) 판매했습니다. (+${item.sellPrice}G)`,
       }
+    }
+
+    case 'CRAFT_ITEM': {
+      const recipe = recipeById(action.recipeId)
+      if (!recipe) return state
+      const hasAll = recipe.ingredients.every((ing) => {
+        const slot = state.inventory.find((s) => s.itemId === ing.itemId)
+        return (slot?.qty ?? 0) >= ing.quantity
+      })
+      if (!hasAll) return { ...state, toast: '재료가 부족합니다.' }
+      let inventory = state.inventory
+      for (const ing of recipe.ingredients) inventory = removeFromInventory(inventory, ing.itemId, ing.quantity)
+      inventory = addToInventory(inventory, recipe.outputItemId, recipe.outputQuantity)
+      const output = itemById(recipe.outputItemId)
+      return { ...state, inventory, toast: `${output?.name ?? '아이템'}을(를) 제작했습니다.` }
     }
 
     case 'USE_ITEM_FIELD': {

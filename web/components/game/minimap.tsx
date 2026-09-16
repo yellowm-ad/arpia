@@ -41,13 +41,13 @@ export function Minimap() {
   const diameter = Math.max(w, h) + 8
 
   return (
-    <div className="pointer-events-none absolute right-2 top-[4.5rem] z-30 flex flex-col items-center gap-1 sm:right-3 sm:top-24">
-      <div className="flex items-center gap-1 rounded-full border border-gold/60 bg-black/55 px-2.5 py-0.5 text-[10px] font-display text-gold-soft text-shadow-ink">
-        <DiamondMark size={9} />
+    <div className="title-enter-2 pointer-events-none absolute right-3 top-24 z-30 flex flex-col items-center gap-1 sm:right-4 sm:top-32">
+      <div className="hud-map-label flex items-center gap-1 text-[11px]">
+        <DiamondMark size={8} />
         {map.name}
       </div>
       <div
-        className="relative shrink-0 overflow-hidden rounded-full border-2 border-gold bg-[#100c08] shadow-[0_0_0_2px_rgba(0,0,0,0.55),0_6px_16px_rgba(0,0,0,0.45)]"
+        className="relative shrink-0 overflow-hidden rounded-full border border-gold/70 bg-[#100c08] shadow-[0_0_0_2px_rgba(0,0,0,0.5),0_6px_18px_rgba(0,0,0,0.5),0_0_14px_rgba(240,217,153,0.25)]"
         style={{ width: diameter, height: diameter }}
       >
         <div

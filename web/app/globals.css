@@ -1074,4 +1074,89 @@
     background: rgba(0, 0, 0, 0.5);
     box-shadow: 0 0 0 3px rgba(217, 164, 65, 0.22);
   }
+
+  /* ── 필드 HUD 개편(2026-09-16): 원신풍 "박스 없는" 미니멀 HUD.
+     panel-royal 액자 대신 아이콘·바가 게임 화면 위에 직접 떠 있고, 그림자만으로 가독성을 확보한다.
+     타이틀 화면과 같은 은빛 텍스트 톤 + title-enter-* 등장 애니메이션을 그대로 재사용. ── */
+  .hud-clean-text {
+    color: #e7ecf5;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 10px rgba(0, 0, 0, 0.5);
+  }
+  .hud-clean-label {
+    font-family: var(--font-display);
+    letter-spacing: 0.04em;
+  }
+  .hud-clean-bar-track {
+    position: relative;
+    height: 7px;
+    width: 100%;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(5, 6, 12, 0.55);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+  .hud-clean-bar-track.hud-clean-bar-thin {
+    height: 5px;
+  }
+  .hud-clean-bar-track.hud-clean-bar-hp-size {
+    height: 11px;
+  }
+  .hud-clean-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 6px 0 var(--fill-glow, transparent);
+  }
+  .hud-bar-hp {
+    background: linear-gradient(180deg, #ff9a86 0%, var(--hp) 60%, #7a1a15 100%);
+    --fill-glow: rgba(255, 90, 70, 0.65);
+  }
+  .hud-bar-mp {
+    background: linear-gradient(180deg, #8fc2ff 0%, var(--mp) 60%, #12326b 100%);
+    --fill-glow: rgba(90, 150, 255, 0.6);
+  }
+  .hud-bar-exp {
+    background: linear-gradient(180deg, #a6f0a6 0%, var(--exp) 60%, #1f5c1f 100%);
+    --fill-glow: rgba(120, 230, 120, 0.55);
+  }
+
+  /* 우상단 메뉴 — 박스 버튼 대신 순수 아이콘. title-start-text와 같은 호버(확대+발광) 언어 */
+  .hud-icon-btn {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  .hud-icon-btn:hover,
+  .hud-icon-btn:focus-visible {
+    transform: translateY(-2px) scale(1.1);
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 10px rgba(240, 217, 153, 0.85));
+  }
+  .hud-icon-btn:active {
+    transform: translateY(0) scale(1.02);
+  }
+  .hud-icon-btn img {
+    image-rendering: pixelated;
+  }
+  .hud-icon-btn-label {
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: #d9dfec;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  }
+
+  /* 미니맵 라벨 — 금테 알약 배경 대신 발광 텍스트만 */
+  .hud-map-label {
+    font-family: var(--font-display);
+    letter-spacing: 0.08em;
+    color: #f0d999;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(240, 217, 153, 0.5);
+  }
 }

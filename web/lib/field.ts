@@ -75,6 +75,11 @@ export function generateFieldMonsters(map: GameMap, testMode: boolean): FieldMon
     place(testMonster.id, Math.floor(map.spawn.x) - 1, Math.floor(map.spawn.y) - 1, 'fm-test')
   }
 
+  // 중간보스/필드보스 — 랜덤 풀과 별개로 지정된 위치에 항상 고정 배치(재입장 시 재도전 가능)
+  if (map.bossSpawns) {
+    for (const boss of map.bossSpawns) place(boss.monsterId, Math.floor(boss.cell.x), Math.floor(boss.cell.y), 'fm-boss')
+  }
+
   return result
 }
 
@@ -128,8 +133,12 @@ function npcSeed(id: string): number {
   return h >>> 0
 }
 
+/** 작업대 등 사람이 아닌 오브젝트형 NPC — 완전히 고정, 배회 애니메이션 없음 */
+const NPC_STATIC_ROLES = new Set(['craftStation'])
+
 /** NPC 배회 반경(그리드 셀) — 자기 발밑 넓이(~1셀)의 16배 면적 ≈ 선형 4배 → flavor는 반경 2셀. */
 export function npcWanderRadius(npc: NpcDef): number {
+  if (NPC_STATIC_ROLES.has(npc.role)) return 0
   return NPC_FULL_ROAM_ROLES.has(npc.role) ? 2.0 : 0.4
 }
 

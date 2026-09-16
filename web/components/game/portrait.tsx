@@ -83,6 +83,9 @@ function PropShape({ prop, accent }: { prop: Prop; accent: string }) {
  * "npc 본거지 일러.png" 시트에서 추출한 본거지 12종) → ② `public/images/npc/<id>.png`(도트 전신
  * 스프라이트 상반신 크롭) → ③ 절차적 SVG(SPECS/FALLBACK).
  */
+/** 사람이 아닌 오브젝트(작업대 등) — 전신 크롭 대신 아이콘 그대로 가운데 배치 */
+const OBJECT_ICON_IDS = new Set(['npc-workbench'])
+
 export function Portrait({ id, className }: { id: string; className?: string }) {
   const candidates = [`/images/npc/portrait-${id}.png`, `/images/npc/${id}.png`]
   const [idx, setIdx] = useState(0)
@@ -93,6 +96,7 @@ export function Portrait({ id, className }: { id: string; className?: string }) 
   }, [id])
   const src = candidates[idx]
   const isIllustration = idx === 0
+  const isObjectIcon = OBJECT_ICON_IDS.has(id)
   return (
     <span className={className} style={{ display: 'inline-block', position: 'relative', overflow: 'hidden' }}>
       <NpcPortraitSvg id={id} className={`h-full w-full ${ready ? 'invisible' : ''}`} />
@@ -111,8 +115,9 @@ export function Portrait({ id, className }: { id: string; className?: string }) 
           inset: 0,
           width: '100%',
           height: '100%',
-          objectFit: 'cover',
-          objectPosition: isIllustration ? '50% 15%' : '50% 6%',
+          objectFit: isObjectIcon ? 'contain' : 'cover',
+          objectPosition: isObjectIcon ? '50% 50%' : isIllustration ? '50% 15%' : '50% 6%',
+          padding: isObjectIcon ? '12%' : 0,
           imageRendering: isIllustration ? 'auto' : 'pixelated',
           display: ready ? 'block' : 'none',
         }}

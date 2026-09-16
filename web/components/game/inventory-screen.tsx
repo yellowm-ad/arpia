@@ -17,6 +17,7 @@ const TABS: { id: ItemType | 'all'; label: string; icon?: string }[] = [
   { id: 'potion', label: '물약', icon: '/images/icons/items/potion.png' },
   { id: 'tool', label: '도구', icon: '/images/icons/items/tool.png' },
   { id: 'feed', label: '먹이', icon: '/images/icons/items/feed.png' },
+  { id: 'material', label: '재료', icon: '/images/icons/items/material.png' },
 ]
 
 export function InventoryScreen() {

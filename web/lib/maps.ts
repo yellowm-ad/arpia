@@ -1535,6 +1535,10 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'forest',
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
+    bossSpawns: [
+      { monsterId: 'mon-thorn-matriarch', cell: { x: 12, y: 13 } },
+      { monsterId: 'mon-ancient-bark-golem', cell: { x: 18, y: 15 } },
+    ],
     recommendedLevel: 2,
     spawn: { ...FIELD_SPAWN },
     portals: [
@@ -1624,6 +1628,10 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'sea',
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
+    bossSpawns: [
+      { monsterId: 'mon-jelly-queen', cell: { x: 12, y: 13 } },
+      { monsterId: 'mon-reef-king', cell: { x: 18, y: 15 } },
+    ],
     recommendedLevel: 3,
     spawn: { ...FIELD_SPAWN },
     portals: [
@@ -1732,6 +1740,10 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'ruins',
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
+    bossSpawns: [
+      { monsterId: 'mon-stone-titan', cell: { x: 12, y: 13 } },
+      { monsterId: 'mon-stone-titan-king', cell: { x: 18, y: 15 } },
+    ],
     recommendedLevel: 10,
     spawn: { ...FIELD_SPAWN },
     portals: [
