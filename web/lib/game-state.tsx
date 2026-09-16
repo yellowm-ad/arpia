@@ -17,7 +17,7 @@ import {
   computeStatsForLevel,
 } from '@/lib/constants'
 import { MAPS, zoneAt } from '@/lib/maps'
-import { ITEMS, MONSTERS, NPCS, SKILLS, autoLearnSkillIds, itemById, npcById, recipeById } from '@/lib/mock-data'
+import { ITEMS, MONSTERS, NPCS, SKILLS, autoLearnSkillIds, itemById, monsterById, npcById, recipeById } from '@/lib/mock-data'
 import { applyExp } from '@/lib/exp-table'
 import { createInitialGameState, createPlayer, createStarterPet } from '@/lib/player-factory'
 import { generateFieldMonsters } from '@/lib/field'
@@ -190,8 +190,11 @@ function reducer(state: GameState, action: Action): GameState {
       const CONTACT_RADIUS = 0.32
       let touched: string | null = null
       for (const fm of state.fieldMonsters) {
+        const rank = monsterById(fm.monsterId)?.rank
+        // 보스는 덩치가 큰 만큼 접촉 판정도 넉넉하게(필드보스가 가장 큼, 스프라이트 축소에 맞춰 비례 완화)
+        const radius = rank === 'fieldBoss' ? CONTACT_RADIUS * 1.84 : rank === 'midBoss' ? CONTACT_RADIUS * 1.35 : CONTACT_RADIUS
         const d = Math.hypot(fm.homeCell.x - nx, fm.homeCell.y - ny)
-        if (d < CONTACT_RADIUS) {
+        if (d < radius) {
           touched = fm.uid
           break
         }

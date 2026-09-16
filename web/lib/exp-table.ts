@@ -1,67 +1,36 @@
 // ============================================================================
-// 레벨업 필요 경험치 테이블 (기획 9번 항목)
+// 레벨업 필요 경험치 테이블
 //
-// "메이플스토리 정보를 따라 200렙 기준을 50으로 환산해서 적용"
-//   → 메이플스토리(구버전) 실제 데이터마이닝 수치를 앵커 포인트로 삼아
-//     "본 게임 레벨 L" = "메이플스토리 레벨 4L" 로 매핑(50 x 4 = 200)한 뒤,
-//     구간 사이는 로그 선형보간(log-linear interpolation)으로 채워
-//     메이플스토리 특유의 "후반부로 갈수록 기하급수적으로 커지는" 성장 곡선
-//     형태를 그대로 재현한다.
+// 2026-09 밸런스 패치: 기존엔 메이플스토리 실측 곡선(1→50을 메이플 1→200으로 환산)을
+// 그대로 써서 후반 레벨 하나에 수십억 경험치가 필요한 등 비현실적으로 가팔랐다.
+// "하루 3시간 × 주 7일(주 21시간) 꾸준히 플레이하면 만렙(50) 도달, 초반 30레벨까지는
+// 빠르게" 라는 목표에 맞춰 완전히 새로 설계.
 //
-// 앵커 데이터 출처: MapleStory Wiki "Experience/Leveling Tables"
-//   https://maplestorywiki.net/w/Experience/Leveling_Tables , namu.wiki "메이플스토리/레벨"
-//   (레벨 1,5,10,20,30,40,50,60,70,80,90,100,120,140,150,160,180,200의
-//    "다음 레벨까지 필요 경험치" 실측값)
-//
-// ※ 실제 몬스터 처치 시 획득 경험치량은 추후 밸런싱 예정(기획 9번). 이 테이블은
-//   "레벨업에 필요한 총 경험치" 기준선으로만 사용한다.
+// 설계 방식: "그 레벨에서 맞는 사냥터 몬스터를 몇 마리 잡아야 다음 레벨이 되는가"를
+// 기준으로 역산했다. kills(L) = 3 + 0.05·L^1.8 (레벨1≈3마리 → 레벨49≈47마리로 완만히
+// 증가), monExp(L) ≈ 5.5·L + 0.2·L² (실제 lib/mock-data.ts 몬스터 expReward 값 회귀
+// 근사치)를 곱해 필요 경험치를 얻는다. 활발한 사냥 페이스(체감 시간당 60~120마리
+// 처치 — 이동·전투·복귀 포함)를 가정하면 전체 1→50 합계(~53만 exp, 총 킬수 ~1,140마리)가
+// 21시간 전후에 맞아떨어진다. 실제 체감 속도는 플레이 패턴에 따라 달라질 수 있으니
+// 실측 후 kills()/monExp() 계수만 조정하면 됨(테이블 재계산 로직은 그대로 재사용).
 // ============================================================================
 
 export const MAX_LEVEL = 50
 
-/** 메이플스토리 실측 앵커: [메이플 레벨, 다음 레벨까지 필요 EXP] */
-const MAPLESTORY_ANCHORS: [number, number][] = [
-  [1, 15],
-  [5, 135],
-  [10, 1242],
-  [20, 3705],
-  [30, 19112],
-  [40, 51357],
-  [50, 110870],
-  [60, 221624],
-  [70, 342029],
-  [80, 685481],
-  [90, 1342136],
-  [100, 2365603],
-  [120, 6479400],
-  [140, 22777494],
-  [150, 41763344],
-  [160, 76574580],
-  [180, 226009829],
-  [200, 2207026470],
-]
+/** 레벨 L에서 다음 레벨까지 필요한 처치 수(완만히 증가) */
+function killsToNextLevel(level: number): number {
+  return 3 + 0.05 * Math.pow(level, 1.8)
+}
 
-function logLinearInterp(mapleLevel: number): number {
-  const anchors = MAPLESTORY_ANCHORS
-  if (mapleLevel <= anchors[0][0]) return anchors[0][1]
-  for (let i = 0; i < anchors.length - 1; i++) {
-    const [l0, e0] = anchors[i]
-    const [l1, e1] = anchors[i + 1]
-    if (mapleLevel >= l0 && mapleLevel <= l1) {
-      const t = (mapleLevel - l0) / (l1 - l0)
-      const log0 = Math.log(e0)
-      const log1 = Math.log(e1)
-      return Math.exp(log0 + t * (log1 - log0))
-    }
-  }
-  return anchors[anchors.length - 1][1]
+/** 레벨 L대 사냥터 몬스터의 평균 처치 경험치(현재 몬스터 데이터 회귀 근사) */
+function avgMonsterExpAtLevel(level: number): number {
+  return 5.5 * level + 0.2 * level * level
 }
 
 /** 본 게임 레벨(1~49) → 다음 레벨까지 필요 경험치. 인덱스 0 = 레벨1→2 필요치 */
 export const EXP_TO_NEXT_LEVEL: number[] = Array.from({ length: MAX_LEVEL }, (_, i) => {
   const gameLevel = i + 1
-  const mapleEquivalentLevel = gameLevel * (200 / MAX_LEVEL) // = gameLevel * 4
-  return Math.round(logLinearInterp(mapleEquivalentLevel))
+  return Math.max(1, Math.round(killsToNextLevel(gameLevel) * avgMonsterExpAtLevel(gameLevel)))
 })
 
 export function expRequiredForLevel(level: number): number {

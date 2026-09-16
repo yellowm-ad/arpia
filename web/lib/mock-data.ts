@@ -569,15 +569,27 @@ export function recipeById(id: string): RecipeDef | undefined {
 // ============================================================================
 // 몬스터 — 설계: §8
 // ============================================================================
+/**
+ * 2026-09 밸런스 패치: 몬스터 전반 하향(기존 대비 HP/공격 채널 약 15~20% 추가 감소) +
+ * 30레벨 미만 구간 한정 추가 완화(초반 몹은 순식간에 잡히도록, 레벨1 → 0.7배 ~ 레벨30 → 1.0배
+ * 선형 보간). 30레벨부터는 이 완화가 사라지고 기본 하향치만 적용된다.
+ * 필드보스는 레벨 자체가 40+ 라 이 완화 구간 밖이며, 개별 mult로 더 강하게 설정돼 있다.
+ */
+function earlyLevelEase(level: number): number {
+  if (level >= 30) return 1
+  return 0.7 + 0.3 * (level / 30)
+}
+
 function mstat(level: number, mult: Partial<Stats> = {}): Stats {
   const s = computeStatsForLevel('neutral', level)
+  const ease = earlyLevelEase(level)
   const base: Stats = {
-    maxHp: Math.round(s.maxHp * 0.75),
+    maxHp: Math.round(s.maxHp * 0.62 * ease),
     maxMp: Math.round(s.maxMp * 0.6),
-    atk: Math.round(s.atk * 0.85),
-    def: Math.round(s.def * 0.7),
-    matk: Math.round(s.matk * 0.7),
-    mdef: Math.round(s.mdef * 0.65),
+    atk: Math.round(s.atk * 0.72 * ease),
+    def: Math.round(s.def * 0.58 * ease),
+    matk: Math.round(s.matk * 0.58 * ease),
+    mdef: Math.round(s.mdef * 0.55 * ease),
     spd: Math.round(s.spd * 0.9),
     luck: Math.round(s.luck * 0.6),
   }
@@ -618,7 +630,7 @@ export const MONSTERS: MonsterDef[] = [
     icon: '/images/monsters/mon-ancient-bark-golem.png',
     element: 'earth',
     family: 'construct',
-    stats: mstat(40, { maxHp: 3.6, def: 2.6, atk: 1.7, spd: 0.4 }),
+    stats: mstat(40, { maxHp: 4.6, def: 3.0, atk: 2.0, spd: 0.4 }),
     traits: ['tank'],
     skills: ['earth-t4-1'],
     expReward: 950,
@@ -657,7 +669,7 @@ export const MONSTERS: MonsterDef[] = [
     icon: '/images/monsters/mon-reef-king.png',
     element: 'ice',
     family: 'aquatic',
-    stats: mstat(42, { maxHp: 3.8, def: 2.7, matk: 1.3, spd: 0.4 }),
+    stats: mstat(42, { maxHp: 4.8, def: 3.1, matk: 1.6, spd: 0.4 }),
     traits: ['tank'],
     skills: ['ice-t2-1'],
     expReward: 980,
@@ -685,7 +697,7 @@ export const MONSTERS: MonsterDef[] = [
     icon: '/images/monsters/mon-stone-titan-king.png',
     element: 'earth',
     family: 'construct',
-    stats: mstat(48, { maxHp: 4.0, def: 2.9, atk: 1.9, spd: 0.4 }),
+    stats: mstat(48, { maxHp: 5.0, def: 3.3, atk: 2.2, spd: 0.4 }),
     traits: ['tank'],
     skills: ['earth-t4-1'],
     expReward: 1050,

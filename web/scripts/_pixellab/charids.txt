@@ -29,3 +29,8 @@ mon-frost-revenant	a9f2c44e-5416-4823-a577-d1beee377331
 mon-dark-mage	07741a03-7d3a-4b6e-8c1b-5373dc7a3f62
 mon-stone-titan	39b40e06-9662-458e-acf0-b4354ee9b95b
 mon-azka-herald	a4618fe4-3154-4eee-bd22-68d70fe09c2d
+mon-thorn-matriarch	3fd06581-00d3-4f37-a969-fd8c0e49e369
+mon-ancient-bark-golem	41b9c88f-0706-418d-8074-6946fb66d5ad
+mon-jelly-queen	69f5feb1-1935-4f93-b015-e9d51daa4c44
+mon-reef-king	8b30be55-3404-4115-b8b2-3a89e3da1199
+mon-stone-titan-king	09f08196-a2d8-40fd-8ac3-f9b90f19d06b

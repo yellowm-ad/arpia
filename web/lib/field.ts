@@ -101,24 +101,43 @@ function avoidBlockers(pos: { x: number; y: number }, home: { x: number; y: numb
 
 const MONSTER_BODY_R = 0.3
 
+/**
+ * 쉴 새 없이 움직이면 기괴해 보여서, "한동안 걷다 잠깐 멈춰 서기"를 주기적으로 반복하게 만드는
+ * 공용 시간 변환. 이동 구간에서는 실제 시간을 그대로 쓰고, 정지 구간에서는 이동 구간이 끝난
+ * 시점의 시간에 멈춰 세워(effectiveT 고정) 위치가 그대로 붙박이가 되게 한다.
+ */
+function pauseCycle(t: number, period: number, moveFrac: number): { effectiveT: number; moving: boolean } {
+  const cyclePos = t % period
+  const moveEnd = period * moveFrac
+  if (cyclePos < moveEnd) return { effectiveT: t, moving: true }
+  return { effectiveT: t - cyclePos + moveEnd, moving: false }
+}
+
 /** 배회 애니메이션: 홈 셀 주변을 실제로 걷는 것처럼 맴도는 위치 계산 (시간 기반, 결정론적) */
 export function wanderPosition(fm: FieldMonster, timeMs: number, blockers?: Blocker[]): { x: number; y: number } {
   const t = timeMs / 1000 + fm.wanderSeed
+  const { effectiveT } = pauseCycle(t, 7, 0.6)
   const radius = 1.1
   const speed = 0.22
   const pos = {
-    x: fm.homeCell.x + Math.cos(t * speed) * radius,
-    y: fm.homeCell.y + Math.sin(t * speed * 1.35) * radius * 0.85,
+    x: fm.homeCell.x + Math.cos(effectiveT * speed) * radius,
+    y: fm.homeCell.y + Math.sin(effectiveT * speed * 1.35) * radius * 0.85,
   }
   return avoidBlockers(pos, fm.homeCell, blockers, MONSTER_BODY_R)
 }
 
-/** wanderPosition의 순간 이동 방향(도트 스프라이트 걷기용, down/up/left/right) */
+/** 지금 이 순간 걷는 중인지(정지 구간이면 false) — CreatureSprite의 walking prop에 그대로 연결 */
+export function wanderIsMoving(fm: FieldMonster, timeMs: number): boolean {
+  return pauseCycle(timeMs / 1000 + fm.wanderSeed, 7, 0.6).moving
+}
+
+/** wanderPosition의 순간 이동 방향(도트 스프라이트 걷기용, down/up/left/right). 정지 중엔 정면(down) */
 export function wanderFacing(fm: FieldMonster, timeMs: number, blockers?: Blocker[]): 'down' | 'up' | 'left' | 'right' {
   const a = wanderPosition(fm, timeMs, blockers)
   const b = wanderPosition(fm, timeMs + 100, blockers)
   const dx = b.x - a.x
   const dy = b.y - a.y
+  if (Math.abs(dx) < 1e-6 && Math.abs(dy) < 1e-6) return 'down'
   return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up'
 }
 
@@ -147,13 +166,21 @@ const NPC_BODY_R = 0.28
 export function npcWanderPosition(npc: NpcDef, timeMs: number, blockers?: Blocker[]): { x: number; y: number } {
   const seed = npcSeed(npc.id)
   const t = timeMs / 1000 + (seed % 1000)
+  const { effectiveT } = pauseCycle(t, 6 + (seed % 4), 0.55)
   const radius = npcWanderRadius(npc)
   const speed = 0.14 + (seed % 53) / 1000 // NPC마다 살짝 다른 속도로 동기화된 움직임 방지
   const pos = {
-    x: npc.cell.x + Math.cos(t * speed) * radius,
-    y: npc.cell.y + Math.sin(t * speed * 1.35) * radius * 0.85,
+    x: npc.cell.x + Math.cos(effectiveT * speed) * radius,
+    y: npc.cell.y + Math.sin(effectiveT * speed * 1.35) * radius * 0.85,
   }
   return avoidBlockers(pos, npc.cell, blockers, NPC_BODY_R)
+}
+
+/** 지금 이 순간 걷는 중인지(정지 구간이면 false) — NpcSprite의 walking prop에 그대로 연결 */
+export function npcWanderIsMoving(npc: NpcDef, timeMs: number): boolean {
+  const seed = npcSeed(npc.id)
+  const t = timeMs / 1000 + (seed % 1000)
+  return pauseCycle(t, 6 + (seed % 4), 0.55).moving
 }
 
 /** npcWanderPosition의 순간 이동 방향(도트 스프라이트 걷기용) */
@@ -162,5 +189,6 @@ export function npcWanderFacing(npc: NpcDef, timeMs: number, blockers?: Blocker[
   const b = npcWanderPosition(npc, timeMs + 100, blockers)
   const dx = b.x - a.x
   const dy = b.y - a.y
+  if (Math.abs(dx) < 1e-6 && Math.abs(dy) < 1e-6) return 'down'
   return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up'
 }

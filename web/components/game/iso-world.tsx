@@ -6,7 +6,7 @@ import type { GameState } from '@/lib/types'
 import { MAPS } from '@/lib/maps'
 import { ELEMENT_META } from '@/lib/constants'
 import { NPCS, MONSTERS } from '@/lib/mock-data'
-import { wanderPosition, wanderFacing, npcWanderPosition, npcWanderFacing } from '@/lib/field'
+import { wanderPosition, wanderFacing, wanderIsMoving, npcWanderPosition, npcWanderFacing, npcWanderIsMoving } from '@/lib/field'
 import { ISO_TILE_W, ISO_TILE_H, isoToScreen, isoBounds, TILE_COLORS, TILE_SPRITES } from '@/lib/iso'
 import type { TileKind, PropDef } from '@/lib/iso'
 import { renderProp } from '@/components/game/iso-sprites'
@@ -187,6 +187,7 @@ export function IsoWorld({
   const npcEntities = mapNpcsForRoam.map((npc) => {
     const pos = npcWanderPosition(npc, wanderT, map.blockers)
     const dir = npcWanderFacing(npc, wanderT, map.blockers)
+    const moving = npcWanderIsMoving(npc, wanderT)
     const s = isoToScreen(pos.x, pos.y)
     return {
       sortY: pos.x + pos.y + 0.2,
@@ -199,7 +200,7 @@ export function IsoWorld({
         >
           <ellipse cx={0} cy={1} rx={13} ry={4.5} fill="rgba(0,0,0,0.32)" />
           <foreignObject x={-ND / 2} y={-ND + 7} width={ND} height={ND} style={{ overflow: 'visible' }}>
-            <NpcSprite npcId={`${npc.id}-walk`} fallbackSrc={npc.icon} dir={dir} walking px={ND} />
+            <NpcSprite npcId={`${npc.id}-walk`} fallbackSrc={npc.icon} dir={dir} walking={moving} px={ND} />
           </foreignObject>
           <g transform="translate(0,-58)">
             <rect x={-npc.name.length * 5 - 5} y={-9} width={npc.name.length * 10 + 10} height={14} rx={3} fill={interactId === npc.id ? '#e0b050' : 'rgba(10,8,16,0.68)'} />
@@ -221,30 +222,38 @@ export function IsoWorld({
       ),
     [state.fieldMonsters, state.position.x, state.position.y],
   )
-  const MD = 58 // 몬스터 도트 표시 크기
+  const MD = 58 // 몬스터 도트 표시 크기(일반 몬스터 기준)
+  /** 필드에서의 보스 크기 배율 — 일반몹 1배 기준 중간보스 2.1배(3×0.7), 필드보스 4.2배(6×0.7) */
+  const fieldRankScale = (rank?: string) => (rank === 'fieldBoss' ? 4.2 : rank === 'midBoss' ? 2.1 : 1)
   const monsterEntities = visibleMonsters.flatMap((fm) => {
     const def = MONSTERS.find((m) => m.id === fm.monsterId)
     if (!def) return []
     const pos = wanderPosition(fm, wanderT, map.blockers)
     const dir = wanderFacing(fm, wanderT, map.blockers)
+    const moving = wanderIsMoving(fm, wanderT)
     const s = isoToScreen(pos.x, pos.y)
+    const scale = fieldRankScale(def.rank)
+    const size = MD * scale
+    const shadowRx = 12 * Math.sqrt(scale)
+    const shadowRy = 4 * Math.sqrt(scale)
+    const labelY = -54 - (size - MD)
     return [
       {
         sortY: pos.x + pos.y,
         node: (
           <g key={fm.uid} transform={`translate(${s.sx},${s.sy})`}>
-            <ellipse cx={0} cy={2} rx={12} ry={4} fill="rgba(0,0,0,0.34)" />
-            <foreignObject x={-MD / 2} y={-MD + 8} width={MD} height={MD} style={{ overflow: 'visible' }}>
-              <CreatureSprite spriteId={def.id} fallbackSrc={def.icon} dir={dir} walking px={MD} />
+            <ellipse cx={0} cy={2} rx={shadowRx} ry={shadowRy} fill="rgba(0,0,0,0.34)" />
+            <foreignObject x={-size / 2} y={-size + 8} width={size} height={size} style={{ overflow: 'visible' }}>
+              <CreatureSprite spriteId={def.id} fallbackSrc={def.icon} dir={dir} walking={moving} px={size} />
             </foreignObject>
-            <g transform="translate(0,-54)">
+            <g transform={`translate(0,${labelY})`}>
               <rect
                 x={-def.name.length * 5 - 5}
                 y={-9}
                 width={def.name.length * 10 + 10}
                 height={14}
                 rx={3}
-                fill={def.isTestMonster ? 'rgba(6,60,30,0.75)' : 'rgba(60,10,10,0.68)'}
+                fill={def.isTestMonster ? 'rgba(6,60,30,0.75)' : def.rank === 'fieldBoss' ? 'rgba(120,20,10,0.85)' : def.rank === 'midBoss' ? 'rgba(90,50,10,0.8)' : 'rgba(60,10,10,0.68)'}
               />
               <text x={0} y={2} textAnchor="middle" fontSize={10} fontWeight={700} fill={def.isTestMonster ? '#a8f0c0' : '#f0c0c0'}>
                 {def.isTestMonster ? 'TEST' : def.name}

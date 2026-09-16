@@ -1535,10 +1535,7 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'forest',
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
-    bossSpawns: [
-      { monsterId: 'mon-thorn-matriarch', cell: { x: 12, y: 13 } },
-      { monsterId: 'mon-ancient-bark-golem', cell: { x: 18, y: 15 } },
-    ],
+    bossSpawns: [{ monsterId: 'mon-thorn-matriarch', cell: { x: 12, y: 13 } }],
     recommendedLevel: 2,
     spawn: { ...FIELD_SPAWN },
     portals: [
@@ -1605,6 +1602,7 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'forest',
     monsterDensity: 0.11,
     monsterSpacing: 1.5,
+    bossSpawns: [{ monsterId: 'mon-ancient-bark-golem', cell: { x: 9, y: 5 } }],
     recommendedLevel: 5,
     spawn: { ...SWAMP_SPAWN },
     portals: [
@@ -1628,10 +1626,7 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'sea',
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
-    bossSpawns: [
-      { monsterId: 'mon-jelly-queen', cell: { x: 12, y: 13 } },
-      { monsterId: 'mon-reef-king', cell: { x: 18, y: 15 } },
-    ],
+    bossSpawns: [{ monsterId: 'mon-jelly-queen', cell: { x: 12, y: 13 } }],
     recommendedLevel: 3,
     spawn: { ...FIELD_SPAWN },
     portals: [
@@ -1655,6 +1650,7 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'sea',
     monsterDensity: 0.12,
     monsterSpacing: 1.5,
+    bossSpawns: [{ monsterId: 'mon-reef-king', cell: { x: 9, y: 4 } }],
     recommendedLevel: 9,
     spawn: { ...SUB_SPAWN },
     portals: [
@@ -1740,10 +1736,7 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'ruins',
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
-    bossSpawns: [
-      { monsterId: 'mon-stone-titan', cell: { x: 12, y: 13 } },
-      { monsterId: 'mon-stone-titan-king', cell: { x: 18, y: 15 } },
-    ],
+    bossSpawns: [{ monsterId: 'mon-stone-titan', cell: { x: 12, y: 13 } }],
     recommendedLevel: 10,
     spawn: { ...FIELD_SPAWN },
     portals: [
@@ -1767,6 +1760,7 @@ export const MAPS: Record<MapId, GameMap> = {
     monsterZoneKind: 'ruins',
     monsterDensity: 0.12,
     monsterSpacing: 1.5,
+    bossSpawns: [{ monsterId: 'mon-stone-titan-king', cell: { x: 9, y: 4 } }],
     recommendedLevel: 13,
     spawn: { ...SUB_SPAWN },
     portals: [

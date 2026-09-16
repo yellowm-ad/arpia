@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useGame } from '@/lib/game-state'
 import { Button } from '@/components/ui/button'
 import { currentActor } from '@/lib/battle-engine'
-import { SKILLS, itemById } from '@/lib/mock-data'
+import { SKILLS, itemById, monsterById } from '@/lib/mock-data'
 import { HeroSprite } from '@/components/game/pixel-hero'
 import { CreatureSprite, spriteIdFromRefId } from '@/components/game/creature-sprite'
 import { SkillFxLayer, fxTier, type FxPos } from '@/components/game/skill-fx'
@@ -453,6 +453,19 @@ export function BattleScreen() {
   )
 }
 
+/**
+ * 전투 화면 몬스터 크기 — 필드에서는 일반몹 1배 기준 중간보스 3배/필드보스 6배를 그대로 쓰지만,
+ * 전투 화면은 고정 높이(overflow-hidden) 무대라 그 비율을 그대로 적용하면 화면 밖으로 잘린다.
+ * 그래서 여기서는 "확실히 커 보이되 잘리지 않는" 선에서 완화한 배율(약 1.6배/2.2배)을 쓴다.
+ */
+function enemyMonsterPx(side: 'player' | 'enemy', refId: string): number {
+  if (side !== 'enemy') return 116
+  const rank = monsterById(refId)?.rank
+  if (rank === 'fieldBoss') return 182 // 260 × 0.7
+  if (rank === 'midBoss') return 133 // 190 × 0.7
+  return 116
+}
+
 function CombatantSprite({
   c,
   side,
@@ -543,7 +556,7 @@ function CombatantSprite({
               dir="right"
               flip={side === 'enemy'}
               walking={active && c.alive}
-              px={116}
+              px={enemyMonsterPx(side, c.refId)}
               className="drop-shadow-[0_3px_4px_rgba(0,0,0,0.55)]"
             />
           )}
