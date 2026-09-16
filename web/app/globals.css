@@ -150,6 +150,7 @@
     position: relative;
     background: radial-gradient(140% 70% at 15% -15%, rgba(255, 255, 255, 0.55), transparent 55%),
       linear-gradient(180deg, #faf5e6 0%, #f2e7cb 55%, #e9dab4 100%);
+    background-clip: padding-box;
     color: var(--parchment-foreground);
     border: 1.5px solid #c2a061;
     border-radius: var(--radius-lg);
@@ -174,6 +175,10 @@
     position: relative;
     background: radial-gradient(120% 55% at 18% -8%, rgba(255, 255, 255, 0.07), transparent 55%),
       linear-gradient(165deg, #241f17 0%, #17130e 45%, #0a0806 100%);
+    /* 배경의 흰 하이라이트 그라디언트가 테두리 박스 위쪽(-8%)까지 번지므로, border-image의
+       반투명 가장자리 픽셀 틈으로 비쳐 나와 옆/위쪽에 가느다란 흰 선처럼 보이던 문제 수정 —
+       배경을 패딩박스 안쪽으로만 한정해 테두리 영역에 새어나가지 않게 한다. */
+    background-clip: padding-box;
     border-style: solid;
     border-width: 26px;
     border-image-source: url('/images/ui/panels/gold-frame.png');
@@ -1051,6 +1056,7 @@
     position: relative;
     background: radial-gradient(120% 180% at 15% -20%, rgba(255, 255, 255, 0.05), transparent 55%),
       linear-gradient(180deg, #1a1611 0%, #100d09 55%, #060504 100%);
+    background-clip: padding-box;
     border-style: solid;
     border-width: 20px;
     border-image-source: url('/images/ui/panels/gold-frame.png');
