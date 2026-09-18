@@ -33,10 +33,16 @@ export function AdminPanel() {
   const testroomNpcs = useMemo(() => NPCS.filter((n) => n.zoneId === 'z-testroom'), [])
 
   if (!open) {
+    // 테스트룸에서는 에버테일풍 HUD 아이콘 열에 가려 우상단 버튼이 잘 안 보이므로, 테스트룸 한정으로 상단 가운데에 띄운다.
+    const inTestroom = state.currentMapId === 'testroom'
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed right-2 top-2 z-[70] rounded-md border border-gold/60 bg-black/80 px-2.5 py-1.5 text-xs font-display text-gold-soft shadow-lg"
+        className={
+          inTestroom
+            ? 'fixed left-1/2 top-2 z-[70] -translate-x-1/2 rounded-md border border-gold/60 bg-black/80 px-3 py-1.5 text-xs font-display text-gold-soft shadow-lg'
+            : 'fixed right-2 top-2 z-[70] rounded-md border border-gold/60 bg-black/80 px-2.5 py-1.5 text-xs font-display text-gold-soft shadow-lg'
+        }
       >
         관리자 패널 열기
       </button>

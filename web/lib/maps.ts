@@ -1533,6 +1533,8 @@ export const MAPS: Record<MapId, GameMap> = {
     blockers: buildBlockers(FOREST_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'forest',
+    // 권장레벨(2) ±5 범위로 제한 + 1레벨 잡몹 비중 확대(나무골렘 lv8은 범위 밖이라 제외, cave/swamp에서 담당)
+    monsterPool: ['mon-field-mouse', 'mon-glow-moth', 'mon-field-mouse', 'mon-glow-moth', 'mon-forest-raccoon', 'mon-thorn-vine', 'mon-sprite-green', 'mon-grey-wolf', 'mon-mush-cap'],
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
     bossSpawns: [{ monsterId: 'mon-thorn-matriarch', cell: { x: 12, y: 13 } }],
@@ -1579,6 +1581,8 @@ export const MAPS: Record<MapId, GameMap> = {
     blockers: buildBlockers(MINE_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
+    // 권장레벨(10) ±5 범위로 제한
+    monsterPool: ['mon-ember-imp', 'mon-ash-hound', 'mon-bone-archer', 'mon-cursed-armor'],
     monsterDensity: 0.12,
     monsterSpacing: 1.5,
     recommendedLevel: 10,
@@ -1624,6 +1628,8 @@ export const MAPS: Record<MapId, GameMap> = {
     blockers: buildBlockers(SEA_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'sea',
+    // 권장레벨(3) ±5 범위로 제한 — 암초거북(lv9)·밀물정령(lv11)은 범위 밖이라 심해에서 담당
+    monsterPool: ['mon-bubble-spirit', 'mon-crab-soldier', 'mon-shallows-eel', 'mon-siren-larva'],
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
     bossSpawns: [{ monsterId: 'mon-jelly-queen', cell: { x: 12, y: 13 } }],
@@ -1734,6 +1740,8 @@ export const MAPS: Record<MapId, GameMap> = {
     blockers: buildBlockers(RUINSF_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
+    // 권장레벨(10) ±5 범위로 제한
+    monsterPool: ['mon-ember-imp', 'mon-ash-hound', 'mon-bone-archer', 'mon-cursed-armor'],
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
     bossSpawns: [{ monsterId: 'mon-stone-titan', cell: { x: 12, y: 13 } }],
@@ -1758,6 +1766,8 @@ export const MAPS: Record<MapId, GameMap> = {
     blockers: buildBlockers(GRAVEYARD_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
+    // 권장레벨(13) ±5 범위로 제한
+    monsterPool: ['mon-ember-imp', 'mon-ash-hound', 'mon-bone-archer', 'mon-cursed-armor', 'mon-wraith', 'mon-dark-acolyte'],
     monsterDensity: 0.12,
     monsterSpacing: 1.5,
     bossSpawns: [{ monsterId: 'mon-stone-titan-king', cell: { x: 9, y: 4 } }],
@@ -1801,6 +1811,8 @@ export const MAPS: Record<MapId, GameMap> = {
     blockers: buildBlockers(SNOWF_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
+    // 권장레벨(15) ±5 범위로 제한
+    monsterPool: ['mon-ember-imp', 'mon-ash-hound', 'mon-bone-archer', 'mon-cursed-armor', 'mon-wraith', 'mon-dark-acolyte', 'mon-flame-warden'],
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
     recommendedLevel: 15,
@@ -1844,6 +1856,8 @@ export const MAPS: Record<MapId, GameMap> = {
     blockers: buildBlockers(VOLCANO_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
+    // 권장레벨(20) ±5 범위로 제한
+    monsterPool: ['mon-cursed-armor', 'mon-wraith', 'mon-dark-acolyte', 'mon-flame-warden', 'mon-frost-revenant', 'mon-dark-mage'],
     monsterDensity: 0.1,
     monsterSpacing: 1.7,
     recommendedLevel: 20,
@@ -1886,6 +1900,8 @@ export const MAPS: Record<MapId, GameMap> = {
     blockers: buildBlockers(DEMONCASTLE_PROPS),
     zones: NO_ZONES,
     monsterZoneKind: 'ruins',
+    // 권장레벨(32) ±5 범위로 제한 — 이 레벨대는 모르스의 전령(lv32) 하나뿐
+    monsterPool: ['mon-azka-herald'],
     monsterDensity: 0.12,
     monsterSpacing: 1.5,
     recommendedLevel: 32,
