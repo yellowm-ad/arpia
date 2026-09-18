@@ -32,6 +32,8 @@ function RasterProp({ p }: { p: PropDef }) {
   // 앵커 미지정 시 이미지 하단-중앙을 발밑으로 가정
   const ax = p.anchor?.x ?? (w ? w / 2 : 0)
   const ay = p.anchor?.y ?? (h ?? 0)
+  // facing:'left' — 좌우 반전(벤치 등, 배치 방향을 통로 쪽으로 맞출 때 사용). wall은 이미 별도 처리하므로 제외.
+  const mirror = p.facing === 'left' && p.kind !== 'wall'
   return (
     <image
       href={p.sprite}
@@ -39,7 +41,11 @@ function RasterProp({ p }: { p: PropDef }) {
       y={-ay}
       width={w}
       height={h}
-      style={{ imageRendering: 'pixelated' }}
+      style={{
+        imageRendering: 'pixelated',
+        transform: mirror ? 'scaleX(-1)' : undefined,
+        transformOrigin: mirror ? 'center' : undefined,
+      }}
     />
   )
 }

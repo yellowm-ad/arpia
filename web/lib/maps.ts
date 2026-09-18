@@ -1019,47 +1019,94 @@ const DEMONCASTLE_PROPS: PropDef[] = scatterProps(
   'dcx',
 )
 
-// ── 아틀란티스 마을 (32×28, 대형 건물 + 다양한 디자인 + 궁전 성벽·정원) ──────
-// 맵 기준 북(위)=궁전(성벽+정원으로 둘러싼 구역), 중앙=길드, 서(왼)=마을(주택가), 동(오)=상점가, 남(아래)=진주공원+환영길.
-// 환영길(남북 대로, 폭 4.4)이 항구→공원→길드→궁전을 관통, 동서 교차로(폭 3.2)가 마을·길드·상점가를 잇는다.
-const AW = 32
-const AH = 28
-const ACX = 16 // 환영길·길드·공원 광장 중심 x
-const GUILD_CY = 14 // 길드 앞 광장 중심 y
-const PARK_CY = 22.5 // 진주공원 중심 y
-const PALACE_CX = 5.6 // 궁전 중심 x — 스케치대로 가장 위 왼쪽 구석
-const PALACE_CY = 3.6 // 궁전 중심 y
+// ── 아틀란티스 마을 (64×56 — ATLANTIS REBUILD PLAN 기준, 기존 32×28 대비 가로×2/세로×2=면적×4) ──
+// 북(위)=대성당(랜드마크) · 중앙=분수광장 · 서(왼)=상점가 · 동(오)=마을회관/길드
+// · 중앙~남 사이(신설)=주거구역(집 7채) · 남=해양공원 · 최남단=마을 입구(정원문+부두).
+// 셀당 화면픽셀(ISO_TILE_W/H)과 건물 스프라이트 픽셀 크기는 고정이므로, 맵을 키운 만큼
+// "건물이 커지는" 게 아니라 "건물 사이 여백·도로·신설 주거구역이 늘어난다".
+const AW = 64
+const AH = 56
+const ACX = 32 // 환영길·길드·공원 광장 중심 x — 모든 구역 X 50%
+// ATLANTIS REBUILD PLAN(2차) 퍼센트 좌표 반영: 성당 Y16% · 광장 Y38.5% · 주거 Y58% · 해양공원 Y75% · 입구 Y92.5%
+const CATHEDRAL_Y0 = 7 // 대성당 footprint 상단(중심 ≈ 56×16% = 9)
+const GUILD_CY = 23 // 분수광장/상점가/회관 열 중심 y (56×38.5% ≈ 21.6, 반올림)
+const RESIDENTIAL_CY = 32 // 주거구역 중심 y (56×58% ≈ 32.5)
+const PARK_CY = 42 // 해양공원 중심 y (56×75% = 42)
+const ENTRANCE_CY = 52 // 마을 입구 중심 y (56×92.5% ≈ 51.8) — 정원문·부두 전용, PARK_CY와 독립
+const SHOP_CX = ACX - 14.4 // 상점가 중심 x (64×27.5% ≈ 17.6 목표, 20~35% 범위 충족)
+const HALL_CX = ACX + 13.8 // 길드 중심 x (64×71.5% ≈ 45.8 목표, 65~78% 범위 충족)
+
+const ATLANTIS_ISLAND_CY = 30 // 대성당(y≈7)~마을입구(y≈53) 전체를 아우르는 섬 세로 중심
+
+/**
+ * 참고자료(아틀란티스 마을 참고 자료.png)처럼 각진 사각 경계 대신, 각도별 물결 노이즈로 굴곡진 섬 해안선을 만든다.
+ * 안전 반경(rx/ry 최소치)은 실제 배치물 범위(성당 y≈7, 상점가 x≈SHOP_CX-8, 길드 x≈HALL_CX+8, 마을입구/부두 y≈53)를
+ * 전부 감싸고도 남도록 잡는다 — 웨이브가 안쪽으로 파고들어 섬 밖(물)으로 밀려나는 회귀버그 방지.
+ */
+function atlantisIslandNorm(x: number, y: number): number {
+  const dx = x - ACX
+  const dy = y - ATLANTIS_ISLAND_CY
+  const angle = Math.atan2(dy, dx)
+  const wobble = Math.sin(angle * 3) * 1.6 + Math.sin(angle * 7 + 1.3) * 0.9 + Math.sin(angle * 13 + 0.4) * 0.4
+  const rx = Math.max(22, 23 + wobble)
+  const ry = Math.max(26, 27 + wobble * 0.85)
+  return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+}
 
 function atlantisTileAt(x: number, y: number): TileKind {
-  // 바깥 테두리 = 물(마을을 감싼 항구/해자) — 바다 위에 뜬 돔 마을 느낌
-  if (x < 1.6 || x > AW - 1.6 || y < 1.6 || y > AH - 1.6) return 'water'
-  // 궁전 앞 정원 광장(왼쪽 위 구석) · 진주공원 광장 · 길드 앞 광장 — 원형 포석
-  if (Math.hypot(x - PALACE_CX, y - PALACE_CY) < 4.2) return 'plaza'
-  if (Math.hypot(x - ACX, y - PARK_CY) < 4.6) return 'plaza'
-  if (Math.hypot(x - ACX, y - GUILD_CY) < 2.6) return 'plaza'
-  // 환영길(남북 대로, 항구 ↔ 공원 ↔ 길드) — 폭 4.4로 넉넉하게
+  const norm = atlantisIslandNorm(x, y)
+  // 해안선 바깥 = 깊은 물, 해안선 바로 안쪽 = 산호 흩어진 얕은 여울(=물 타일 재사용, 소품으로 산호 배치)
+  if (norm > 1) return 'water'
+  // 참고자료는 맨땅(sand)이 거의 안 보이고 포석 광장 + 손질된 회양목 정원이 지면 전체를 채운다 —
+  // 대성당 앞 정원 광장(북) · 해양공원 광장(남) · 분수 광장(중앙) — 원형 포석
+  if (Math.hypot(x - ACX, y - (CATHEDRAL_Y0 + 3.4)) < 5.4) return 'plaza'
+  if (Math.hypot(x - ACX, y - PARK_CY) < 5.8) return 'plaza'
+  if (Math.hypot(x - ACX, y - GUILD_CY) < 4.4) return 'plaza'
+  // 회관·상점가 앞 마당도 포석으로
+  if (Math.hypot(x - HALL_CX, y - (GUILD_CY - 1.4)) < 3.4) return 'plaza'
+  if (Math.hypot(x - SHOP_CX, y - (GUILD_CY - 0.6)) < 3.6) return 'plaza'
+  // 환영길(남북 대로, 마을입구 ↔ 공원 ↔ 주거구역 ↔ 광장 ↔ 대성당) — 폭 4.4로 넉넉하게, 맵 전체를 관통
   if (Math.abs(x - ACX) < 2.2) return 'path'
-  // 동서 교차로(마을 ↔ 길드 ↔ 상점가) — 폭 3.2
+  // 동서 교차로(상점가 ↔ 광장 ↔ 회관) — 폭 3.2
   if (Math.abs(y - GUILD_CY) < 1.6) return 'path'
-  return 'sand'
+  // 신설 주거구역 진입 교차로(서/동 주택 클러스터 ↔ 환영길) — 폭 2.8
+  if (Math.abs(y - RESIDENTIAL_CY) < 1.4) return 'path'
+  // 참고자료의 대각선 X자 산책로 — 중앙 분수에서 네 방향 대각선으로 뻗어 4개의 정원 쐐기를 나눈다
+  const rdx = x - ACX
+  const rdy = y - GUILD_CY
+  if (Math.hypot(rdx, rdy) < 12.5 && (Math.abs(rdx - rdy) < 1.2 || Math.abs(rdx + rdy) < 1.2)) return 'path'
+  // 그 외 지면은 전부 손질된 회양목 정원 잔디(참고자료의 정원 쐐기·앞마당 느낌) — sand는 더 이상 기본값이 아님
+  return 'grass'
 }
 
 // PixelLab 생성 → sharp 트림 완료 (public/images/map/props/atlantis/). 건물 비중을 키우고
 // 집·상점 각 3종 variant로 단조로움을 없앴다.
 const ATLANTIS_SPRITE = {
-  palace: { sprite: '/images/map/props/atlantis/atl_palace2.png', px: { w: 335, h: 373 } },
+  // 참고자료(각 마을 배치도 참고 자료.png) 재현 — 북:궁전(신규) / 동:마을회관(신규) / 서:상점가(신규) / 중앙:분수(신규)
+  palace: { sprite: '/images/map/props/atlantis/atl_palace_new.png', px: { w: 320, h: 307 } },
+  hall: { sprite: '/images/map/props/atlantis/atl_hall_new.png', px: { w: 184, h: 175 } },
+  // 상점가는 참고자료(2차) 요구대로 연립 1장 대신 개별 건물 4종으로 분리 제작(붙이지 않고 각자 여백 확보)
+  shopA: { sprite: '/images/map/props/atlantis/atl_shopA_new.png', px: { w: 100, h: 118 } },
+  shopB: { sprite: '/images/map/props/atlantis/atl_shopB_new.png', px: { w: 99, h: 116 } },
+  shopC: { sprite: '/images/map/props/atlantis/atl_shopC_new.png', px: { w: 99, h: 119 } },
+  shopD: { sprite: '/images/map/props/atlantis/atl_shopD_new.png', px: { w: 107, h: 121 } },
+  fountain: { sprite: '/images/map/props/atlantis/atl_fountain_new.png', px: { w: 113, h: 143 } },
+  reef: { sprite: '/images/map/props/atlantis/atl_reef_new.png', px: { w: 65, h: 48 } },
+  dock: { sprite: '/images/map/props/atlantis/atl_dock_new.png', px: { w: 128, h: 80 } },
+  gate: { sprite: '/images/map/props/atlantis/atl_gate_new.png', px: { w: 122, h: 105 } },
+  // house/houseC = 둥근 지붕, 쿼터뷰 정합 확인 후 재활용(houseB는 정면뷰 첨탑이라 폐기)
   house: { sprite: '/images/map/props/atlantis/atl_house.png', px: { w: 104, h: 111 } },
-  houseB: { sprite: '/images/map/props/atlantis/atl_houseB.png', px: { w: 88, h: 114 } },
   houseC: { sprite: '/images/map/props/atlantis/atl_houseC.png', px: { w: 102, h: 125 } },
-  guildhall: { sprite: '/images/map/props/atlantis/atl_guildhall.png', px: { w: 150, h: 174 } },
+  houseD: { sprite: '/images/map/props/atlantis/atl_houseD_new.png', px: { w: 121, h: 111 } },
+  // stall류·무역상관 = 쿼터뷰 정합 확인 후 재활용
   stall: { sprite: '/images/map/props/atlantis/atl_stall.png', px: { w: 84, h: 84 } },
   stallB: { sprite: '/images/map/props/atlantis/atl_stallB.png', px: { w: 81, h: 91 } },
   stallC: { sprite: '/images/map/props/atlantis/atl_stallC.png', px: { w: 76, h: 87 } },
   tradinghouse: { sprite: '/images/map/props/atlantis/atl_tradinghouse.png', px: { w: 166, h: 177 } },
-  pearl: { sprite: '/images/map/props/atlantis/atl_pearlmonument.png', px: { w: 156, h: 155 } },
   gazebo: { sprite: '/images/map/props/atlantis/atl_gazebo.png', px: { w: 67, h: 77 } },
   tidepool: { sprite: '/images/map/props/atlantis/atl_tidepool.png', px: { w: 46, h: 33 } },
-  bench: { sprite: '/images/map/props/atlantis/atl_bench.png', px: { w: 39, h: 25 } },
+  // 기존 bench(정면뷰 소파)는 폐기, 쿼터뷰로 신규 제작
+  bench: { sprite: '/images/map/props/atlantis/atl_bench_new.png', px: { w: 38, h: 40 } },
   flowerbed: { sprite: '/images/map/props/atlantis/atl_flowerbed.png', px: { w: 46, h: 27 } },
   kelp: { sprite: '/images/map/props/atlantis/atl_kelp.png', px: { w: 53, h: 78 } },
   lamp: { sprite: '/images/map/props/atlantis/atl_lamp.png', px: { w: 14, h: 66 } },
@@ -1075,125 +1122,156 @@ const ATLANTIS_SPRITE = {
 function atlantisProps(): PropDef[] {
   const P: PropDef[] = []
 
-  // ════════ 궁전 구역 (가장 위 왼쪽 구석) — 스케치대로 코너에 몰아서 배치 ════════
+  // ════════ 북: 아틀란티스 대성당 (참고자료 랜드마크, X 50%/Y 16%, 중앙 정렬) ════════
   P.push({
-    id: 'atl-palace', kind: 'dome', cell: { x: PALACE_CX - 2.8, y: 1.8 }, size: { w: 5.6, d: 4.4 },
-    solid: true, label: '인어궁전', ...ATLANTIS_SPRITE.palace,
+    id: 'atl-palace', kind: 'dome', cell: { x: ACX - 2.7, y: CATHEDRAL_Y0 }, size: { w: 5.4, d: 3.8 },
+    solid: true, label: '아틀란티스 대성당', ...ATLANTIS_SPRITE.palace,
   })
-  // 궁전 뒤 성벽 — 궁전 폭에 맞춰 구석에 딱 붙여서(밖으로 삐져나오지 않게)
-  for (let wx = 2.0, wi = 0; wx <= 9.4; wx += 1.3, wi++) {
-    P.push({ id: `atl-wall${wi}`, kind: 'wall', cell: { x: wx, y: 1.65 }, size: { w: 1.2, d: 0.4 }, solid: true, ...ATLANTIS_SPRITE.wall })
-  }
-  // 정원 앞뜰 — 근위병·깃발·회양목 정원·화단·벤치, 전부 궁전 발치에 붙여서
-  ;[[4.2, 7.0], [7.0, 7.0]].forEach(([x, y], i) =>
+  ;[[ACX - 5.0, CATHEDRAL_Y0 + 4.6], [ACX + 5.0, CATHEDRAL_Y0 + 4.6]].forEach(([x, y], i) =>
     P.push({ id: `atl-guard${i}`, kind: 'statue', cell: { x, y }, size: { w: 0.6, d: 0.5 }, solid: true, ...ATLANTIS_SPRITE.guard }),
   )
-  ;[[2.0, 2.2], [9.2, 2.2]].forEach(([x, y], i) =>
-    P.push({ id: `atl-pbanner${i}`, kind: 'banner', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.banner }),
-  )
-  ;[[3.0, 7.6], [8.2, 7.6], [2.2, 5.0], [9.0, 5.0]].forEach(([x, y], i) =>
-    P.push({ id: `atl-topiary${i}`, kind: 'bush', cell: { x, y }, size: { w: 0.7, d: 0.5 }, ...ATLANTIS_SPRITE.topiary }),
-  )
-  ;[[2.0, 3.6], [9.2, 3.6]].forEach(([x, y], i) =>
+  ;[[ACX - 4.2, CATHEDRAL_Y0 + 4.8], [ACX + 4.2, CATHEDRAL_Y0 + 4.8]].forEach(([x, y], i) =>
     P.push({ id: `atl-pkelp${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...ATLANTIS_SPRITE.kelp }),
   )
-  ;[[2.2, 8.4], [9.0, 8.4]].forEach(([x, y], i) =>
+  ;[[ACX - 3.2, CATHEDRAL_Y0 + 5.4], [ACX + 3.2, CATHEDRAL_Y0 + 5.4], [ACX - 1.6, CATHEDRAL_Y0 + 5.6], [ACX + 1.6, CATHEDRAL_Y0 + 5.6]].forEach(([x, y], i) =>
+    P.push({ id: `atl-ptopiary${i}`, kind: 'bush', cell: { x, y }, size: { w: 0.7, d: 0.5 }, ...ATLANTIS_SPRITE.topiary }),
+  )
+  ;[[ACX - 5.6, CATHEDRAL_Y0 + 3.0], [ACX + 5.6, CATHEDRAL_Y0 + 3.0], [ACX - 4.6, CATHEDRAL_Y0 + 6.4], [ACX + 4.6, CATHEDRAL_Y0 + 6.4]].forEach(([x, y], i) =>
     P.push({ id: `atl-pflower${i}`, kind: 'bush', cell: { x, y }, size: { w: 1.0, d: 0.5 }, ...ATLANTIS_SPRITE.flowerbed }),
   )
-  ;[[4.4, 8.2], [6.8, 8.2]].forEach(([x, y], i) =>
-    P.push({ id: `atl-pbench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, ...ATLANTIS_SPRITE.bench }),
-  )
 
-  // ════════ 길드홀 (중앙, 마을↔상점가 사이) — 평판을 쌓는 곳, 크고 존재감 있게 ════════
+  // ════════ 중앙: 광장 분수(랜드마크) ════════
   P.push({
-    id: 'atl-guildhall', kind: 'shop', cell: { x: ACX - 1.3, y: GUILD_CY - 3.4 }, size: { w: 2.5, d: 2.3 },
-    solid: true, label: '항해자 길드', ...ATLANTIS_SPRITE.guildhall,
+    id: 'atl-fountain', kind: 'fountain', cell: { x: ACX - 0.95, y: GUILD_CY - 1.4 }, size: { w: 1.9, d: 2.0 },
+    collide: { w: 2.2, d: 2.2 }, radial: true, solid: true, label: '중앙 분수', ...ATLANTIS_SPRITE.fountain,
   })
-  ;[[12.8, GUILD_CY - 1.8], [19.2, GUILD_CY - 1.8]].forEach(([x, y], i) =>
-    P.push({ id: `atl-gbanner${i}`, kind: 'banner', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.banner }),
+  ;[[ACX - 4.4, GUILD_CY - 1.4], [ACX + 4.4, GUILD_CY - 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `atl-cbanner${i}`, kind: 'banner', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.banner }),
   )
-  P.push({ id: 'atl-notice', kind: 'postbox', cell: { x: ACX + 2.8, y: GUILD_CY - 0.4 }, size: { w: 0.5, d: 0.4 }, ...ATLANTIS_SPRITE.noticeboard })
-  ;[[12.2, GUILD_CY - 3.2], [19.8, GUILD_CY - 3.2]].forEach(([x, y], i) =>
-    P.push({ id: `atl-gtopiary${i}`, kind: 'bush', cell: { x, y }, size: { w: 0.7, d: 0.5 }, ...ATLANTIS_SPRITE.topiary }),
+  ;[[ACX - 2.6, GUILD_CY - 3.0], [ACX + 2.6, GUILD_CY - 3.0], [ACX - 2.6, GUILD_CY + 0.2], [ACX + 2.6, GUILD_CY + 0.2]].forEach(([x, y], i) =>
+    P.push({ id: `atl-cflower${i}`, kind: 'bush', cell: { x, y }, size: { w: 1.0, d: 0.5 }, ...ATLANTIS_SPRITE.flowerbed }),
   )
+  // 대각선 산책로 사이 4개 정원 쐐기 — 참고자료의 손질된 회양목 화단을 격자로 빼곡하게(NE/NW/SE/SW), 빈 땅이 안 보이게
+  ;[[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sy], qi) => {
+    const bx = ACX + sx * 3.6
+    const by = GUILD_CY + sy * 3.2
+    // 3×2 격자 회양목 — 촘촘한 정형 정원
+    for (let gx = 0; gx < 3; gx++) {
+      for (let gy = 0; gy < 2; gy++) {
+        P.push({
+          id: `atl-wedge${qi}-topiary${gx}-${gy}`, kind: 'bush',
+          cell: { x: bx + sx * gx * 1.3, y: by + sy * gy * 1.3 }, size: { w: 0.7, d: 0.5 }, ...ATLANTIS_SPRITE.topiary,
+        })
+      }
+    }
+    P.push({ id: `atl-wedge${qi}-flower0`, kind: 'bush', cell: { x: bx + sx * 0.6, y: by + sy * 2.6 }, size: { w: 1.0, d: 0.5 }, ...ATLANTIS_SPRITE.flowerbed })
+    P.push({ id: `atl-wedge${qi}-flower1`, kind: 'bush', cell: { x: bx + sx * 3.0, y: by + sy * 0.6 }, size: { w: 1.0, d: 0.5 }, ...ATLANTIS_SPRITE.flowerbed })
+    P.push({ id: `atl-wedge${qi}-kelp0`, kind: 'tree', cell: { x: bx - sx * 0.8, y: by + sy * 0.4 }, size: { w: 0.6, d: 0.6 }, ...ATLANTIS_SPRITE.kelp })
+    P.push({ id: `atl-wedge${qi}-kelp1`, kind: 'tree', cell: { x: bx + sx * 3.4, y: by + sy * 2.4 }, size: { w: 0.6, d: 0.6 }, ...ATLANTIS_SPRITE.kelp })
+    P.push({ id: `atl-wedge${qi}-lamp`, kind: 'lamp', cell: { x: bx + sx * 1.6, y: by - sy * 0.8 }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp })
+  })
 
-  // ════════ 마을(주택가, 서쪽) — 집 3종 variant를 섞어 빼곡하게 ════════
-  const houseSprites = [ATLANTIS_SPRITE.house, ATLANTIS_SPRITE.houseB, ATLANTIS_SPRITE.houseC]
-  const houseFoot: [number, number][] = [[1.7, 1.5], [1.5, 1.3], [1.7, 1.5]]
-  const houseRows = [9.4, 17.6, 21.2]
-  const houseCols = [2.8, 6.4, 10.0]
-  let hi = 0
-  houseRows.forEach((hy, ri) => houseCols.forEach((hx, ci) => {
-    const v = (ri + ci) % 3
-    const [w, d] = houseFoot[v]
-    P.push({ id: `atl-house${hi}`, kind: 'cottage', cell: { x: hx, y: hy }, size: { w, d }, solid: true, ...houseSprites[v] })
-    hi++
-  }))
-  ;[[1.8, 6.6], [11.6, 6.6], [1.8, 24.8], [11.6, 24.8]].forEach(([x, y], i) =>
+  // ════════ 동: 마을회관/길드 (X 65~78% → HALL_CX) ════════
+  P.push({
+    id: 'atl-hall', kind: 'shop', cell: { x: HALL_CX, y: GUILD_CY - 2.6 }, size: { w: 3.1, d: 2.3 },
+    solid: true, label: '마을 회관', ...ATLANTIS_SPRITE.hall,
+  })
+  P.push({ id: 'atl-notice', kind: 'postbox', cell: { x: HALL_CX + 4.0, y: GUILD_CY - 1.0 }, size: { w: 0.5, d: 0.4 }, ...ATLANTIS_SPRITE.noticeboard })
+  ;[[HALL_CX + 0.2, GUILD_CY - 5.2], [HALL_CX + 5.0, GUILD_CY - 5.2], [HALL_CX + 0.2, GUILD_CY + 1.4], [HALL_CX + 5.0, GUILD_CY + 1.4]].forEach(([x, y], i) =>
     P.push({ id: `atl-hkelp${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...ATLANTIS_SPRITE.kelp }),
   )
-  ;[[6.8, 6.8], [6.8, 24.6]].forEach(([x, y], i) =>
-    P.push({ id: `atl-hlamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp }),
-  )
-  ;[[4.6, 13.2], [8.2, 13.2], [4.6, 19.6], [8.2, 19.6]].forEach(([x, y], i) =>
-    P.push({ id: `atl-hbench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, ...ATLANTIS_SPRITE.bench }),
-  )
-  ;[[2.4, 11.0], [10.4, 11.0]].forEach(([x, y], i) =>
-    P.push({ id: `atl-hbarrel${i}`, kind: 'trashbin', cell: { x, y }, size: { w: 0.5, d: 0.5 }, ...ATLANTIS_SPRITE.barrel }),
-  )
+  P.push({ id: 'atl-hlamp0', kind: 'lamp', cell: { x: HALL_CX + 4.0, y: GUILD_CY - 3.6 }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp })
 
-  // ════════ 상점가 (동쪽) — 노점 3종 variant + 무역상관(대형) ════════
-  const stallSprites = [ATLANTIS_SPRITE.stall, ATLANTIS_SPRITE.stallB, ATLANTIS_SPRITE.stallC]
-  const stallFoot: [number, number][] = [[1.4, 1.3], [1.4, 1.3], [1.3, 1.2]]
-  const stallRows = [9.4, 17.6, 21.2]
-  const stallCols = [21.8, 25.2, 28.6]
-  let si = 0
-  stallRows.forEach((sy, ri) => stallCols.forEach((sx, ci) => {
-    const v = (ri + ci) % 3
-    const [w, d] = stallFoot[v]
-    P.push({ id: `atl-stall${si}`, kind: 'stall', cell: { x: sx, y: sy }, size: { w, d }, solid: true, ...stallSprites[v] })
-    si++
-  }))
-  P.push({
-    id: 'atl-tradinghouse', kind: 'shop', cell: { x: 19.6, y: GUILD_CY + 0.4 }, size: { w: 2.8, d: 2.5 },
-    solid: true, label: '원양 무역상관', ...ATLANTIS_SPRITE.tradinghouse,
-  })
-  ;[[20.6, 6.6], [30.2, 6.6], [20.6, 24.8], [30.2, 24.8]].forEach(([x, y], i) =>
+  // ════════ 서: 상점가 (X 20~35% → SHOP_CX) — 개별 건물 4채, 사이 간격 확보(붙이지 않음) ════════
+  const shopSprites = [ATLANTIS_SPRITE.shopA, ATLANTIS_SPRITE.shopB, ATLANTIS_SPRITE.shopC, ATLANTIS_SPRITE.shopD]
+  const shopOffsets: [number, number][] = [[-3.4, -1.0], [-1.0, -1.4], [1.4, -1.0], [3.8, -1.4]]
+  shopOffsets.forEach(([ox, oy], i) =>
+    P.push({
+      id: `atl-shop${i}`, kind: 'shop', cell: { x: SHOP_CX + ox, y: GUILD_CY + oy }, size: { w: 1.7, d: 1.9 },
+      solid: true, label: `상점 ${i + 1}`, ...shopSprites[i],
+    }),
+  )
+  ;[[SHOP_CX - 5.2, GUILD_CY - 4.6], [SHOP_CX + 5.8, GUILD_CY - 4.6], [SHOP_CX - 5.2, GUILD_CY + 1.4], [SHOP_CX + 5.8, GUILD_CY + 1.4]].forEach(([x, y], i) =>
     P.push({ id: `atl-skelp${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...ATLANTIS_SPRITE.kelp }),
   )
-  ;[[25.0, 6.8], [25.0, 24.6]].forEach(([x, y], i) =>
+  ;[[SHOP_CX - 2.2, GUILD_CY - 4.8], [SHOP_CX - 2.2, GUILD_CY + 1.6]].forEach(([x, y], i) =>
     P.push({ id: `atl-slamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp }),
   )
-  ;[[23.4, 11.2], [27.0, 11.2], [23.4, 19.6], [27.0, 19.6]].forEach(([x, y], i) =>
+  ;[[SHOP_CX - 6.6, GUILD_CY - 1.2], [SHOP_CX + 3.6, GUILD_CY - 1.2]].forEach(([x, y], i) =>
     P.push({ id: `atl-sbarrel${i}`, kind: 'trashbin', cell: { x, y }, size: { w: 0.5, d: 0.5 }, ...ATLANTIS_SPRITE.barrel }),
   )
 
-  // ════════ 진주공원 (남) — 진주 기념물 중심, 정자·연못·화단·벤치 ════════
-  P.push({
-    id: 'atl-pearl', kind: 'fountain', cell: { x: ACX, y: PARK_CY }, size: { w: 2.6, d: 2.6 },
-    collide: { w: 3.2, d: 3.2 }, radial: true, solid: true, label: '진주공원', ...ATLANTIS_SPRITE.pearl,
+  // ════════ 신설: 주거구역 (광장↔해양공원 사이, 참고자료 5번 구역) — 서3채+동3채, 3종 variant 로테이션 ════════
+  const houseSprites = [ATLANTIS_SPRITE.house, ATLANTIS_SPRITE.houseC, ATLANTIS_SPRITE.houseD]
+  const houseFoot: [number, number][] = [[1.7, 1.5], [1.7, 1.5], [1.9, 1.5]]
+  const westHouseX = ACX - 9
+  const eastHouseX = ACX + 7
+  const houseRows = [RESIDENTIAL_CY - 6, RESIDENTIAL_CY, RESIDENTIAL_CY + 6]
+  houseRows.forEach((hy, ri) => {
+    const wv = ri % 3
+    P.push({ id: `atl-house-w${ri}`, kind: 'cottage', cell: { x: westHouseX, y: hy }, size: { w: houseFoot[wv][0], d: houseFoot[wv][1] }, solid: true, ...houseSprites[wv] })
+    P.push({ id: `atl-hflower-w${ri}`, kind: 'bush', cell: { x: westHouseX + 2.4, y: hy + 0.4 }, size: { w: 1.0, d: 0.5 }, ...ATLANTIS_SPRITE.flowerbed })
+    const ev = (ri + 1) % 3
+    P.push({ id: `atl-house-e${ri}`, kind: 'cottage', cell: { x: eastHouseX, y: hy }, size: { w: houseFoot[ev][0], d: houseFoot[ev][1] }, solid: true, ...houseSprites[ev] })
+    P.push({ id: `atl-hflower-e${ri}`, kind: 'bush', cell: { x: eastHouseX - 1.6, y: hy + 0.4 }, size: { w: 1.0, d: 0.5 }, ...ATLANTIS_SPRITE.flowerbed })
   })
-  P.push({ id: 'atl-gazebo', kind: 'gazebo', cell: { x: 21.8, y: PARK_CY - 0.6 }, size: { w: 1.3, d: 1.3 }, solid: true, ...ATLANTIS_SPRITE.gazebo })
-  P.push({ id: 'atl-tidepool', kind: 'fountain', cell: { x: 10.2, y: PARK_CY - 0.4 }, size: { w: 1.0, d: 0.7 }, radial: true, ...ATLANTIS_SPRITE.tidepool })
-  ;[[13.0, 20.5], [19.0, 20.5], [13.0, 24.9], [19.0, 24.9], [10.4, 23.1], [21.8, 23.1]].forEach(([x, y], i) =>
-    P.push({ id: `atl-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, ...ATLANTIS_SPRITE.bench }),
+  ;[[westHouseX + 3.6, RESIDENTIAL_CY - 3], [westHouseX + 3.6, RESIDENTIAL_CY + 3], [eastHouseX - 2.6, RESIDENTIAL_CY - 3], [eastHouseX - 2.6, RESIDENTIAL_CY + 3]].forEach(([x, y], i) =>
+    P.push({ id: `atl-hkelp-r${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...ATLANTIS_SPRITE.kelp }),
   )
-  ;[[7.8, 20.1], [24.2, 20.1], [7.8, 25.5], [24.2, 25.5], [11.8, 25.9], [20.2, 25.9]].forEach(([x, y], i) =>
+  P.push({ id: 'atl-rlamp0', kind: 'lamp', cell: { x: ACX - 2.6, y: RESIDENTIAL_CY }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp })
+  P.push({ id: 'atl-rlamp1', kind: 'lamp', cell: { x: ACX + 2.4, y: RESIDENTIAL_CY }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp })
+
+  // ════════ 남: 해양정원 / 분수공원 (중앙 분수와 동일 에셋 재사용, 쿼터뷰 정합) ════════
+  P.push({
+    id: 'atl-parkfountain', kind: 'fountain', cell: { x: ACX - 0.95, y: PARK_CY - 0.6 }, size: { w: 1.9, d: 2.0 },
+    collide: { w: 2.2, d: 2.2 }, radial: true, solid: true, label: '해양정원', ...ATLANTIS_SPRITE.fountain,
+  })
+  P.push({ id: 'atl-gazebo', kind: 'gazebo', cell: { x: ACX + 5.8, y: PARK_CY - 0.6 }, size: { w: 1.3, d: 1.3 }, solid: true, ...ATLANTIS_SPRITE.gazebo })
+  P.push({ id: 'atl-tidepool', kind: 'fountain', cell: { x: ACX - 5.8, y: PARK_CY - 0.4 }, size: { w: 1.0, d: 0.7 }, radial: true, ...ATLANTIS_SPRITE.tidepool })
+  // 참고자료의 좌우 대칭 쌍둥이 분수(중앙 분수 ↔ 남쪽 가장 아래 분수 사이 열)
+  ;[[ACX - 4.4, PARK_CY - 4.2], [ACX + 4.4, PARK_CY - 4.2]].forEach(([x, y], i) =>
+    P.push({
+      id: `atl-twinfountain${i}`, kind: 'fountain', cell: { x, y }, size: { w: 1.5, d: 1.6 },
+      collide: { w: 1.8, d: 1.8 }, radial: true, solid: true, label: '정원 분수', ...ATLANTIS_SPRITE.fountain,
+    }),
+  )
+  // 벤치는 길 안쪽(분수 쪽)을 바라보도록 중심선(ACX) 기준 좌/우 반전 — 서쪽 벤치만 좌우 미러
+  ;[[ACX - 3.0, PARK_CY - 2.0], [ACX + 3.0, PARK_CY - 2.0], [ACX - 3.0, PARK_CY + 2.4], [ACX + 3.0, PARK_CY + 2.4], [ACX - 5.6, PARK_CY + 0.6], [ACX + 5.8, PARK_CY + 0.6]].forEach(([x, y], i) =>
+    P.push({
+      id: `atl-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 },
+      facing: x < ACX ? 'left' : undefined, ...ATLANTIS_SPRITE.bench,
+    }),
+  )
+  ;[[ACX - 8.2, PARK_CY - 2.4], [ACX + 8.2, PARK_CY - 2.4], [ACX - 8.2, PARK_CY + 3.0], [ACX + 8.2, PARK_CY + 3.0], [ACX - 4.2, PARK_CY + 3.4], [ACX + 4.2, PARK_CY + 3.4]].forEach(([x, y], i) =>
     P.push({ id: `atl-flower${i}`, kind: 'bush', cell: { x, y }, size: { w: 1.0, d: 0.5 }, ...ATLANTIS_SPRITE.flowerbed }),
   )
-  ;[[6.2, 20.7], [25.8, 20.7], [6.2, 25.7], [25.8, 25.7]].forEach(([x, y], i) =>
+  ;[[ACX - 9.8, PARK_CY - 1.8], [ACX + 9.8, PARK_CY - 1.8], [ACX - 9.8, PARK_CY + 3.2], [ACX + 9.8, PARK_CY + 3.2]].forEach(([x, y], i) =>
     P.push({ id: `atl-pkelp2-${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...ATLANTIS_SPRITE.kelp }),
   )
-  ;[[9.4, 18.6], [22.6, 18.6]].forEach(([x, y], i) =>
-    P.push({ id: `atl-ptopiary${i}`, kind: 'bush', cell: { x, y }, size: { w: 0.7, d: 0.5 }, ...ATLANTIS_SPRITE.topiary }),
+  ;[[ACX - 6.6, PARK_CY - 3.9], [ACX + 6.6, PARK_CY - 3.9]].forEach(([x, y], i) =>
+    P.push({ id: `atl-gtopiary${i}`, kind: 'bush', cell: { x, y }, size: { w: 0.7, d: 0.5 }, ...ATLANTIS_SPRITE.topiary }),
   )
-  P.push({ id: 'atl-citizen0', kind: 'statue', cell: { x: 14.2, y: 24.1 }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.citizen })
-  P.push({ id: 'atl-citizen1', kind: 'statue', cell: { x: 18.0, y: 21.5 }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.citizen })
+  P.push({ id: 'atl-citizen0', kind: 'statue', cell: { x: ACX - 1.8, y: PARK_CY + 1.6 }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.citizen })
+  P.push({ id: 'atl-citizen1', kind: 'statue', cell: { x: ACX + 2.0, y: PARK_CY - 1.0 }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.citizen })
 
-  // ════════ 환영길(대로) 가로등 — 항구 → 공원 → 길드 → 궁전 ════════
-  ;[10.4, 18.6, 26.4].forEach((y, i) => {
-    P.push({ id: `atl-blamp${i}a`, kind: 'lamp', cell: { x: 14.1, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp })
-    P.push({ id: `atl-blamp${i}b`, kind: 'lamp', cell: { x: 17.9, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp })
+  // ════════ 해안선 산호 군집 + 부두 — 참고자료의 물가 디테일 ════════
+  ;[
+    [ACX - 20.5, GUILD_CY + 0.5], [ACX + 20.7, GUILD_CY + 0.5], [ACX - 12.0, CATHEDRAL_Y0 - 2.6], [ACX + 12.2, CATHEDRAL_Y0 - 2.6],
+    [ACX - 18.0, RESIDENTIAL_CY], [ACX + 18.2, RESIDENTIAL_CY],
+    [ACX - 13.0, PARK_CY + 1.7], [ACX + 13.2, PARK_CY + 1.7], [ACX - 6.4, ENTRANCE_CY + 0.5], [ACX + 6.6, ENTRANCE_CY + 0.5],
+  ].forEach(([x, y], i) =>
+    P.push({ id: `atl-reef${i}`, kind: 'bush', cell: { x, y }, size: { w: 0.9, d: 0.7 }, ...ATLANTIS_SPRITE.reef }),
+  )
+  ;[[ACX - 4.0, ENTRANCE_CY + 1.3], [ACX + 4.2, ENTRANCE_CY + 1.3]].forEach(([x, y], i) =>
+    P.push({ id: `atl-dock${i}`, kind: 'wall', cell: { x, y }, size: { w: 2.1, d: 1.3 }, ...ATLANTIS_SPRITE.dock }),
+  )
+  // 참고자료 남쪽 끝(Y 92.5%) 쌍둥이 첨탑 정원문 — 출구 포탈 통로 위에 장식으로만(비충돌), 플레이어가 그대로 통과
+  P.push({ id: 'atl-gate', kind: 'gate', cell: { x: ACX - 1.15, y: ENTRANCE_CY - 1.0 }, size: { w: 2.3, d: 2.0 }, label: '아틀란티스 정원문', ...ATLANTIS_SPRITE.gate })
+
+  // ════════ 환영길(대로) 가로등 — 대성당 → 분수광장 → 주거구역 → 해양공원 → 마을입구 ════════
+  ;[CATHEDRAL_Y0 + 3.4, GUILD_CY + 4.6, RESIDENTIAL_CY - 4.5, RESIDENTIAL_CY + 4.5, PARK_CY - 3.5].forEach((y, i) => {
+    P.push({ id: `atl-blamp${i}a`, kind: 'lamp', cell: { x: ACX - 2.1, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp })
+    P.push({ id: `atl-blamp${i}b`, kind: 'lamp', cell: { x: ACX + 1.9, y }, size: { w: 0.4, d: 0.4 }, ...ATLANTIS_SPRITE.lamp })
   })
 
   return P
@@ -1202,76 +1280,148 @@ function atlantisProps(): PropDef[] {
 const ATLANTIS_PROPS = atlantisProps()
 const ATLANTIS_BLOCKERS = buildBlockers(ATLANTIS_PROPS)
 
-// ── 천공 신전 (32×28, 흰색·황금색 하늘 신전) ────────────────────────────────
-// 북=대신전+길드(바람의 교단), 중앙=수정 제단(트레이드마크) 광장, 좌우=노점·순례자 숙소, 남=진입로.
-const SKY_AW = 32
-const SKY_AH = 28
-const SKY_CX = 16
-const SKY_TEMPLE_CY = 6
-const SKY_ALTAR_CY = 15
+// ── 천공 신전 (64×56 — 아틀란티스와 동일한 좌표 공식: 가로×2/세로×2=면적×4, 퍼센트 존) ──
+// 북(Y16%)=대신전(랜드마크) · 중앙(Y38.5%)=수정분수광장 · 서(X27.5%)=상점가 · 동(X71.5%)=마을회관
+// · 남(Y75%)=하늘정원 · 최남단(Y92.5%)=진입로. 구름바다에 뜬 섬 — 물 대신 구름/얼음 경계.
+const SKY_AW = 64
+const SKY_AH = 56
+const SKY_CX = 32
+const SKY_TEMPLE_Y0 = 7
+const SKY_GUILD_CY = 23
+const SKY_PARK_CY = 42
+const SKY_ENTRANCE_CY = 52
+const SKY_SHOP_CX = SKY_CX - 14.4
+const SKY_HALL_CX = SKY_CX + 13.8
+const SKY_ISLAND_CY = 30
+
+function skyIslandNorm(x: number, y: number): number {
+  const dx = x - SKY_CX
+  const dy = y - SKY_ISLAND_CY
+  const angle = Math.atan2(dy, dx)
+  const wobble = Math.sin(angle * 3) * 1.6 + Math.sin(angle * 7 + 1.3) * 0.9 + Math.sin(angle * 13 + 0.4) * 0.4
+  const rx = Math.max(22, 23 + wobble)
+  const ry = Math.max(26, 27 + wobble * 0.85)
+  return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+}
 
 function skyTempleTileAt(x: number, y: number): TileKind {
-  if (x < 1.6 || x > SKY_AW - 1.6 || y < 1.6 || y > SKY_AH - 1.6) return 'water'
-  if (Math.hypot(x - SKY_CX, y - SKY_TEMPLE_CY) < 4.4) return 'plaza'
-  if (Math.hypot(x - SKY_CX, y - SKY_ALTAR_CY) < 3.6) return 'plaza'
-  if (Math.abs(x - SKY_CX) < 2.0) return 'path'
-  if (Math.abs(y - SKY_ALTAR_CY) < 1.4) return 'path'
+  if (skyIslandNorm(x, y) > 1) return 'water'
+  if (Math.hypot(x - SKY_CX, y - (SKY_TEMPLE_Y0 + 3.4)) < 5.4) return 'plaza'
+  if (Math.hypot(x - SKY_CX, y - SKY_PARK_CY) < 5.8) return 'plaza'
+  if (Math.hypot(x - SKY_CX, y - SKY_GUILD_CY) < 4.4) return 'plaza'
+  if (Math.hypot(x - SKY_HALL_CX, y - (SKY_GUILD_CY - 1.4)) < 3.4) return 'plaza'
+  if (Math.hypot(x - SKY_SHOP_CX, y - (SKY_GUILD_CY - 0.6)) < 3.6) return 'plaza'
+  if (Math.abs(x - SKY_CX) < 2.2) return 'path'
+  if (Math.abs(y - SKY_GUILD_CY) < 1.6) return 'path'
+  const rdx = x - SKY_CX
+  const rdy = y - SKY_GUILD_CY
+  if (Math.hypot(rdx, rdy) < 12.5 && (Math.abs(rdx - rdy) < 1.2 || Math.abs(rdx + rdy) < 1.2)) return 'path'
   return 'cloud'
 }
 
 const SKY_SPRITE = {
-  temple: { sprite: '/images/map/props/skytemple/sky_temple.png', px: { w: 330, h: 319 } },
-  guild: { sprite: '/images/map/props/skytemple/sky_guild.png', px: { w: 192, h: 219 } },
-  houseA: { sprite: '/images/map/props/skytemple/sky_houseA.png', px: { w: 107, h: 125 } },
-  houseB: { sprite: '/images/map/props/skytemple/sky_houseB.png', px: { w: 101, h: 107 } },
-  stallA: { sprite: '/images/map/props/skytemple/sky_stallA.png', px: { w: 82, h: 91 } },
-  stallB: { sprite: '/images/map/props/skytemple/sky_stallB.png', px: { w: 90, h: 90 } },
-  landmark: { sprite: '/images/map/props/skytemple/sky_landmark.png', px: { w: 107, h: 158 } },
+  temple: { sprite: '/images/map/props/skytemple/sky_temple_new.png', px: { w: 229, h: 297 } },
+  hall: { sprite: '/images/map/props/skytemple/sky_hall_new.png', px: { w: 147, h: 159 } },
+  shopA: { sprite: '/images/map/props/skytemple/sky_shopA_new.png', px: { w: 91, h: 109 } },
+  shopB: { sprite: '/images/map/props/skytemple/sky_shopB_new.png', px: { w: 99, h: 126 } },
+  shopC: { sprite: '/images/map/props/skytemple/sky_shopC_new.png', px: { w: 82, h: 116 } },
+  shopD: { sprite: '/images/map/props/skytemple/sky_shopD_new.png', px: { w: 97, h: 113 } },
+  fountain: { sprite: '/images/map/props/skytemple/sky_fountain_new.png', px: { w: 102, h: 154 } },
+  gate: { sprite: '/images/map/props/atlantis/atl_gate_new.png', px: { w: 122, h: 105 } },
+  reef: { sprite: '/images/map/props/atlantis/atl_reef_new.png', px: { w: 65, h: 48 } },
+  bench: { sprite: '/images/map/props/atlantis/atl_bench_new.png', px: { w: 38, h: 40 } },
   lamp: { sprite: '/images/map/props/skytemple/sky_lamp.png', px: { w: 18, h: 81 } },
   tree: { sprite: '/images/map/props/skytemple/sky_tree.png', px: { w: 69, h: 92 } },
-  bench: { sprite: '/images/map/props/skytemple/sky_bench.png', px: { w: 32, h: 8 } },
 }
 
 function skyTempleProps(): PropDef[] {
   const P: PropDef[] = []
+
+  // ════════ 북: 천공 대신전 (X50%/Y16%) ════════
   P.push({
-    id: 'sky-temple-b', kind: 'dome', cell: { x: SKY_CX - 2.8, y: 1.8 }, size: { w: 5.6, d: 4.3 },
+    id: 'sky-temple-b', kind: 'dome', cell: { x: SKY_CX - 2.7, y: SKY_TEMPLE_Y0 }, size: { w: 5.4, d: 3.8 },
     solid: true, label: '천공 대신전', ...SKY_SPRITE.temple,
   })
-  P.push({
-    id: 'sky-guild', kind: 'shop', cell: { x: 21.0, y: 3.4 }, size: { w: 2.6, d: 2.6 },
-    solid: true, label: '바람의 교단', ...SKY_SPRITE.guild,
-  })
-  // 서쪽 — 순례자 노점 4개(2종 variant)
-  const stallSprites = [SKY_SPRITE.stallA, SKY_SPRITE.stallB]
-  const stallFoot: [number, number][] = [[1.4, 1.5], [1.5, 1.5]]
-  ;[[4.6, 9.0], [8.2, 9.0], [4.6, 18.4], [8.2, 18.4]].forEach(([x, y], i) => {
-    const v = i % 2
-    P.push({ id: `sky-stall${i}`, kind: 'stall', cell: { x, y }, size: { w: stallFoot[v][0], d: stallFoot[v][1] }, solid: true, ...stallSprites[v] })
-  })
-  // 동쪽 — 순례자 숙소 4개(2종 variant)
-  const houseSprites = [SKY_SPRITE.houseA, SKY_SPRITE.houseB]
-  const houseFoot: [number, number][] = [[1.7, 1.6], [1.6, 1.4]]
-  ;[[23.4, 9.0], [27.0, 9.0], [23.4, 18.4], [27.0, 18.4]].forEach(([x, y], i) => {
-    const v = i % 2
-    P.push({ id: `sky-house${i}`, kind: 'cottage', cell: { x, y }, size: { w: houseFoot[v][0], d: houseFoot[v][1] }, solid: true, ...houseSprites[v] })
-  })
-  // 중앙 — 수정 제단(트레이드마크)
-  P.push({
-    id: 'sky-landmark', kind: 'fountain', cell: { x: SKY_CX, y: SKY_ALTAR_CY }, size: { w: 1.6, d: 1.6 },
-    collide: { w: 2.0, d: 2.0 }, radial: true, solid: true, label: '수정 제단', ...SKY_SPRITE.landmark,
-  })
-  ;[[13.0, 13.6], [19.0, 13.6], [13.0, 16.4], [19.0, 16.4]].forEach(([x, y], i) =>
-    P.push({ id: `sky-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.4 }, ...SKY_SPRITE.bench }),
+  ;[[SKY_CX - 4.2, SKY_TEMPLE_Y0 + 4.8], [SKY_CX + 4.2, SKY_TEMPLE_Y0 + 4.8]].forEach(([x, y], i) =>
+    P.push({ id: `sky-ptree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...SKY_SPRITE.tree }),
   )
-  // 진입로(남북 대로) 가로수 + 가로등 — 항구 → 제단 → 신전
-  ;[9.0, 20.0, 24.6].forEach((y, i) => {
-    P.push({ id: `sky-lamp${i}a`, kind: 'lamp', cell: { x: 14.1, y }, size: { w: 0.4, d: 0.4 }, ...SKY_SPRITE.lamp })
-    P.push({ id: `sky-lamp${i}b`, kind: 'lamp', cell: { x: 17.9, y }, size: { w: 0.4, d: 0.4 }, ...SKY_SPRITE.lamp })
-  })
-  ;[[10.0, 4.0], [22.0, 4.0], [4.0, 12.0], [28.0, 12.0], [4.0, 21.0], [28.0, 21.0]].forEach(([x, y], i) =>
-    P.push({ id: `sky-tree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...SKY_SPRITE.tree }),
+  ;[[SKY_CX - 2.2, SKY_TEMPLE_Y0 + 5.6], [SKY_CX + 2.2, SKY_TEMPLE_Y0 + 5.6]].forEach(([x, y], i) =>
+    P.push({ id: `sky-plamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...SKY_SPRITE.lamp }),
   )
+
+  // ════════ 중앙: 수정 분수 광장(X50%/Y38.5%) — 대각선 정원 쐐기 포함 ════════
+  P.push({
+    id: 'sky-fountain', kind: 'fountain', cell: { x: SKY_CX - 0.85, y: SKY_GUILD_CY - 1.4 }, size: { w: 1.7, d: 1.9 },
+    collide: { w: 2.0, d: 2.0 }, radial: true, solid: true, label: '수정 분수', ...SKY_SPRITE.fountain,
+  })
+  ;[[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sy], qi) => {
+    const bx = SKY_CX + sx * 3.6
+    const by = SKY_GUILD_CY + sy * 3.2
+    for (let gx = 0; gx < 3; gx++) {
+      for (let gy = 0; gy < 2; gy++) {
+        P.push({
+          id: `sky-wedge${qi}-tree${gx}-${gy}`, kind: 'tree',
+          cell: { x: bx + sx * gx * 1.4, y: by + sy * gy * 1.4 }, size: { w: 0.7, d: 0.6 }, ...SKY_SPRITE.tree,
+        })
+      }
+    }
+    P.push({ id: `sky-wedge${qi}-lamp`, kind: 'lamp', cell: { x: bx + sx * 1.6, y: by - sy * 0.8 }, size: { w: 0.4, d: 0.4 }, ...SKY_SPRITE.lamp })
+  })
+
+  // ════════ 동: 마을회관(X71.5%) ════════
+  P.push({
+    id: 'sky-hall', kind: 'shop', cell: { x: SKY_HALL_CX, y: SKY_GUILD_CY - 2.4 }, size: { w: 2.9, d: 2.5 },
+    solid: true, label: '바람의 교단 회관', ...SKY_SPRITE.hall,
+  })
+  ;[[SKY_HALL_CX + 0.2, SKY_GUILD_CY - 5.2], [SKY_HALL_CX + 4.8, SKY_GUILD_CY - 5.2], [SKY_HALL_CX + 0.2, SKY_GUILD_CY + 1.4], [SKY_HALL_CX + 4.8, SKY_GUILD_CY + 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `sky-htree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...SKY_SPRITE.tree }),
+  )
+  P.push({ id: 'sky-hlamp0', kind: 'lamp', cell: { x: SKY_HALL_CX + 4.0, y: SKY_GUILD_CY - 3.6 }, size: { w: 0.4, d: 0.4 }, ...SKY_SPRITE.lamp })
+
+  // ════════ 서: 상점가(X27.5%) — 개별 건물 4채, 간격 확보 ════════
+  const shopSprites = [SKY_SPRITE.shopA, SKY_SPRITE.shopB, SKY_SPRITE.shopC, SKY_SPRITE.shopD]
+  const shopOffsets: [number, number][] = [[-3.4, -1.0], [-1.0, -1.4], [1.4, -1.0], [3.8, -1.4]]
+  shopOffsets.forEach(([ox, oy], i) =>
+    P.push({
+      id: `sky-shop${i}`, kind: 'shop', cell: { x: SKY_SHOP_CX + ox, y: SKY_GUILD_CY + oy }, size: { w: 1.6, d: 1.8 },
+      solid: true, label: `상점 ${i + 1}`, ...shopSprites[i],
+    }),
+  )
+  ;[[SKY_SHOP_CX - 5.2, SKY_GUILD_CY - 4.6], [SKY_SHOP_CX + 5.8, SKY_GUILD_CY - 4.6], [SKY_SHOP_CX - 5.2, SKY_GUILD_CY + 1.4], [SKY_SHOP_CX + 5.8, SKY_GUILD_CY + 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `sky-stree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...SKY_SPRITE.tree }),
+  )
+  ;[[SKY_SHOP_CX - 2.2, SKY_GUILD_CY - 4.8], [SKY_SHOP_CX - 2.2, SKY_GUILD_CY + 1.6]].forEach(([x, y], i) =>
+    P.push({ id: `sky-slamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...SKY_SPRITE.lamp }),
+  )
+
+  // ════════ 남: 하늘정원(X50%/Y75%) ════════
+  P.push({
+    id: 'sky-parkfountain', kind: 'fountain', cell: { x: SKY_CX - 0.85, y: SKY_PARK_CY - 0.6 }, size: { w: 1.7, d: 1.9 },
+    collide: { w: 2.0, d: 2.0 }, radial: true, solid: true, label: '하늘정원 분수', ...SKY_SPRITE.fountain,
+  })
+  ;[[SKY_CX - 3.0, SKY_PARK_CY - 2.0], [SKY_CX + 3.0, SKY_PARK_CY - 2.0], [SKY_CX - 3.0, SKY_PARK_CY + 2.4], [SKY_CX + 3.0, SKY_PARK_CY + 2.4]].forEach(([x, y], i) =>
+    P.push({ id: `sky-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, facing: x < SKY_CX ? 'left' : undefined, ...SKY_SPRITE.bench }),
+  )
+  ;[[SKY_CX - 8.2, SKY_PARK_CY - 2.4], [SKY_CX + 8.2, SKY_PARK_CY - 2.4], [SKY_CX - 8.2, SKY_PARK_CY + 3.0], [SKY_CX + 8.2, SKY_PARK_CY + 3.0]].forEach(([x, y], i) =>
+    P.push({ id: `sky-ptree2-${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...SKY_SPRITE.tree }),
+  )
+
+  // ════════ 해안선(구름바다) 장식 + 마을입구 ════════
+  ;[
+    [SKY_CX - 20.5, SKY_GUILD_CY + 0.5], [SKY_CX + 20.7, SKY_GUILD_CY + 0.5],
+    [SKY_CX - 18.0, 32], [SKY_CX + 18.2, 32],
+    [SKY_CX - 13.0, SKY_PARK_CY + 1.7], [SKY_CX + 13.2, SKY_PARK_CY + 1.7],
+  ].forEach(([x, y], i) =>
+    P.push({ id: `sky-reef${i}`, kind: 'bush', cell: { x, y }, size: { w: 0.9, d: 0.7 }, ...SKY_SPRITE.reef }),
+  )
+  P.push({ id: 'sky-gate', kind: 'gate', cell: { x: SKY_CX - 1.15, y: SKY_ENTRANCE_CY - 1.0 }, size: { w: 2.3, d: 2.0 }, label: '천공 신전 정원문', ...SKY_SPRITE.gate })
+
+  // ════════ 대로 가로등 — 신전 → 광장 → 정원 → 입구 ════════
+  ;[SKY_TEMPLE_Y0 + 3.4, SKY_GUILD_CY + 4.6, SKY_PARK_CY - 3.5].forEach((y, i) => {
+    P.push({ id: `sky-blamp${i}a`, kind: 'lamp', cell: { x: SKY_CX - 2.1, y }, size: { w: 0.4, d: 0.4 }, ...SKY_SPRITE.lamp })
+    P.push({ id: `sky-blamp${i}b`, kind: 'lamp', cell: { x: SKY_CX + 1.9, y }, size: { w: 0.4, d: 0.4 }, ...SKY_SPRITE.lamp })
+  })
+
   return P
 }
 
@@ -1279,68 +1429,133 @@ const SKY_PROPS = skyTempleProps()
 const SKY_BLOCKERS = buildBlockers(SKY_PROPS)
 
 // ── 버려진 신전 (32×28, 어두운 폐허 느낌) ────────────────────────────────────
-const RUIN_AW = 32
-const RUIN_AH = 28
-const RUIN_CX = 16
-const RUIN_TEMPLE_CY = 6
-const RUIN_ALTAR_CY = 15
+const RUIN_AW = 64
+const RUIN_AH = 56
+const RUIN_CX = 32
+const RUIN_TEMPLE_Y0 = 7
+const RUIN_GUILD_CY = 23
+const RUIN_PARK_CY = 42
+const RUIN_ENTRANCE_CY = 52
+const RUIN_SHOP_CX = RUIN_CX - 14.4
+const RUIN_HALL_CX = RUIN_CX + 13.8
+const RUIN_ISLAND_CY = 30
+
+function ruinIslandNorm(x: number, y: number): number {
+  const dx = x - RUIN_CX
+  const dy = y - RUIN_ISLAND_CY
+  const angle = Math.atan2(dy, dx)
+  const wobble = Math.sin(angle * 3) * 1.6 + Math.sin(angle * 7 + 1.3) * 0.9 + Math.sin(angle * 13 + 0.4) * 0.4
+  const rx = Math.max(22, 23 + wobble)
+  const ry = Math.max(26, 27 + wobble * 0.85)
+  return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+}
 
 function templeRuinTileAt(x: number, y: number): TileKind {
-  if (x < 1.6 || x > RUIN_AW - 1.6 || y < 1.6 || y > RUIN_AH - 1.6) return 'dirt'
-  if (Math.hypot(x - RUIN_CX, y - RUIN_TEMPLE_CY) < 4.4) return 'plaza'
-  if (Math.hypot(x - RUIN_CX, y - RUIN_ALTAR_CY) < 3.6) return 'plaza'
-  if (Math.abs(x - RUIN_CX) < 2.0) return 'path'
-  if (Math.abs(y - RUIN_ALTAR_CY) < 1.4) return 'path'
+  if (ruinIslandNorm(x, y) > 1) return 'dirt'
+  if (Math.hypot(x - RUIN_CX, y - (RUIN_TEMPLE_Y0 + 3.4)) < 5.4) return 'plaza'
+  if (Math.hypot(x - RUIN_CX, y - RUIN_PARK_CY) < 5.8) return 'plaza'
+  if (Math.hypot(x - RUIN_CX, y - RUIN_GUILD_CY) < 4.4) return 'plaza'
+  if (Math.hypot(x - RUIN_HALL_CX, y - (RUIN_GUILD_CY - 1.4)) < 3.4) return 'plaza'
+  if (Math.hypot(x - RUIN_SHOP_CX, y - (RUIN_GUILD_CY - 0.6)) < 3.6) return 'plaza'
+  if (Math.abs(x - RUIN_CX) < 2.2) return 'path'
+  if (Math.abs(y - RUIN_GUILD_CY) < 1.6) return 'path'
+  const rdx = x - RUIN_CX
+  const rdy = y - RUIN_GUILD_CY
+  if (Math.hypot(rdx, rdy) < 12.5 && (Math.abs(rdx - rdy) < 1.2 || Math.abs(rdx + rdy) < 1.2)) return 'path'
   return 'ash'
 }
 
 const RUIN_SPRITE = {
   temple: { sprite: '/images/map/props/templeruin/ruin_temple.png', px: { w: 307, h: 294 } },
   guild: { sprite: '/images/map/props/templeruin/ruin_guild.png', px: { w: 197, h: 224 } },
-  houseA: { sprite: '/images/map/props/templeruin/ruin_houseA.png', px: { w: 118, h: 119 } },
-  houseB: { sprite: '/images/map/props/templeruin/ruin_houseB.png', px: { w: 106, h: 104 } },
-  stallA: { sprite: '/images/map/props/templeruin/ruin_stallA.png', px: { w: 92, h: 94 } },
-  stallB: { sprite: '/images/map/props/templeruin/ruin_stallB.png', px: { w: 91, h: 91 } },
+  shopA: { sprite: '/images/map/props/templeruin/ruin_shopA_new.png', px: { w: 65, h: 82 } },
+  shopB: { sprite: '/images/map/props/templeruin/ruin_shopB_new.png', px: { w: 103, h: 121 } },
+  shopC: { sprite: '/images/map/props/templeruin/ruin_shopC_new.png', px: { w: 96, h: 120 } },
+  shopD: { sprite: '/images/map/props/templeruin/ruin_shopD_new.png', px: { w: 103, h: 120 } },
   landmark: { sprite: '/images/map/props/templeruin/ruin_landmark.png', px: { w: 81, h: 144 } },
   lamp: { sprite: '/images/map/props/templeruin/ruin_lamp.png', px: { w: 23, h: 83 } },
   tree: { sprite: '/images/map/props/templeruin/ruin_tree.png', px: { w: 62, h: 97 } },
-  bench: { sprite: '/images/map/props/templeruin/ruin_bench.png', px: { w: 36, h: 24 } },
+  bench: { sprite: '/images/map/props/atlantis/atl_bench_new.png', px: { w: 38, h: 40 } },
+  gate: { sprite: '/images/map/props/atlantis/atl_gate_new.png', px: { w: 122, h: 105 } },
 }
 
 function templeRuinProps(): PropDef[] {
   const P: PropDef[] = []
+
+  // ════════ 북: 버려진 신전(X50%/Y16%) ════════
   P.push({
-    id: 'ruin-temple-b', kind: 'dome', cell: { x: RUIN_CX - 2.6, y: 1.8 }, size: { w: 5.2, d: 4.3 },
+    id: 'ruin-temple-b', kind: 'dome', cell: { x: RUIN_CX - 2.6, y: RUIN_TEMPLE_Y0 }, size: { w: 5.2, d: 4.3 },
     solid: true, label: '버려진 신전', ...RUIN_SPRITE.temple,
   })
-  P.push({
-    id: 'ruin-guild', kind: 'shop', cell: { x: 21.0, y: 3.4 }, size: { w: 2.6, d: 2.6 },
-    solid: true, label: '유물 수호단', ...RUIN_SPRITE.guild,
-  })
-  const stallSprites = [RUIN_SPRITE.stallA, RUIN_SPRITE.stallB]
-  ;[[4.6, 9.0], [8.2, 9.0], [4.6, 18.4], [8.2, 18.4]].forEach(([x, y], i) =>
-    P.push({ id: `ruin-stall${i}`, kind: 'stall', cell: { x, y }, size: { w: 1.4, d: 1.3 }, solid: true, ...stallSprites[i % 2] }),
+  ;[[RUIN_CX - 4.2, RUIN_TEMPLE_Y0 + 5.2], [RUIN_CX + 4.2, RUIN_TEMPLE_Y0 + 5.2]].forEach(([x, y], i) =>
+    P.push({ id: `ruin-ptree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...RUIN_SPRITE.tree }),
   )
-  const houseSprites = [RUIN_SPRITE.houseA, RUIN_SPRITE.houseB]
-  const houseFoot: [number, number][] = [[1.7, 1.5], [1.6, 1.4]]
-  ;[[23.4, 9.0], [27.0, 9.0], [23.4, 18.4], [27.0, 18.4]].forEach(([x, y], i) => {
-    const v = i % 2
-    P.push({ id: `ruin-house${i}`, kind: 'cottage', cell: { x, y }, size: { w: houseFoot[v][0], d: houseFoot[v][1] }, solid: true, ...houseSprites[v] })
-  })
+  ;[[RUIN_CX - 2.2, RUIN_TEMPLE_Y0 + 6.0], [RUIN_CX + 2.2, RUIN_TEMPLE_Y0 + 6.0]].forEach(([x, y], i) =>
+    P.push({ id: `ruin-plamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...RUIN_SPRITE.lamp }),
+  )
+
+  // ════════ 중앙: 저주받은 제단(X50%/Y38.5%) — 대각선 정원 쐐기 ════════
   P.push({
-    id: 'ruin-landmark', kind: 'fountain', cell: { x: RUIN_CX, y: RUIN_ALTAR_CY }, size: { w: 1.4, d: 1.4 },
+    id: 'ruin-landmark', kind: 'fountain', cell: { x: RUIN_CX, y: RUIN_GUILD_CY - 1.4 }, size: { w: 1.4, d: 1.4 },
     collide: { w: 1.8, d: 1.8 }, radial: true, solid: true, label: '저주받은 제단', ...RUIN_SPRITE.landmark,
   })
-  ;[[13.0, 13.6], [19.0, 13.6], [13.0, 16.4], [19.0, 16.4]].forEach(([x, y], i) =>
-    P.push({ id: `ruin-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, ...RUIN_SPRITE.bench }),
-  )
-  ;[9.0, 20.0, 24.6].forEach((y, i) => {
-    P.push({ id: `ruin-lamp${i}a`, kind: 'lamp', cell: { x: 14.1, y }, size: { w: 0.4, d: 0.4 }, ...RUIN_SPRITE.lamp })
-    P.push({ id: `ruin-lamp${i}b`, kind: 'lamp', cell: { x: 17.9, y }, size: { w: 0.4, d: 0.4 }, ...RUIN_SPRITE.lamp })
+  ;[[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sy], qi) => {
+    const bx = RUIN_CX + sx * 3.6
+    const by = RUIN_GUILD_CY + sy * 3.2
+    for (let gx = 0; gx < 3; gx++) {
+      for (let gy = 0; gy < 2; gy++) {
+        P.push({
+          id: `ruin-wedge${qi}-tree${gx}-${gy}`, kind: 'tree',
+          cell: { x: bx + sx * gx * 1.4, y: by + sy * gy * 1.4 }, size: { w: 0.6, d: 0.6 }, ...RUIN_SPRITE.tree,
+        })
+      }
+    }
+    P.push({ id: `ruin-wedge${qi}-lamp`, kind: 'lamp', cell: { x: bx + sx * 1.6, y: by - sy * 0.8 }, size: { w: 0.4, d: 0.4 }, ...RUIN_SPRITE.lamp })
   })
-  ;[[10.0, 4.0], [22.0, 4.0], [4.0, 12.0], [28.0, 12.0], [4.0, 21.0], [28.0, 21.0]].forEach(([x, y], i) =>
-    P.push({ id: `ruin-tree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...RUIN_SPRITE.tree }),
+
+  // ════════ 동: 길드/관리 건물(X71.5%) ════════
+  P.push({
+    id: 'ruin-guild', kind: 'shop', cell: { x: RUIN_HALL_CX, y: RUIN_GUILD_CY - 2.4 }, size: { w: 2.6, d: 2.6 },
+    solid: true, label: '유물 수호단', ...RUIN_SPRITE.guild,
+  })
+  ;[[RUIN_HALL_CX + 0.2, RUIN_GUILD_CY - 5.2], [RUIN_HALL_CX + 4.8, RUIN_GUILD_CY - 5.2], [RUIN_HALL_CX + 0.2, RUIN_GUILD_CY + 1.4], [RUIN_HALL_CX + 4.8, RUIN_GUILD_CY + 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `ruin-htree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...RUIN_SPRITE.tree }),
   )
+  P.push({ id: 'ruin-hlamp0', kind: 'lamp', cell: { x: RUIN_HALL_CX + 4.0, y: RUIN_GUILD_CY - 3.6 }, size: { w: 0.4, d: 0.4 }, ...RUIN_SPRITE.lamp })
+
+  // ════════ 서: 어두운 상점가(X27.5%) — 개별 건물 4채 ════════
+  const shopSprites = [RUIN_SPRITE.shopA, RUIN_SPRITE.shopB, RUIN_SPRITE.shopC, RUIN_SPRITE.shopD]
+  const shopOffsets: [number, number][] = [[-3.4, -1.0], [-1.0, -1.4], [1.4, -1.0], [3.8, -1.4]]
+  shopOffsets.forEach(([ox, oy], i) =>
+    P.push({
+      id: `ruin-shop${i}`, kind: 'shop', cell: { x: RUIN_SHOP_CX + ox, y: RUIN_GUILD_CY + oy }, size: { w: 1.7, d: 1.9 },
+      solid: true, label: `상점 ${i + 1}`, ...shopSprites[i],
+    }),
+  )
+  ;[[RUIN_SHOP_CX - 5.2, RUIN_GUILD_CY - 4.6], [RUIN_SHOP_CX + 5.8, RUIN_GUILD_CY - 4.6], [RUIN_SHOP_CX - 5.2, RUIN_GUILD_CY + 1.4], [RUIN_SHOP_CX + 5.8, RUIN_GUILD_CY + 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `ruin-stree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...RUIN_SPRITE.tree }),
+  )
+  ;[[RUIN_SHOP_CX - 2.2, RUIN_GUILD_CY - 4.8], [RUIN_SHOP_CX - 2.2, RUIN_GUILD_CY + 1.6]].forEach(([x, y], i) =>
+    P.push({ id: `ruin-slamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...RUIN_SPRITE.lamp }),
+  )
+
+  // ════════ 남: 폐허 정원/조각상(X50%/Y75%) ════════
+  ;[[RUIN_CX - 3.0, RUIN_PARK_CY - 2.0], [RUIN_CX + 3.0, RUIN_PARK_CY - 2.0], [RUIN_CX - 3.0, RUIN_PARK_CY + 2.4], [RUIN_CX + 3.0, RUIN_PARK_CY + 2.4]].forEach(([x, y], i) =>
+    P.push({ id: `ruin-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, facing: x < RUIN_CX ? 'left' : undefined, ...RUIN_SPRITE.bench }),
+  )
+  ;[[RUIN_CX - 8.2, RUIN_PARK_CY - 2.4], [RUIN_CX + 8.2, RUIN_PARK_CY - 2.4], [RUIN_CX - 8.2, RUIN_PARK_CY + 3.0], [RUIN_CX + 8.2, RUIN_PARK_CY + 3.0]].forEach(([x, y], i) =>
+    P.push({ id: `ruin-ptree2-${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.6, d: 0.6 }, ...RUIN_SPRITE.tree }),
+  )
+
+  // ════════ 마을입구(Y92.5%) ════════
+  P.push({ id: 'ruin-gate', kind: 'gate', cell: { x: RUIN_CX - 1.15, y: RUIN_ENTRANCE_CY - 1.0 }, size: { w: 2.3, d: 2.0 }, label: '폐허 정원문', ...RUIN_SPRITE.gate })
+
+  // ════════ 대로 가로등 ════════
+  ;[RUIN_TEMPLE_Y0 + 3.4, RUIN_GUILD_CY + 4.6, RUIN_PARK_CY - 3.5].forEach((y, i) => {
+    P.push({ id: `ruin-blamp${i}a`, kind: 'lamp', cell: { x: RUIN_CX - 2.1, y }, size: { w: 0.4, d: 0.4 }, ...RUIN_SPRITE.lamp })
+    P.push({ id: `ruin-blamp${i}b`, kind: 'lamp', cell: { x: RUIN_CX + 1.9, y }, size: { w: 0.4, d: 0.4 }, ...RUIN_SPRITE.lamp })
+  })
+
   return P
 }
 
@@ -1348,68 +1563,133 @@ const RUIN_PROPS = templeRuinProps()
 const RUIN_BLOCKERS = buildBlockers(RUIN_PROPS)
 
 // ── 오로라 마을 (32×28, 밝은 남색 설원 느낌) ─────────────────────────────────
-const AUR_AW = 32
-const AUR_AH = 28
-const AUR_CX = 16
-const AUR_HALL_CY = 6
-const AUR_ALTAR_CY = 15
+const AUR_AW = 64
+const AUR_AH = 56
+const AUR_CX = 32
+const AUR_TEMPLE_Y0 = 7
+const AUR_GUILD_CY = 23
+const AUR_PARK_CY = 42
+const AUR_ENTRANCE_CY = 52
+const AUR_SHOP_CX = AUR_CX - 14.4
+const AUR_HALL_CX = AUR_CX + 13.8
+const AUR_ISLAND_CY = 30
+
+function auroraIslandNorm(x: number, y: number): number {
+  const dx = x - AUR_CX
+  const dy = y - AUR_ISLAND_CY
+  const angle = Math.atan2(dy, dx)
+  const wobble = Math.sin(angle * 3) * 1.6 + Math.sin(angle * 7 + 1.3) * 0.9 + Math.sin(angle * 13 + 0.4) * 0.4
+  const rx = Math.max(22, 23 + wobble)
+  const ry = Math.max(26, 27 + wobble * 0.85)
+  return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+}
 
 function auroraTileAt(x: number, y: number): TileKind {
-  if (x < 1.6 || x > AUR_AW - 1.6 || y < 1.6 || y > AUR_AH - 1.6) return 'water'
-  if (Math.hypot(x - AUR_CX, y - AUR_HALL_CY) < 4.4) return 'plaza'
-  if (Math.hypot(x - AUR_CX, y - AUR_ALTAR_CY) < 3.6) return 'plaza'
-  if (Math.abs(x - AUR_CX) < 2.0) return 'path'
-  if (Math.abs(y - AUR_ALTAR_CY) < 1.4) return 'path'
+  if (auroraIslandNorm(x, y) > 1) return 'water'
+  if (Math.hypot(x - AUR_CX, y - (AUR_TEMPLE_Y0 + 3.4)) < 5.4) return 'plaza'
+  if (Math.hypot(x - AUR_CX, y - AUR_PARK_CY) < 5.8) return 'plaza'
+  if (Math.hypot(x - AUR_CX, y - AUR_GUILD_CY) < 4.4) return 'plaza'
+  if (Math.hypot(x - AUR_HALL_CX, y - (AUR_GUILD_CY - 1.4)) < 3.4) return 'plaza'
+  if (Math.hypot(x - AUR_SHOP_CX, y - (AUR_GUILD_CY - 0.6)) < 3.6) return 'plaza'
+  if (Math.abs(x - AUR_CX) < 2.2) return 'path'
+  if (Math.abs(y - AUR_GUILD_CY) < 1.6) return 'path'
+  const rdx = x - AUR_CX
+  const rdy = y - AUR_GUILD_CY
+  if (Math.hypot(rdx, rdy) < 12.5 && (Math.abs(rdx - rdy) < 1.2 || Math.abs(rdx + rdy) < 1.2)) return 'path'
   return 'ice'
 }
 
 const AUR_SPRITE = {
-  hall: { sprite: '/images/map/props/aurora/aurora_temple.png', px: { w: 286, h: 288 } },
-  guild: { sprite: '/images/map/props/aurora/aurora_guild.png', px: { w: 180, h: 195 } },
-  houseA: { sprite: '/images/map/props/aurora/aurora_houseA.png', px: { w: 123, h: 96 } },
-  houseB: { sprite: '/images/map/props/aurora/aurora_houseB.png', px: { w: 114, h: 111 } },
-  stallA: { sprite: '/images/map/props/aurora/aurora_stallA.png', px: { w: 94, h: 94 } },
-  stallB: { sprite: '/images/map/props/aurora/aurora_stallB.png', px: { w: 87, h: 87 } },
+  temple: { sprite: '/images/map/props/aurora/aurora_temple_new.png', px: { w: 297, h: 305 } },
+  hall: { sprite: '/images/map/props/aurora/aurora_hall_new.png', px: { w: 188, h: 194 } },
+  shopA: { sprite: '/images/map/props/aurora/aurora_shopA_new.png', px: { w: 107, h: 123 } },
+  shopB: { sprite: '/images/map/props/aurora/aurora_shopB_new.png', px: { w: 106, h: 116 } },
+  shopC: { sprite: '/images/map/props/aurora/aurora_shopC_new.png', px: { w: 97, h: 118 } },
+  shopD: { sprite: '/images/map/props/aurora/aurora_shopD_new.png', px: { w: 102, h: 108 } },
   landmark: { sprite: '/images/map/props/aurora/aurora_landmark.png', px: { w: 126, h: 143 } },
   lamp: { sprite: '/images/map/props/aurora/aurora_lamp.png', px: { w: 25, h: 78 } },
   tree: { sprite: '/images/map/props/aurora/aurora_tree.png', px: { w: 64, h: 92 } },
-  bench: { sprite: '/images/map/props/aurora/aurora_bench.png', px: { w: 33, h: 22 } },
+  bench: { sprite: '/images/map/props/atlantis/atl_bench_new.png', px: { w: 38, h: 40 } },
+  gate: { sprite: '/images/map/props/atlantis/atl_gate_new.png', px: { w: 122, h: 105 } },
 }
 
 function auroraProps(): PropDef[] {
   const P: PropDef[] = []
+
+  // ════════ 북: 설원 성소(X50%/Y16%) ════════
   P.push({
-    id: 'aurora-hall', kind: 'dome', cell: { x: AUR_CX - 2.5, y: 2.0 }, size: { w: 5.0, d: 4.0 },
-    solid: true, label: '오로라 대전당', ...AUR_SPRITE.hall,
+    id: 'aurora-temple', kind: 'dome', cell: { x: AUR_CX - 2.7, y: AUR_TEMPLE_Y0 }, size: { w: 5.4, d: 3.8 },
+    solid: true, label: '설원 성소', ...AUR_SPRITE.temple,
   })
-  P.push({
-    id: 'aurora-guild', kind: 'shop', cell: { x: 21.0, y: 3.4 }, size: { w: 2.6, d: 2.5 },
-    solid: true, label: '서리사냥꾼 길드', ...AUR_SPRITE.guild,
-  })
-  const stallSprites = [AUR_SPRITE.stallA, AUR_SPRITE.stallB]
-  ;[[4.6, 9.0], [8.2, 9.0], [4.6, 18.4], [8.2, 18.4]].forEach(([x, y], i) =>
-    P.push({ id: `aurora-stall${i}`, kind: 'stall', cell: { x, y }, size: { w: 1.4, d: 1.3 }, solid: true, ...stallSprites[i % 2] }),
+  ;[[AUR_CX - 4.2, AUR_TEMPLE_Y0 + 4.8], [AUR_CX + 4.2, AUR_TEMPLE_Y0 + 4.8]].forEach(([x, y], i) =>
+    P.push({ id: `aurora-ptree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...AUR_SPRITE.tree }),
   )
-  const houseSprites = [AUR_SPRITE.houseA, AUR_SPRITE.houseB]
-  const houseFoot: [number, number][] = [[1.8, 1.2], [1.7, 1.5]]
-  ;[[23.4, 9.0], [27.0, 9.0], [23.4, 18.4], [27.0, 18.4]].forEach(([x, y], i) => {
-    const v = i % 2
-    P.push({ id: `aurora-house${i}`, kind: 'cottage', cell: { x, y }, size: { w: houseFoot[v][0], d: houseFoot[v][1] }, solid: true, ...houseSprites[v] })
-  })
+  ;[[AUR_CX - 2.2, AUR_TEMPLE_Y0 + 5.6], [AUR_CX + 2.2, AUR_TEMPLE_Y0 + 5.6]].forEach(([x, y], i) =>
+    P.push({ id: `aurora-plamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...AUR_SPRITE.lamp }),
+  )
+
+  // ════════ 중앙: 오로라 수정탑 분수(X50%/Y38.5%) — 대각선 정원 쐐기 ════════
   P.push({
-    id: 'aurora-landmark', kind: 'fountain', cell: { x: AUR_CX, y: AUR_ALTAR_CY }, size: { w: 1.6, d: 1.6 },
+    id: 'aurora-landmark', kind: 'fountain', cell: { x: AUR_CX, y: AUR_GUILD_CY - 1.4 }, size: { w: 1.6, d: 1.6 },
     collide: { w: 2.0, d: 2.0 }, radial: true, solid: true, label: '오로라 수정탑', ...AUR_SPRITE.landmark,
   })
-  ;[[13.0, 13.6], [19.0, 13.6], [13.0, 16.4], [19.0, 16.4]].forEach(([x, y], i) =>
-    P.push({ id: `aurora-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.4 }, ...AUR_SPRITE.bench }),
-  )
-  ;[9.0, 20.0, 24.6].forEach((y, i) => {
-    P.push({ id: `aurora-lamp${i}a`, kind: 'lamp', cell: { x: 14.1, y }, size: { w: 0.4, d: 0.4 }, ...AUR_SPRITE.lamp })
-    P.push({ id: `aurora-lamp${i}b`, kind: 'lamp', cell: { x: 17.9, y }, size: { w: 0.4, d: 0.4 }, ...AUR_SPRITE.lamp })
+  ;[[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sy], qi) => {
+    const bx = AUR_CX + sx * 3.6
+    const by = AUR_GUILD_CY + sy * 3.2
+    for (let gx = 0; gx < 3; gx++) {
+      for (let gy = 0; gy < 2; gy++) {
+        P.push({
+          id: `aurora-wedge${qi}-tree${gx}-${gy}`, kind: 'tree',
+          cell: { x: bx + sx * gx * 1.4, y: by + sy * gy * 1.4 }, size: { w: 0.7, d: 0.6 }, ...AUR_SPRITE.tree,
+        })
+      }
+    }
+    P.push({ id: `aurora-wedge${qi}-lamp`, kind: 'lamp', cell: { x: bx + sx * 1.6, y: by - sy * 0.8 }, size: { w: 0.4, d: 0.4 }, ...AUR_SPRITE.lamp })
   })
-  ;[[10.0, 4.0], [22.0, 4.0], [4.0, 12.0], [28.0, 12.0], [4.0, 21.0], [28.0, 21.0]].forEach(([x, y], i) =>
-    P.push({ id: `aurora-tree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...AUR_SPRITE.tree }),
+
+  // ════════ 동: 마을회관(X71.5%) ════════
+  P.push({
+    id: 'aurora-hall', kind: 'shop', cell: { x: AUR_HALL_CX, y: AUR_GUILD_CY - 2.4 }, size: { w: 2.9, d: 2.4 },
+    solid: true, label: '오로라 마을회관', ...AUR_SPRITE.hall,
+  })
+  ;[[AUR_HALL_CX + 0.2, AUR_GUILD_CY - 5.2], [AUR_HALL_CX + 4.8, AUR_GUILD_CY - 5.2], [AUR_HALL_CX + 0.2, AUR_GUILD_CY + 1.4], [AUR_HALL_CX + 4.8, AUR_GUILD_CY + 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `aurora-htree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...AUR_SPRITE.tree }),
   )
+  P.push({ id: 'aurora-hlamp0', kind: 'lamp', cell: { x: AUR_HALL_CX + 4.0, y: AUR_GUILD_CY - 3.6 }, size: { w: 0.4, d: 0.4 }, ...AUR_SPRITE.lamp })
+
+  // ════════ 서: 상점가(X27.5%) — 개별 건물 4채 ════════
+  const shopSprites = [AUR_SPRITE.shopA, AUR_SPRITE.shopB, AUR_SPRITE.shopC, AUR_SPRITE.shopD]
+  const shopOffsets: [number, number][] = [[-3.4, -1.0], [-1.0, -1.4], [1.4, -1.0], [3.8, -1.4]]
+  shopOffsets.forEach(([ox, oy], i) =>
+    P.push({
+      id: `aurora-shop${i}`, kind: 'shop', cell: { x: AUR_SHOP_CX + ox, y: AUR_GUILD_CY + oy }, size: { w: 1.7, d: 1.9 },
+      solid: true, label: `상점 ${i + 1}`, ...shopSprites[i],
+    }),
+  )
+  ;[[AUR_SHOP_CX - 5.2, AUR_GUILD_CY - 4.6], [AUR_SHOP_CX + 5.8, AUR_GUILD_CY - 4.6], [AUR_SHOP_CX - 5.2, AUR_GUILD_CY + 1.4], [AUR_SHOP_CX + 5.8, AUR_GUILD_CY + 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `aurora-stree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...AUR_SPRITE.tree }),
+  )
+  ;[[AUR_SHOP_CX - 2.2, AUR_GUILD_CY - 4.8], [AUR_SHOP_CX - 2.2, AUR_GUILD_CY + 1.6]].forEach(([x, y], i) =>
+    P.push({ id: `aurora-slamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...AUR_SPRITE.lamp }),
+  )
+
+  // ════════ 남: 눈 정원/호수 정원(X50%/Y75%) ════════
+  ;[[AUR_CX - 3.0, AUR_PARK_CY - 2.0], [AUR_CX + 3.0, AUR_PARK_CY - 2.0], [AUR_CX - 3.0, AUR_PARK_CY + 2.4], [AUR_CX + 3.0, AUR_PARK_CY + 2.4]].forEach(([x, y], i) =>
+    P.push({ id: `aurora-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, facing: x < AUR_CX ? 'left' : undefined, ...AUR_SPRITE.bench }),
+  )
+  ;[[AUR_CX - 8.2, AUR_PARK_CY - 2.4], [AUR_CX + 8.2, AUR_PARK_CY - 2.4], [AUR_CX - 8.2, AUR_PARK_CY + 3.0], [AUR_CX + 8.2, AUR_PARK_CY + 3.0]].forEach(([x, y], i) =>
+    P.push({ id: `aurora-ptree2-${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...AUR_SPRITE.tree }),
+  )
+
+  // ════════ 마을입구(Y92.5%) ════════
+  P.push({ id: 'aurora-gate', kind: 'gate', cell: { x: AUR_CX - 1.15, y: AUR_ENTRANCE_CY - 1.0 }, size: { w: 2.3, d: 2.0 }, label: '설원 정원문', ...AUR_SPRITE.gate })
+
+  // ════════ 대로 가로등 ════════
+  ;[AUR_TEMPLE_Y0 + 3.4, AUR_GUILD_CY + 4.6, AUR_PARK_CY - 3.5].forEach((y, i) => {
+    P.push({ id: `aurora-blamp${i}a`, kind: 'lamp', cell: { x: AUR_CX - 2.1, y }, size: { w: 0.4, d: 0.4 }, ...AUR_SPRITE.lamp })
+    P.push({ id: `aurora-blamp${i}b`, kind: 'lamp', cell: { x: AUR_CX + 1.9, y }, size: { w: 0.4, d: 0.4 }, ...AUR_SPRITE.lamp })
+  })
+
   return P
 }
 
@@ -1417,66 +1697,133 @@ const AURORA_PROPS = auroraProps()
 const AURORA_BLOCKERS = buildBlockers(AURORA_PROPS)
 
 // ── 마물 마을 (32×28, 화산지대 붉은 느낌) ────────────────────────────────────
-const DEMON_AW = 32
-const DEMON_AH = 28
-const DEMON_CX = 16
-const DEMON_FORT_CY = 6
-const DEMON_ALTAR_CY = 15
+const DEMON_AW = 64
+const DEMON_AH = 56
+const DEMON_CX = 32
+const DEMON_TEMPLE_Y0 = 7
+const DEMON_GUILD_CY = 23
+const DEMON_PARK_CY = 42
+const DEMON_ENTRANCE_CY = 52
+const DEMON_SHOP_CX = DEMON_CX - 14.4
+const DEMON_HALL_CX = DEMON_CX + 13.8
+const DEMON_ISLAND_CY = 30
+
+function demonIslandNorm(x: number, y: number): number {
+  const dx = x - DEMON_CX
+  const dy = y - DEMON_ISLAND_CY
+  const angle = Math.atan2(dy, dx)
+  const wobble = Math.sin(angle * 3) * 1.6 + Math.sin(angle * 7 + 1.3) * 0.9 + Math.sin(angle * 13 + 0.4) * 0.4
+  const rx = Math.max(22, 23 + wobble)
+  const ry = Math.max(26, 27 + wobble * 0.85)
+  return (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+}
 
 function demonVillageTileAt(x: number, y: number): TileKind {
-  if (x < 1.6 || x > DEMON_AW - 1.6 || y < 1.6 || y > DEMON_AH - 1.6) return 'field'
-  if (Math.hypot(x - DEMON_CX, y - DEMON_FORT_CY) < 4.4) return 'plaza'
-  if (Math.hypot(x - DEMON_CX, y - DEMON_ALTAR_CY) < 3.6) return 'plaza'
-  if (Math.abs(x - DEMON_CX) < 2.0) return 'path'
-  if (Math.abs(y - DEMON_ALTAR_CY) < 1.4) return 'path'
+  if (demonIslandNorm(x, y) > 1) return 'field'
+  if (Math.hypot(x - DEMON_CX, y - (DEMON_TEMPLE_Y0 + 3.4)) < 5.4) return 'plaza'
+  if (Math.hypot(x - DEMON_CX, y - DEMON_PARK_CY) < 5.8) return 'plaza'
+  if (Math.hypot(x - DEMON_CX, y - DEMON_GUILD_CY) < 4.4) return 'plaza'
+  if (Math.hypot(x - DEMON_HALL_CX, y - (DEMON_GUILD_CY - 1.4)) < 3.4) return 'plaza'
+  if (Math.hypot(x - DEMON_SHOP_CX, y - (DEMON_GUILD_CY - 0.6)) < 3.6) return 'plaza'
+  if (Math.abs(x - DEMON_CX) < 2.2) return 'path'
+  if (Math.abs(y - DEMON_GUILD_CY) < 1.6) return 'path'
+  const rdx = x - DEMON_CX
+  const rdy = y - DEMON_GUILD_CY
+  if (Math.hypot(rdx, rdy) < 12.5 && (Math.abs(rdx - rdy) < 1.2 || Math.abs(rdx + rdy) < 1.2)) return 'path'
   return 'obsidian'
 }
 
 const DEMON_SPRITE = {
   fortress: { sprite: '/images/map/props/demon/demon_temple.png', px: { w: 298, h: 301 } },
-  guild: { sprite: '/images/map/props/demon/demon_guild.png', px: { w: 179, h: 221 } },
-  houseA: { sprite: '/images/map/props/demon/demon_houseA.png', px: { w: 113, h: 123 } },
-  houseB: { sprite: '/images/map/props/demon/demon_houseB.png', px: { w: 118, h: 120 } },
-  stallA: { sprite: '/images/map/props/demon/demon_stallA.png', px: { w: 90, h: 90 } },
-  stallB: { sprite: '/images/map/props/demon/demon_stallB.png', px: { w: 95, h: 97 } },
+  hall: { sprite: '/images/map/props/demon/demon_hall_new.png', px: { w: 183, h: 196 } },
+  shopA: { sprite: '/images/map/props/demon/demon_shopA_new.png', px: { w: 102, h: 114 } },
+  shopB: { sprite: '/images/map/props/demon/demon_shopB_new.png', px: { w: 79, h: 93 } },
+  shopC: { sprite: '/images/map/props/demon/demon_shopC_new.png', px: { w: 107, h: 125 } },
+  shopD: { sprite: '/images/map/props/demon/demon_shopD_new.png', px: { w: 76, h: 85 } },
   landmark: { sprite: '/images/map/props/demon/demon_landmark.png', px: { w: 126, h: 152 } },
   lamp: { sprite: '/images/map/props/demon/demon_lamp.png', px: { w: 36, h: 83 } },
   tree: { sprite: '/images/map/props/demon/demon_tree.png', px: { w: 83, h: 106 } },
-  bench: { sprite: '/images/map/props/demon/demon_bench.png', px: { w: 40, h: 32 } },
+  bench: { sprite: '/images/map/props/atlantis/atl_bench_new.png', px: { w: 38, h: 40 } },
+  gate: { sprite: '/images/map/props/atlantis/atl_gate_new.png', px: { w: 122, h: 105 } },
 }
 
 function demonVillageProps(): PropDef[] {
   const P: PropDef[] = []
+
+  // ════════ 북: 화산 성채(X50%/Y16%) ════════
   P.push({
-    id: 'demon-fortress', kind: 'dome', cell: { x: DEMON_CX - 2.5, y: 1.9 }, size: { w: 5.0, d: 4.1 },
-    solid: true, label: '마물 거성', ...DEMON_SPRITE.fortress,
+    id: 'demon-fortress', kind: 'dome', cell: { x: DEMON_CX - 2.5, y: DEMON_TEMPLE_Y0 }, size: { w: 5.0, d: 4.1 },
+    solid: true, label: '화산 성채', ...DEMON_SPRITE.fortress,
   })
-  P.push({
-    id: 'demon-guild', kind: 'shop', cell: { x: 21.0, y: 3.4 }, size: { w: 2.6, d: 2.6 },
-    solid: true, label: '마물 용병단', ...DEMON_SPRITE.guild,
-  })
-  const stallSprites = [DEMON_SPRITE.stallA, DEMON_SPRITE.stallB]
-  ;[[4.6, 9.0], [8.2, 9.0], [4.6, 18.4], [8.2, 18.4]].forEach(([x, y], i) =>
-    P.push({ id: `demon-stall${i}`, kind: 'stall', cell: { x, y }, size: { w: 1.4, d: 1.3 }, solid: true, ...stallSprites[i % 2] }),
+  ;[[DEMON_CX - 4.2, DEMON_TEMPLE_Y0 + 5.0], [DEMON_CX + 4.2, DEMON_TEMPLE_Y0 + 5.0]].forEach(([x, y], i) =>
+    P.push({ id: `demon-ptree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...DEMON_SPRITE.tree }),
   )
-  const houseSprites = [DEMON_SPRITE.houseA, DEMON_SPRITE.houseB]
-  ;[[23.4, 9.0], [27.0, 9.0], [23.4, 18.4], [27.0, 18.4]].forEach(([x, y], i) =>
-    P.push({ id: `demon-house${i}`, kind: 'cottage', cell: { x, y }, size: { w: 1.7, d: 1.5 }, solid: true, ...houseSprites[i % 2] }),
+  ;[[DEMON_CX - 2.2, DEMON_TEMPLE_Y0 + 5.8], [DEMON_CX + 2.2, DEMON_TEMPLE_Y0 + 5.8]].forEach(([x, y], i) =>
+    P.push({ id: `demon-plamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...DEMON_SPRITE.lamp }),
   )
+
+  // ════════ 중앙: 용암 분수(X50%/Y38.5%) — 대각선 정원 쐐기 ════════
   P.push({
-    id: 'demon-landmark', kind: 'fountain', cell: { x: DEMON_CX, y: DEMON_ALTAR_CY }, size: { w: 1.6, d: 1.6 },
+    id: 'demon-landmark', kind: 'fountain', cell: { x: DEMON_CX, y: DEMON_GUILD_CY - 1.4 }, size: { w: 1.6, d: 1.6 },
     collide: { w: 2.0, d: 2.0 }, radial: true, solid: true, label: '용암 분수', ...DEMON_SPRITE.landmark,
   })
-  ;[[13.0, 13.6], [19.0, 13.6], [13.0, 16.4], [19.0, 16.4]].forEach(([x, y], i) =>
-    P.push({ id: `demon-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, ...DEMON_SPRITE.bench }),
-  )
-  ;[9.0, 20.0, 24.6].forEach((y, i) => {
-    P.push({ id: `demon-lamp${i}a`, kind: 'lamp', cell: { x: 14.1, y }, size: { w: 0.4, d: 0.4 }, ...DEMON_SPRITE.lamp })
-    P.push({ id: `demon-lamp${i}b`, kind: 'lamp', cell: { x: 17.9, y }, size: { w: 0.4, d: 0.4 }, ...DEMON_SPRITE.lamp })
+  ;[[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sy], qi) => {
+    const bx = DEMON_CX + sx * 3.6
+    const by = DEMON_GUILD_CY + sy * 3.2
+    for (let gx = 0; gx < 3; gx++) {
+      for (let gy = 0; gy < 2; gy++) {
+        P.push({
+          id: `demon-wedge${qi}-tree${gx}-${gy}`, kind: 'tree',
+          cell: { x: bx + sx * gx * 1.4, y: by + sy * gy * 1.4 }, size: { w: 0.7, d: 0.6 }, ...DEMON_SPRITE.tree,
+        })
+      }
+    }
+    P.push({ id: `demon-wedge${qi}-lamp`, kind: 'lamp', cell: { x: bx + sx * 1.6, y: by - sy * 0.8 }, size: { w: 0.4, d: 0.4 }, ...DEMON_SPRITE.lamp })
   })
-  ;[[10.0, 4.0], [22.0, 4.0], [4.0, 12.0], [28.0, 12.0], [4.0, 21.0], [28.0, 21.0]].forEach(([x, y], i) =>
-    P.push({ id: `demon-tree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...DEMON_SPRITE.tree }),
+
+  // ════════ 동: 아인·수인 주민회관(X71.5%) ════════
+  P.push({
+    id: 'demon-hall', kind: 'shop', cell: { x: DEMON_HALL_CX, y: DEMON_GUILD_CY - 2.4 }, size: { w: 2.9, d: 2.5 },
+    solid: true, label: '아인·수인 주민회관', ...DEMON_SPRITE.hall,
+  })
+  ;[[DEMON_HALL_CX + 0.2, DEMON_GUILD_CY - 5.2], [DEMON_HALL_CX + 4.8, DEMON_GUILD_CY - 5.2], [DEMON_HALL_CX + 0.2, DEMON_GUILD_CY + 1.4], [DEMON_HALL_CX + 4.8, DEMON_GUILD_CY + 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `demon-htree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...DEMON_SPRITE.tree }),
   )
+  P.push({ id: 'demon-hlamp0', kind: 'lamp', cell: { x: DEMON_HALL_CX + 4.0, y: DEMON_GUILD_CY - 3.6 }, size: { w: 0.4, d: 0.4 }, ...DEMON_SPRITE.lamp })
+
+  // ════════ 서: 대장간/상점가(X27.5%) — 개별 건물 4채 ════════
+  const shopSprites = [DEMON_SPRITE.shopA, DEMON_SPRITE.shopB, DEMON_SPRITE.shopC, DEMON_SPRITE.shopD]
+  const shopOffsets: [number, number][] = [[-3.4, -1.0], [-1.0, -1.4], [1.4, -1.0], [3.8, -1.4]]
+  shopOffsets.forEach(([ox, oy], i) =>
+    P.push({
+      id: `demon-shop${i}`, kind: 'shop', cell: { x: DEMON_SHOP_CX + ox, y: DEMON_GUILD_CY + oy }, size: { w: 1.7, d: 1.9 },
+      solid: true, label: `상점 ${i + 1}`, ...shopSprites[i],
+    }),
+  )
+  ;[[DEMON_SHOP_CX - 5.2, DEMON_GUILD_CY - 4.6], [DEMON_SHOP_CX + 5.8, DEMON_GUILD_CY - 4.6], [DEMON_SHOP_CX - 5.2, DEMON_GUILD_CY + 1.4], [DEMON_SHOP_CX + 5.8, DEMON_GUILD_CY + 1.4]].forEach(([x, y], i) =>
+    P.push({ id: `demon-stree${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...DEMON_SPRITE.tree }),
+  )
+  ;[[DEMON_SHOP_CX - 2.2, DEMON_GUILD_CY - 4.8], [DEMON_SHOP_CX - 2.2, DEMON_GUILD_CY + 1.6]].forEach(([x, y], i) =>
+    P.push({ id: `demon-slamp${i}`, kind: 'lamp', cell: { x, y }, size: { w: 0.4, d: 0.4 }, ...DEMON_SPRITE.lamp }),
+  )
+
+  // ════════ 남: 온천/용암 정원(X50%/Y75%) ════════
+  ;[[DEMON_CX - 3.0, DEMON_PARK_CY - 2.0], [DEMON_CX + 3.0, DEMON_PARK_CY - 2.0], [DEMON_CX - 3.0, DEMON_PARK_CY + 2.4], [DEMON_CX + 3.0, DEMON_PARK_CY + 2.4]].forEach(([x, y], i) =>
+    P.push({ id: `demon-bench${i}`, kind: 'bench', cell: { x, y }, size: { w: 0.9, d: 0.5 }, facing: x < DEMON_CX ? 'left' : undefined, ...DEMON_SPRITE.bench }),
+  )
+  ;[[DEMON_CX - 8.2, DEMON_PARK_CY - 2.4], [DEMON_CX + 8.2, DEMON_PARK_CY - 2.4], [DEMON_CX - 8.2, DEMON_PARK_CY + 3.0], [DEMON_CX + 8.2, DEMON_PARK_CY + 3.0]].forEach(([x, y], i) =>
+    P.push({ id: `demon-ptree2-${i}`, kind: 'tree', cell: { x, y }, size: { w: 0.7, d: 0.6 }, ...DEMON_SPRITE.tree }),
+  )
+
+  // ════════ 마을입구(Y92.5%) ════════
+  P.push({ id: 'demon-gate', kind: 'gate', cell: { x: DEMON_CX - 1.15, y: DEMON_ENTRANCE_CY - 1.0 }, size: { w: 2.3, d: 2.0 }, label: '화산지대 정문', ...DEMON_SPRITE.gate })
+
+  // ════════ 대로 가로등 ════════
+  ;[DEMON_TEMPLE_Y0 + 3.4, DEMON_GUILD_CY + 4.6, DEMON_PARK_CY - 3.5].forEach((y, i) => {
+    P.push({ id: `demon-blamp${i}a`, kind: 'lamp', cell: { x: DEMON_CX - 2.1, y }, size: { w: 0.4, d: 0.4 }, ...DEMON_SPRITE.lamp })
+    P.push({ id: `demon-blamp${i}b`, kind: 'lamp', cell: { x: DEMON_CX + 1.9, y }, size: { w: 0.4, d: 0.4 }, ...DEMON_SPRITE.lamp })
+  })
+
   return P
 }
 
@@ -1677,9 +2024,9 @@ export const MAPS: Record<MapId, GameMap> = {
     zones: [
       z('z-atlantis', 'atlantis', '아틀란티스 마을', 0, 0, AW, AH, '#2f86c0', '심해 아래 잠든 수중 도시. 해류로 지은 유리 돔 아래 인어족이 살아간다.'),
     ],
-    spawn: { x: ACX, y: 25.8 },
+    spawn: { x: ACX, y: ENTRANCE_CY - 0.2 },
     portals: [
-      { id: 'atlantis-exit', cell: { x: ACX, y: 26.5 }, to: 'sea', toSpawn: { x: 20, y: 5.2 }, label: '해안으로', kind: 'exit' },
+      { id: 'atlantis-exit', cell: { x: ACX, y: ENTRANCE_CY + 0.5 }, to: 'sea', toSpawn: { x: 20, y: 5.2 }, label: '해안으로', kind: 'exit' },
     ],
   },
 
@@ -1720,9 +2067,9 @@ export const MAPS: Record<MapId, GameMap> = {
     zones: [
       z('z-sky-temple', 'temple', '천공 신전', 0, 0, SKY_AW, SKY_AH, '#d8c98a', '폭풍 위에 떠 있는 하얀 신전. 바람을 읽는 사제들이 순례자를 맞는다.'),
     ],
-    spawn: { x: SKY_CX, y: 25.6 },
+    spawn: { x: SKY_CX, y: SKY_ENTRANCE_CY - 0.2 },
     portals: [
-      { id: 'sky-temple-exit', cell: { x: SKY_CX, y: 26.5 }, to: 'stormhaven', toSpawn: { x: 12, y: 5.2 }, label: '스톰헤이븐으로', kind: 'exit' },
+      { id: 'sky-temple-exit', cell: { x: SKY_CX, y: SKY_ENTRANCE_CY + 0.5 }, to: 'stormhaven', toSpawn: { x: 12, y: 5.2 }, label: '스톰헤이븐으로', kind: 'exit' },
     ],
   },
 
@@ -1791,9 +2138,9 @@ export const MAPS: Record<MapId, GameMap> = {
     zones: [
       z('z-abandoned-temple', 'temple', '버려진 신전', 0, 0, RUIN_AW, RUIN_AH, '#9a8a54', '폐허 깊숙이 남은 옛 신전. 은둔한 수도자들이 유물을 지키며 순례자를 맞는다.'),
     ],
-    spawn: { x: RUIN_CX, y: 25.6 },
+    spawn: { x: RUIN_CX, y: RUIN_ENTRANCE_CY - 0.2 },
     portals: [
-      { id: 'temple-ruin-exit', cell: { x: RUIN_CX, y: 26.5 }, to: 'ruins', toSpawn: { x: 20, y: 5.2 }, label: '폐허로', kind: 'exit' },
+      { id: 'temple-ruin-exit', cell: { x: RUIN_CX, y: RUIN_ENTRANCE_CY + 0.5 }, to: 'ruins', toSpawn: { x: 20, y: 5.2 }, label: '폐허로', kind: 'exit' },
     ],
   },
 
@@ -1836,9 +2183,9 @@ export const MAPS: Record<MapId, GameMap> = {
     zones: [
       z('z-aurora', 'aurora', '오로라 마을', 0, 0, AUR_AW, AUR_AH, '#7fb0d8', '설원 한가운데, 밤이면 하늘에 오로라가 흐르는 얼음집 마을. 설인족과 상인들이 산다.'),
     ],
-    spawn: { x: AUR_CX, y: 25.6 },
+    spawn: { x: AUR_CX, y: AUR_ENTRANCE_CY - 0.2 },
     portals: [
-      { id: 'aurora-exit', cell: { x: AUR_CX, y: 26.5 }, to: 'snowfield', toSpawn: { x: 12, y: 5.2 }, label: '설원으로', kind: 'exit' },
+      { id: 'aurora-exit', cell: { x: AUR_CX, y: AUR_ENTRANCE_CY + 0.5 }, to: 'snowfield', toSpawn: { x: 12, y: 5.2 }, label: '설원으로', kind: 'exit' },
     ],
   },
 
@@ -1882,9 +2229,9 @@ export const MAPS: Record<MapId, GameMap> = {
     zones: [
       z('z-demon-village', 'demon', '마물 마을', 0, 0, DEMON_AW, DEMON_AH, '#3a1230', '화산 기슭에 자리한 마물들의 정착지. 모르스를 따르지 않는 온건파 마물이 교역한다.'),
     ],
-    spawn: { x: DEMON_CX, y: 25.6 },
+    spawn: { x: DEMON_CX, y: DEMON_ENTRANCE_CY - 0.2 },
     portals: [
-      { id: 'demon-village-exit', cell: { x: DEMON_CX, y: 26.5 }, to: 'volcano', toSpawn: { x: 4, y: 5.2 }, label: '화산지대로', kind: 'exit' },
+      { id: 'demon-village-exit', cell: { x: DEMON_CX, y: DEMON_ENTRANCE_CY + 0.5 }, to: 'volcano', toSpawn: { x: 4, y: 5.2 }, label: '화산지대로', kind: 'exit' },
     ],
   },
   'demon-castle': {
