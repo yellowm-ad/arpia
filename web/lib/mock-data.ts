@@ -746,8 +746,8 @@ const NPCS_BASE: NpcDef[] = [
   { id: 'npc-farmer', name: '농부 하름', role: 'farmer', icon: '/images/npc/npc-farmer.png', zoneId: 'z-farm', cell: { x: 26, y: 29.2 }, greeting: ['어이, 견습생! 여기가 햇살 농가일세.', '밭농사에 펫 농장까지 해볼 생각인데, 아직은 삽질만 하고 있다네. 곧 열 테니 기대하게.'] },
 
   // ── 아틀란티스 마을 (안전지대) ──
-  { id: 'npc-atlantis-elder', name: '해류사제 넬리아', role: 'flavor', icon: '/images/npc/npc-atlantis-elder.png', zoneId: 'z-atlantis', cell: { x: 18.6, y: 20.0 }, greeting: ['숨은 걱정 말게 — 이 돔 안은 뭍과 같으니.', '아틀란티스는 심해가 삼키기 전, 삼원을 가장 먼저 연구한 도시였네.'] },
-  { id: 'npc-atlantis-merchant', name: '진주상인 카로', role: 'potionMerchant', icon: '/images/npc/npc-atlantis-merchant.png', zoneId: 'z-atlantis', cell: { x: 43.8, y: 20.0 }, greeting: ['해저에서 건진 물약이라네. 뭍 것보다 훨씬 잘 들어.'], shopItemIds: potions.map((p) => p.id) },
+  { id: 'npc-atlantis-elder', name: '해류사제 넬리아', role: 'flavor', icon: '/images/npc/npc-atlantis-elder.png', zoneId: 'z-atlantis', cell: { x: 18.6, y: 23.2 }, greeting: ['숨은 걱정 말게 — 이 돔 안은 뭍과 같으니.', '아틀란티스는 심해가 삼키기 전, 삼원을 가장 먼저 연구한 도시였네.'] },
+  { id: 'npc-atlantis-merchant', name: '진주상인 카로', role: 'potionMerchant', icon: '/images/npc/npc-atlantis-merchant.png', zoneId: 'z-atlantis', cell: { x: 43.6, y: 23.4 }, greeting: ['해저에서 건진 물약이라네. 뭍 것보다 훨씬 잘 들어.'], shopItemIds: potions.map((p) => p.id) },
   { id: 'npc-atlantis-child', name: '인어 아이 피오', role: 'flavor', icon: '/images/npc/npc-atlantis-child.png', zoneId: 'z-atlantis', cell: { x: 32.0, y: 40.0 }, greeting: ['위쪽 세계 사람이다! 다리로 걷는 거 신기해요.'] },
 
   // ── 천공 신전 (안전지대) ──
@@ -765,7 +765,7 @@ const NPCS_BASE: NpcDef[] = [
 
   // ── 마물 마을 (안전지대) ──
   { id: 'npc-demon-elder', name: '온건파 장로 카즈', role: 'flavor', icon: '/images/npc/npc-demon-elder.png', zoneId: 'z-demon-village', cell: { x: 32.0, y: 13.0 }, greeting: ['놀랐나? 우리 모두가 모르스를 따르는 건 아니야.', '여기선 칼을 거둬라. 교역하러 온 거라면 환영이다.'] },
-  { id: 'npc-demon-smith', name: '용암대장장이 그롯', role: 'weaponMerchant', icon: '/images/npc/npc-demon-smith.png', zoneId: 'z-demon-village', cell: { x: 18.6, y: 20.0 }, greeting: ['화산 불로 벼린 물건이다. 뭍 대장간 것과는 격이 달라.'], shopItemIds: [...wands.map((w) => w.id)] },
+  { id: 'npc-demon-smith', name: '용암대장장이 그롯', role: 'weaponMerchant', icon: '/images/npc/npc-demon-smith.png', zoneId: 'z-demon-village', cell: { x: 18.6, y: 23.2 }, greeting: ['화산 불로 벼린 물건이다. 뭍 대장간 것과는 격이 달라.'], shopItemIds: [...wands.map((w) => w.id)] },
   { id: 'npc-demon-child', name: '꼬마 마물 삐약', role: 'flavor', icon: '/images/npc/npc-demon-child.png', zoneId: 'z-demon-village', cell: { x: 32.0, y: 21.6 }, greeting: ['인간이다! 뿔 없는 거 진짜였네…'] },
 ]
 

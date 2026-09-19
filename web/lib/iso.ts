@@ -44,6 +44,21 @@ export type TileKind =
   | 'cave' // 이끼 동굴 — 축축한 암반 + 이끼
   | 'mine' // 폐광산 — 암반+갱목 바닥
   | 'swamp' // 안개 늪지 — 진흙+웅덩이
+  | 'sky-marble' // 천공 신전(하늘 도시) — 크림 대리석 슬랩(평면 타일)
+  | 'sky-road' // 천공 신전 — 하늘빛 포석 길(평면 타일)
+  | 'sky-cloud' // 천공 신전 — 섬 바깥 솜구름(평면 타일)
+  | 'ruin-stone' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'ruin-road' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'ruin-moss' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'ruin-mist' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'aurora-stone' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'aurora-road' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'aurora-snow' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'aurora-mist' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'demon-stone' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'demon-road' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'demon-ash' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
+  | 'demon-lava' // 마을 테마 평면 타일 (scripts/gen-town-tiles.mjs)
 
 /**
  * 라스터 모드에서 지면 타일 PNG 경로 (다이메트릭 2:1, 폭 = ISO_TILE_W 배수).
@@ -66,6 +81,21 @@ export const TILE_SPRITES: Partial<Record<TileKind, string>> = {
   cave: '/images/map/tiles/cave.png',
   mine: '/images/map/tiles/mine.png',
   swamp: '/images/map/tiles/swamp.png',
+  'sky-marble': '/images/map/tiles/sky-marble.png',
+  'sky-road': '/images/map/tiles/sky-road.png',
+  'sky-cloud': '/images/map/tiles/sky-cloud.png',
+  'ruin-stone': '/images/map/tiles/ruin-stone.png',
+  'ruin-road': '/images/map/tiles/ruin-road.png',
+  'ruin-moss': '/images/map/tiles/ruin-moss.png',
+  'ruin-mist': '/images/map/tiles/ruin-mist.png',
+  'aurora-stone': '/images/map/tiles/aurora-stone.png',
+  'aurora-road': '/images/map/tiles/aurora-road.png',
+  'aurora-snow': '/images/map/tiles/aurora-snow.png',
+  'aurora-mist': '/images/map/tiles/aurora-mist.png',
+  'demon-stone': '/images/map/tiles/demon-stone.png',
+  'demon-road': '/images/map/tiles/demon-road.png',
+  'demon-ash': '/images/map/tiles/demon-ash.png',
+  'demon-lava': '/images/map/tiles/demon-lava.png',
 }
 
 /** 타일별 상/좌/우 면 색 (좌·우는 살짝 어둡게 해 미세 입체) */
@@ -86,6 +116,21 @@ export const TILE_COLORS: Record<TileKind, { top: string; edge: string }> = {
   cave: { top: '#3a4038', edge: '#272b26' },
   mine: { top: '#4a4038', edge: '#332c26' },
   swamp: { top: '#3f4a34', edge: '#2a3122' },
+  'sky-marble': { top: '#f3efe4', edge: '#cfc4a6' },
+  'sky-road': { top: '#bccce4', edge: '#7f93b8' },
+  'sky-cloud': { top: '#f1f8ff', edge: '#c4d8ee' },
+  'ruin-stone': { top: '#6a6577', edge: '#3b3647' },
+  'ruin-road': { top: '#4a4560', edge: '#2a2636' },
+  'ruin-moss': { top: '#2d4a34', edge: '#14201c' },
+  'ruin-mist': { top: '#483f6a', edge: '#26213c' },
+  'aurora-stone': { top: '#e3ecf5', edge: '#a7bdd4' },
+  'aurora-road': { top: '#bdd2dc', edge: '#7f9cae' },
+  'aurora-snow': { top: '#f2f8fd', edge: '#c3d6e8' },
+  'aurora-mist': { top: '#dcf3f4', edge: '#a3d0de' },
+  'demon-stone': { top: '#3b2b2e', edge: '#150c0e' },
+  'demon-road': { top: '#2a1d1f', edge: '#8a3a14' },
+  'demon-ash': { top: '#4a4143', edge: '#2b2426' },
+  'demon-lava': { top: '#ff6a1a', edge: '#5a1a0a' },
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
